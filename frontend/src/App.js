@@ -21,12 +21,14 @@ function App() {
     // </div>
     <body>
       <div className="nav">
-        <div className="logo">Let It Fly</div>
-        <ul>
-          <li><a href="#">link one</a></li>
-          <li><a href="#">link two</a></li>
-          <li><a href="#">link three</a></li>
-        </ul>
+        <div className="left-section">
+          <div className="logo">Let It Fly</div>
+            <ul>
+              <li><a href="#">Ride</a></li>
+              <li><a href="#">Drive</a></li>
+              <li><a href="#">About</a></li>
+            </ul>
+        </div>
         <ul>
           <li><a href="#">Log in</a></li>
           <li><a href="#">Sign up</a></li>
@@ -34,13 +36,13 @@ function App() {
       </div>
       <div className="introduction">
         <div className="text">
-          <div className="slogan-1">Fast. Convenient.</div>
-          <div className="slogan-2">Let It Fly - On Your Schedule.</div>
-          <div className="about-1">Bay Area Airports' Premier Shuttle Service.</div>
+          <div className="slogan">Fast. </div>
+          <div className="slogan">Convenient.</div>
+          <div className="slogan">Always On Your Schedule.</div>
+          <div className="slogan">Let It Fly.</div>
+          <div className="about">Bay Area's Premier Airport Shuttle Service.</div>
         </div>
-        <div className="image">
-          Here.
-        </div>
+        <img src="/Driving.png" alt="Driving Over The Golden Gate Bridge" />
       </div>
       <div className="airports">
         <div className="text">Go To And From...</div>
@@ -62,7 +64,7 @@ function App() {
           </div>
         </div>
       </div>
-      
+
     </body>
   );
 }
