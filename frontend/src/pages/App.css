@@ -52,7 +52,7 @@ body {
 }
 
 /*-------------------Nav-Bar---------------------------*/
-.nav {
+.custom-nav {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -74,7 +74,7 @@ body {
   font-weight: 900;
 }
 
-.nav ul {
+.custom-nav ul {
   display: flex;
   list-style: none;
   margin: 0 70px ;
@@ -82,7 +82,12 @@ body {
   gap: 40px;
 }
 
-a {
+.custom-nav a {
+  text-decoration: none;
+  color: white;
+}
+
+.nav-button {
   text-decoration: none;
   color: white;
 }
@@ -151,6 +156,7 @@ a {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
 }
 
 .container .text-1{
@@ -169,4 +175,9 @@ a {
   padding: 10px;
   font-size: 18px;
   color:	#7E7E7E;
+}
+
+/*--------------------Forms---------------------------*/
+.form-group {
+  margin-bottom: 1rem;
 }
