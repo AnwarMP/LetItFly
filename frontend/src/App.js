@@ -66,33 +66,6 @@ function App() {
           <div className="small-text">Free of charge</div>
         </div>
       </div>
-      {/* <div className="airports">
-        <div className="text">Our Airports</div>
-        <div className="cards">
-
-          <div className="card-design">
-            <div className="card-box">
-              <img src="/SFO.png" alt="SFO Airport"></img>
-            </div>
-            <div className="card-text">SFO</div>
-          </div>
-
-          <div className="card-design">
-            <div className="card-box">
-              <img src="/OAK.png" alt="OAK Airport"></img>
-            </div>
-            <div className="card-text">OAK</div>
-          </div>
-
-          <div className="card-design">
-            <div className="card-box">
-              <img src="/SJC.png" alt="SJC Airport"></img>
-            </div>
-            <div className="card-text">SJC</div>
-          </div>
-        </div>
-      </div> */}
-
     </body>
   );
 }
