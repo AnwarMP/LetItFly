@@ -37,9 +37,9 @@
   }
 } */
 
-* {
+/* * {
     outline: 2px solid red;
-}
+} */
 
 body {
   margin: 0;
@@ -115,9 +115,27 @@ a {
   padding: 20px 0;
 }
 
+.text .button-options{
+  display: flex;
+  flex-direction: column;
+  margin-top: 45px;
+}
+
+.text button {
+  border: none;
+  border-radius: 60px;
+  background: #0c0b31;
+  color: white;
+  font-weight: bold;
+  width: 175px;
+  height: 40px;
+  flex: 0 0 auto;
+  margin: 10px 0;
+}
+
 
 .introduction img {
   width: 550px;
   height: 600px;
-  border-radius: 20px;
+  border-radius: 10px;
 }

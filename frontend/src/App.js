@@ -41,6 +41,10 @@ function App() {
           <div className="slogan">Always On Your Schedule.</div>
           <div className="slogan">Let It Fly.</div>
           <div className="about">Bay Area's Premier Airport Shuttle Service.</div>
+          <div className="button-options">
+            <button>Ride With Us</button>
+            <button>Drive With Us</button>
+          </div>
         </div>
         <img src="/Driving.png" alt="Driving Over The Golden Gate Bridge" />
       </div>
