@@ -29,7 +29,7 @@ export const Login = () => {
 
     return (
 
-        <body>
+        <body className="bg">
             <div className="custom-nav">
                 <div className="left-section">
                     <div className="logo">Let It Fly</div>
@@ -47,6 +47,7 @@ export const Login = () => {
                 
             <div className="numerical">
                 <div className="container">
+                    <br/><br/><br/>
                     <form className="form-group custom-form" onSubmit={handleSubmit}>
                         <label>Enter your email:</label>
                     <br/>
@@ -59,7 +60,7 @@ export const Login = () => {
                         />
 
                         <br/>
-                        <label>Enter your pass:</label>
+                        <label>Enter your password:</label>
                         <br/>
                         <input 
                             type="password" 
@@ -69,11 +70,14 @@ export const Login = () => {
                             onChange={handleSetValue}
                         />
                     <br/>
-
-
                     <br/>
                         <button type='submit' className='btn btn-success btn-md'>Login</button>
                     </form>
+                </div>
+                <div className="container">
+                    <div className="img-container">
+                        <img src="/Driving.png" alt="Driving Over The Golden Gate Bridge" />
+                    </div>
                 </div>
             </div>
         </body>
