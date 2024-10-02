@@ -48,26 +48,32 @@ function App() {
         </div>
         <img src="/Driving.png" alt="Driving Over The Golden Gate Bridge" />
       </div>
-      <div className="airports">
-        <div className="text">Go To And From...</div>
-        <div cassName="cards">
+      {/* <div className="airports">
+        <div className="text">Our Airports</div>
+        <div className="cards">
 
-          <div class="card-design">
-            <div className="card-box"></div>
+          <div className="card-design">
+            <div className="card-box">
+              <img src="/SFO.png" alt="SFO Airport"></img>
+            </div>
             <div className="card-text">SFO</div>
           </div>
 
-          <div class="card-design">
-            <div className="card-box"></div>
+          <div className="card-design">
+            <div className="card-box">
+              <img src="/OAK.png" alt="OAK Airport"></img>
+            </div>
             <div className="card-text">OAK</div>
           </div>
 
-          <div class="card-design">
-            <div className="card-box"></div>
+          <div className="card-design">
+            <div className="card-box">
+              <img src="/SJC.png" alt="SJC Airport"></img>
+            </div>
             <div className="card-text">SJC</div>
           </div>
         </div>
-      </div>
+      </div> */}
 
     </body>
   );
