@@ -48,6 +48,24 @@ function App() {
         </div>
         <img src="/Driving.png" alt="Driving Over The Golden Gate Bridge" />
       </div>
+
+      <div className="numerical">
+        <div className="container">
+          <div className="text-1">&lt; 30</div>
+          <div className="text-2">minutes</div>
+          <div className="small-text">Guaranteed wait time</div>
+        </div>
+        <div className="container">
+          <div className="text-1">$15</div>
+          <div className="text-2">minimum</div>
+          <div className="small-text">Competitive pricing</div>
+        </div>
+        <div className="container">
+          <div className="text-1">2</div>
+          <div className="text-2">miles</div>
+          <div className="small-text">Free of charge</div>
+        </div>
+      </div>
       {/* <div className="airports">
         <div className="text">Our Airports</div>
         <div className="cards">

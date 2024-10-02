@@ -124,7 +124,7 @@ a {
 .text button {
   border: none;
   border-radius: 60px;
-  background: #0c0b31;
+  background: black;
   color: white;
   font-weight: bold;
   width: 175px;
@@ -138,6 +138,37 @@ a {
   width: 550px;
   height: 600px;
   border-radius: 10px;
+}
+
+/*--------------------Numerical---------------------------*/
+.numerical{
+  display: flex;
+  justify-content: space-evenly;
+  height: 30vh;
+}
+
+.numerical .container{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.container .text-1{
+  font-size: 100px;
+  font-weight: bold;
+  color:#333333;
+}
+
+.container .text-2{
+  font-size: 30px;
+  font-weight: bold;
+  color:#333333;
+}
+
+.container .small-text{
+  padding: 10px;
+  font-size: 18px;
+  color:	#7E7E7E;
 }
 
 /*--------------------Airport Cards---------------------------*/
