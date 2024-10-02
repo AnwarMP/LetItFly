@@ -1,4 +1,4 @@
-.App {
+/* .App {
   text-align: center;
 }
 
@@ -35,4 +35,138 @@
   to {
     transform: rotate(360deg);
   }
+} */
+
+/* * {
+    outline: 2px solid red;
+} */
+
+body {
+  margin: 0;
+  padding: 0;
+
+  font-family: Helvetica, Arial, sans-serif;
+
+  display: flex;
+  flex-direction: column;
+}
+
+/*-------------------Nav-Bar---------------------------*/
+.nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  width: 100%;
+  height: 70px;
+
+  background-color: #060606;
+}
+
+.left-section {
+  display: flex;
+  margin: 70px;
+}
+
+.logo {
+  color: white;
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.nav ul {
+  display: flex;
+  list-style: none;
+  margin: 0 70px ;
+  padding: 0;
+  gap: 40px;
+}
+
+a {
+  text-decoration: none;
+  color: white;
+}
+
+/*--------------------Introduction---------------------------*/
+.introduction {
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+
+  height: calc(100vh - 70px);
+}
+
+.introduction .text{
+  height: 600px;
+}
+
+.text .slogan {
+  font-size: 50px;
+  font-weight: bold;
+  padding: 10px 0;
+}
+
+.text .about {
+  font-size: 20px;
+  font-weight: 500;
+
+  color: #0c0b31;
+
+  padding: 20px 0;
+}
+
+.text .button-options{
+  display: flex;
+  flex-direction: column;
+  margin-top: 45px;
+}
+
+.text button {
+  border: none;
+  border-radius: 60px;
+  background: black;
+  color: white;
+  font-weight: bold;
+  width: 175px;
+  height: 40px;
+  flex: 0 0 auto;
+  margin: 10px 0;
+}
+
+
+.introduction img {
+  width: 550px;
+  height: 600px;
+  border-radius: 10px;
+}
+
+/*--------------------Numerical---------------------------*/
+.numerical{
+  display: flex;
+  justify-content: space-evenly;
+  height: 30vh;
+}
+
+.numerical .container{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.container .text-1{
+  font-size: 100px;
+  font-weight: bold;
+  color:#333333;
+}
+
+.container .text-2{
+  font-size: 30px;
+  font-weight: bold;
+  color:#333333;
+}
+
+.container .small-text{
+  padding: 10px;
+  font-size: 18px;
+  color:	#7E7E7E;
 }
