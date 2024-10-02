@@ -1,7 +1,32 @@
 import logo from './logo.svg';
 import './App.css';
 
+import { useState } from 'react';
+import ReactDOM from 'react-dom/client';
+
+
+// function ProcessLogin() {
+
+// }
+
+
 function App() {
+  const [inputs, setInputs] = useState({});
+
+  const handleSetValue = (event) => {
+    const entry = event.target.name;
+    const pass = event.target.value;
+    setInputs(values => ({...values, [entry]: pass}))
+  }
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    if (inputs.user == 'John' && inputs.pass == '123') {
+      alert("passed login check");
+    }
+  }
+
+
   return (
     // <div className="App">
     //   <header className="App-header">
@@ -19,6 +44,7 @@ function App() {
     //     </a>
     //   </header>
     // </div>
+
     <body>
       <div className="nav">
         <div className="left-section">
@@ -30,42 +56,43 @@ function App() {
             </ul>
         </div>
         <ul>
-          <li><a href="#">Log in</a></li>
+          <li><a href="LoginPage.js">Log in</a></li>
           <li><a href="#">Sign up</a></li>
         </ul>
       </div>
-      <div className="introduction">
-        <div className="text">
-          <div className="slogan">Fast. </div>
-          <div className="slogan">Convenient.</div>
-          <div className="slogan">Always On Your Schedule.</div>
-          <div className="slogan">Let It Fly.</div>
-          <div className="about">Bay Area's Premier Airport Shuttle Service.</div>
-          <div className="button-options">
-            <button>Ride With Us</button>
-            <button>Drive With Us</button>
-          </div>
-        </div>
-        <img src="/Driving.png" alt="Driving Over The Golden Gate Bridge" />
-      </div>
+
 
       <div className="numerical">
         <div className="container">
-          <div className="text-1">&lt; 30</div>
-          <div className="text-2">minutes</div>
-          <div className="small-text">Guaranteed wait time</div>
-        </div>
-        <div className="container">
-          <div className="text-1">$15</div>
-          <div className="text-2">minimum</div>
-          <div className="small-text">Competitive pricing</div>
-        </div>
-        <div className="container">
-          <div className="text-1">2</div>
-          <div className="text-2">miles</div>
-          <div className="small-text">Free of charge</div>
+          
+        <form onSubmit={handleSubmit}>
+          <label>Enter your username:
+            <br/>
+            <input 
+              type="text" 
+              name="user"
+              value={inputs.user || ""}
+              onChange={handleSetValue}
+            />
+          </label>
+          <br/>
+          <label>Enter your pass:
+            <br/>
+            <input 
+              type="text" 
+              name="pass"
+              value={inputs.pass || ""}
+              onChange={handleSetValue}
+            />
+          </label>
+          <br/>
+          <input type="submit" />
+        </form>
+
         </div>
       </div>
+
+      
     </body>
   );
 }
