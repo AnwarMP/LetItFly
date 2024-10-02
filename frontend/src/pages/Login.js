@@ -20,8 +20,8 @@ export const Login = () => {
       event.preventDefault();
       // Sample test case for the sprint this week
       if (inputs.email == "john123@gmail.com" && inputs.pass == "123") {
-        //
         alert("The login is successful! Redirecting back to landing page for this demo");
+        // Note: this window.location.replace can redirect to our user page later, for now it goes back to landing
         window.location.replace("/");
       }
     }
@@ -73,11 +73,6 @@ export const Login = () => {
                     <br/>
                         <button type='submit' className='btn btn-success btn-md'>Login</button>
                     </form>
-                </div>
-                <div className="container">
-                    <div className="img-container">
-                        <img src="/Driving.png" alt="Driving Over The Golden Gate Bridge" />
-                    </div>
                 </div>
             </div>
         </body>

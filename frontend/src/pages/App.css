@@ -177,14 +177,7 @@ body {
   color:	#7E7E7E;
 }
 
-
+/*--------------------Forms---------------------------*/
 .form-group {
   margin-bottom: 1rem;
-}
-
-.img-container img {
-  margin-top: 35%;
-  width: 60%;
-  height: 80%;
-  border-radius: 10px;
 }
