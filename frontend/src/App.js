@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { Landing } from "./pages/Landing";
-import { Login } from "./pages/Login";
-import SignUp from "./pages/SignUp";
+import { Landing } from "./Pages/Landing";
+import { Login } from "./Pages/Login";
+import SignUp from "./Pages/SignUp";
+import { Driver } from "./Pages/Driver";
 
 
 
@@ -17,6 +18,7 @@ function App() {
           <Route exact path = "/" element={<Landing />}/>
           <Route path = "/login" element={<Login />}/>
           <Route path = "/signup" element={<SignUp />}/>
+          <Route path = "/driver" element={<Driver />}/>
         </Routes>
       </Router>
     </div>
