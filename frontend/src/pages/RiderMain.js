@@ -1,51 +1,13 @@
-//Create the initial layout
-//Map of their location
-//To and From + find drivers
 import { Link } from 'react-router-dom';
 // import { useState, useEffect }  from 'react';
 // import { LoadScript, GoogleMap, Marker } from '@react-google-maps/api';
 import './App.css';
+import './Rider.css';
 
 
 //const MAPS_API_KEY = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
 
-// Default latitude and longitude if cannot get rider's location
-// Set to SF
-// const defaultLatitude = 37.7749;
-// const defaultLongitude = -122.4194; 
-
-// const containerStyle = {
-//     width: '100%',
-//     height: '400px',
-//   };
-
-// function getUserLocation(setLat, setLong) {
-//     if (navigator.geolocation) {
-//       navigator.geolocation.getCurrentPosition(
-//             (position) => {
-//                 setLat(position.coords.latitude);
-//                 setLong(position.coords.longitude);
-//             },
-//             (error) => {
-//                 console.error("Error fetching location: ", error);
-//             }
-//         );
-//     } else {
-//         console.error("Geolocation is not supported by this browser.");
-//     }
-// }
-
 export const RiderMain = () => {
-    // const [riderLatitude, setLat] = useState(defaultLatitude);
-    // const [riderLongitude, setLong] = useState(defaultLongitude);
-
-    // Use useEffect to fetch the user's location when the component mounts
-    // Default is set to default lat & longitude;
-    // useEffect(() => {
-    //     getUserLocation(setLat, setLong);
-    // }, []);
-
-
     return (
     <div>    
         <div className="custom-nav">
@@ -61,24 +23,37 @@ export const RiderMain = () => {
             <li><a href="#">Account</a></li>
             </ul>
         </div>
-
-
-        {/* <div className="map-container">
-            {riderLatitude && riderLongitude ? (
-                <LoadScript googleMapsApiKey={MAPS_API_KEY}>
-                <GoogleMap
-                    mapContainerStyle={containerStyle}
-                    center={{ lat: riderLatitude, lng: riderLongitude }}
-                    zoom={15}
-                >
-                    <Marker position={{ lat: riderLatitude, lng: riderLongitude }} />
-                </GoogleMap>
-                </LoadScript>
-            ) : (
-                <p>Fetching location...</p>
-            )}
-        </div> */}
-
+        <div className="rider-ui">
+            <div className="rider-nav-sidebar">
+                <div className="from-textbox">
+                    <input list="pickup-locations" type="text" placeholder="Pickup Location" className="from-input" />
+                    <datalist id="pickup-locations">
+                        <option value="San Francisco International Airport" />
+                        <option value="San Jose Mineta International Airport" />
+                        <option value="Oakland International Airport" />
+                    </datalist>
+                </div>
+                <div className="to-textbox">
+                <input list="dropoff-locations" type="text" placeholder="Where to?" className="to-input" />
+                    <datalist id="dropoff-locations">
+                        <option value="San Francisco International Airport" />
+                        <option value="San Jose Mineta International Airport" />
+                        <option value="Oakland International Airport" />
+                    </datalist>
+                </div>
+                <div className="driver-button">
+                    <button>Find Driver</button>
+                </div>
+                
+            </div>
+            <iframe
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d12641.637409132061!2d-122.39722578496227!3d37.6160577524095!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x808f778c55555555%3A0xa4f25c571acded3f!2sSan%20Francisco%20International%20Airport!5e0!3m2!1sen!2sus!4v1728510592051!5m2!1sen!2sus"
+                style={{ border: 0 }}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+            ></iframe>
+        </div>
     </div> 
     );
 };
