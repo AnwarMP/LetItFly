@@ -20,8 +20,7 @@ export const Driver = () => {
                     </ul>
                 </div>
                 <ul>
-                    <li><Link to="/login" className='nav-button'>Log in</Link></li>
-                    <li><a href="#">Sign up</a></li>
+                    <li><a href="#">Account</a></li>
                 </ul>
             </div>
 
