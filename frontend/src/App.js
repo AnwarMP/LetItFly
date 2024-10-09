@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { Landing } from "./Pages/Landing";
-import { Login } from "./Pages/Login";
-import SignUp from "./Pages/SignUp";
-import { Driver } from "./Pages/Driver";
+import { Landing } from "./pages/Landing";
+import { Login } from "./pages/Login";
+import SignUp from "./pages/SignUp";
+import { Driver } from "./pages/Driver";
 import { RiderMain } from "./pages/RiderMain.js";
 
 function App() {
