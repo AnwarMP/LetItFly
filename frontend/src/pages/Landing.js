@@ -18,7 +18,7 @@ export const Landing = () => {
         </div>
         <ul>
           <li><Link to="/login" className='nav-button'>Log in</Link></li>
-          <li><Link to="/signup">Sign up</Link></li>
+          <li><Link to="/signup" className='nav-button'>Sign up</Link></li>
         </ul>
       </div>
       <div className="introduction">

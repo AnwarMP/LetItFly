@@ -1,6 +1,10 @@
-import React, { useState } from 'react';
-import './SignUp.css';
+import React from 'react'
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+//import { useDispatch } from 'react-redux';
 
+
+import './SignUp.css';
 function SignUp() {
     const [role, setRole] = useState('');
     const [formData, setFormData] = useState({
@@ -45,13 +49,13 @@ function SignUp() {
               className={`role-button ${role === 'rider' ? 'selected' : ''}`} 
               onClick={() => handleRoleChange('rider')}
             >
-              Rider Sign Up
+              Rider
             </button>
             <button 
               className={`role-button ${role === 'driver' ? 'selected' : ''}`} 
               onClick={() => handleRoleChange('driver')}
             >
-              Driver Sign Up
+              Driver
             </button>
           </div>
   
