@@ -17,8 +17,7 @@ function Map({
   // Initialize Google Maps API
   useEffect(() => {
     const loader = new Loader({
-      apiKey: "AIzaSyAjrdKdNdF0WeI4Eqrg3m5lmb_EpOWDOGo",
-      version: "weekly",
+      apiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
       libraries: ["places"],
     });
 
@@ -106,7 +105,7 @@ function Map({
       position: location,
       map,
       icon: {
-        url: "http://maps.google.com/mapfiles/ms/icons/green-dot.png",
+        url: "http://maps.google.com/mapfiles/ms/icons/green-dot.png", //icon
         scaledSize: new google.maps.Size(40, 40),
       },
     });
