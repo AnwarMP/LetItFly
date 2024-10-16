@@ -16,15 +16,31 @@ export const Login = () => {
       setInputs(values => ({...values, [entry]: pass}))
     }
   
-    const handleSubmit = (event) => {
-      event.preventDefault();
-      // Sample test case for the sprint this week
-      if (inputs.email == "john123@gmail.com" && inputs.pass == "123") {
-        alert("The login is successful! Redirecting back to landing page for this demo");
-        // Note: this window.location.replace can redirect to our user page later, for now it goes back to landing
-        window.location.replace("/");
-      }
-    }
+    const handleSubmit = async (event) => {
+        event.preventDefault();
+        try {
+          const response = await fetch('http://localhost:3000/login', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email: inputs.email, password: inputs.pass }),
+          });
+      
+          const data = await response.json();
+          if (response.ok) {
+            alert('Login successful!');
+            // Save the token in localStorage or state for future requests
+            localStorage.setItem('token', data.token);
+            window.location.replace('/');
+          } else {
+            alert(data.message);
+          }
+        } catch (error) {
+          console.error('Login failed', error);
+          alert('Login failed. Please try again.');
+        }
+      };      
 
 
     return (
