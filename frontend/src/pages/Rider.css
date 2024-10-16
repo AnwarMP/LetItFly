@@ -5,65 +5,119 @@
 /*-------------Rider Nav Side Bar-------------*/
 
 .rider-ui {
-    display: flex;
-    justify-content: space-between;
+  display: flex;
+  justify-content: space-between;
 
-    height: calc(100vh - 70px);
+  height: calc(100vh - 70px);
 }
 
 .rider-nav-sidebar {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 
-    margin: 10px;
+  margin: 10px;
 }
 
 .from-textbox,
 .to-textbox {
-    margin: 10px 0;
+  margin: 10px 0;
 }
 
 .from-input,
 .to-input {
-    width: 25vw; /* Full width */
-    height: 50px; /* Adjust height */
-    padding: 10px; /* Inner spacing */
-    font-size: 16px; /* Font size */
-    border: 1px solid #ccc; /* Border color */
-    border-radius: 5px; /* Rounded corners */
-    box-sizing: border-box; /* Include padding in width */
+  width: 25vw; /* Full width */
+  height: 50px; /* Adjust height */
+  padding: 10px; /* Inner spacing */
+  font-size: 16px; /* Font size */
+  border: 1px solid #ccc; /* Border color */
+  border-radius: 5px; /* Rounded corners */
+  box-sizing: border-box; /* Include padding in width */
 }
 
 /* Placeholder text color */
 .from-input::placeholder,
 .to-input::placeholder {
-    color: #999; 
+  color: #999;
 }
 
 .driver-button {
-    margin: 20px;
+  margin: 20px;
 }
 
 .driver-button button {
-    width: 100%; /* Full width */
-    height: 50px; /* Button height */
-    font-size: 18px; /* Font size */
-    color: #fff; /* Text color */
-    background-color: black; /* Button color */
-    border: none; /* Remove border */
-    border-radius: 5px; /* Rounded corners */
-    cursor: pointer; /* Pointer cursor on hover */
-    transition: background-color 0.3s; /* Smooth transition */
+  width: 100%; /* Full width */
+  height: 50px; /* Button height */
+  font-size: 18px; /* Font size */
+  color: #fff; /* Text color */
+  background-color: black; /* Button color */
+  border: none; /* Remove border */
+  border-radius: 5px; /* Rounded corners */
+  cursor: pointer; /* Pointer cursor on hover */
+  transition: background-color 0.3s; /* Smooth transition */
 }
 
 /*-------------Map-------------*/
 iframe {
-    height: calc(100vh - 70px);
-    width: 75vw; 
+  height: calc(100vh - 70px);
+  width: 75vw;
 }
 
+/* RideCost.css */
 
+/* Container for ride details and authentication buttons */
+.ride-details-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
 
+.ride-info {
+  flex: 2;
+}
 
+.auth-options {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 10px;
+}
 
+.auth-options .btn {
+  width: 100%;
+  padding: 10px;
+  font-size: 16px;
+  text-align: center;
+}
+
+.auth-options .btn-primary {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.auth-options .btn-secondary {
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.auth-options .auth-link {
+  color: white;
+  text-decoration: none;
+}
+
+.auth-options .btn-primary:hover {
+  background-color: #0056b3;
+}
+
+.auth-options .btn-secondary:hover {
+  background-color: #5a6268;
+}
