@@ -87,9 +87,11 @@ body {
     width: 100%;
 }
 
-.image-container {
+.map-container {
     display: grid;
     height: 100%;
+    width: 100%;
+    background-color: lightgray;
 }
 
   .container .text-1{
@@ -119,4 +121,10 @@ body {
   /*--------------------Forms---------------------------*/
   .form-group {
     margin-bottom: 1rem;
+  }
+
+
+  /* THIS NAME MUST STAY TO KEEP THE UI FOR DIRECTIONS HIDDEN */
+  .mapbox-directions-component-keyline {
+    display: none;
   }
