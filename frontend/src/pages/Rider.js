@@ -1,11 +1,12 @@
 /*global google*/
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import RiderUI from "./RiderUI";
+import NavBar from "./NavBar"; // Import the NavBar component
+import RiderUI from "./RiderUI"; // Import the RiderUI component
 import "./Rider.css";
-import "./App.css";
+import "./App.css"; // Import global styles
 
-function Rider() {
+function RiderGuest() {
   const [pickup, setPickup] = useState("");
   const [dropoff, setDropoff] = useState("");
   const [pickupCoords, setPickupCoords] = useState(null);
@@ -14,7 +15,7 @@ function Rider() {
   const pickupInputRef = useRef(null);
   const dropoffInputRef = useRef(null);
   const navigate = useNavigate();
-
+  // option for airports
   const airports = {
     SFO: {
       name: "San Francisco International Airport",
@@ -33,13 +34,7 @@ function Rider() {
     },
   };
 
-  // Debugging effect to check ref initialization
-  useEffect(() => {
-    console.log("Component mounted. Checking refs:");
-    console.log("Pickup ref:", pickupInputRef.current);
-    console.log("Dropoff ref:", dropoffInputRef.current);
-  }, []);
-
+  // Geocode an address and return the location coordinates
   const geocodeAddress = (address, callback) => {
     const geocoder = new google.maps.Geocoder();
     geocoder.geocode({ address }, (results, status) => {
@@ -53,6 +48,7 @@ function Rider() {
     });
   };
 
+  // Handle location permission for the user's current location
   const handleLocationPermission = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -81,19 +77,21 @@ function Rider() {
     }
   };
 
+  // Handle quick pick for airports (sets either pickup or dropoff)
   const handleQuickPick = (airport) => {
     const location = { lat: airport.lat, lng: airport.lng };
     if (activeInput === "pickup") {
       setPickup(airport.name);
       setPickupCoords(location);
-      setActiveInput(null);
+      setActiveInput(null); // Clear active input after setting the location
     } else if (activeInput === "dropoff") {
       setDropoff(airport.name);
       setDropoffCoords(location);
-      setActiveInput(null);
+      setActiveInput(null); // Clear active input after setting the location
     }
   };
 
+  // Handle form submission and navigate to the rider's home page
   const handleSubmit = () => {
     if (pickup && dropoff) {
       const promises = [];
@@ -144,6 +142,7 @@ function Rider() {
 
   return (
     <div className="rider-dashboard-container">
+      <NavBar />
       <RiderUI
         pickup={pickup}
         dropoff={dropoff}
@@ -164,4 +163,4 @@ function Rider() {
   );
 }
 
-export default Rider;
+export default RiderGuest;
