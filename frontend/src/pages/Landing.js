@@ -1,8 +1,7 @@
+import "./App.css";
 
-import './App.css';
-
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React from "react";
+import { Link } from "react-router-dom";
 
 export const Landing = () => {
   return (
@@ -10,15 +9,34 @@ export const Landing = () => {
       <div className="custom-nav">
         <div className="left-section">
           <div className="logo">Let It Fly</div>
-            <ul>
-              <li><a href="#">Ride</a></li>
-              <li><a href="#">Drive</a></li>
-              <li><a href="#">About</a></li>
-            </ul>
+          <ul>
+            <li>
+              <a href="#">Ride</a>
+            </li>
+            <li>
+              <a href="#">Drive</a>
+            </li>
+            <li>
+              <a href="#">About</a>
+            </li>
+          </ul>
         </div>
         <ul>
-          <li><Link to="/login" className='nav-button'>Log in</Link></li>
-          <li><Link to="/signup" className='nav-button'>Sign up</Link></li>
+          <li>
+            <Link to="/riderguest" className="nav-button">
+              RideCost Check
+            </Link>
+          </li>
+          <li>
+            <Link to="/login" className="nav-button">
+              Log in
+            </Link>
+          </li>
+          <li>
+            <Link to="/signup" className="nav-button">
+              Sign up
+            </Link>
+          </li>
         </ul>
       </div>
       <div className="introduction">
@@ -27,7 +45,9 @@ export const Landing = () => {
           <div className="slogan">Convenient.</div>
           <div className="slogan">Always On Your Schedule.</div>
           <div className="slogan">Let It Fly.</div>
-          <div className="about">Bay Area's Premier Airport Shuttle Service.</div>
+          <div className="about">
+            Bay Area's Premier Airport Shuttle Service.
+          </div>
           <div className="button-options">
             <button>Ride With Us</button>
             <button>Drive With Us</button>
@@ -55,6 +75,6 @@ export const Landing = () => {
       </div>
     </body>
   );
-}
+};
 
 export default Landing;
