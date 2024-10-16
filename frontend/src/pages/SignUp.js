@@ -27,17 +27,47 @@ function SignUp() {
       setFormData({ ...formData, [e.target.name]: e.target.value });
     };
   
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
       e.preventDefault();
+      
       if (!role) {
         alert('Please select whether you are signing up as a Rider or Driver');
       } else if (formData.password !== formData.confirm_password) {
         alert('Passwords do not match!');
       } else {
-        // Handle sign-up logic here when we implement backend
-        console.log('Sign-up data:', { role, ...formData });
+        // Create an object with only the email and password
+        const signUpData = {
+          email: formData.email,
+          password: formData.password
+        };
+        
+        try {
+          // Send a POST request to your backend's /register endpoint
+          const response = await fetch('http://localhost:3000/register', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(signUpData),
+          });
+    
+          const data = await response.json();
+    
+          // Handle success or errors based on the backend response
+          if (response.ok) {
+            alert('Registration successful!');
+            // Optionally, redirect the user or clear the form
+            window.location.replace('/');
+          } else {
+            alert(`Registration failed: ${data.message}`);
+          }
+        } catch (error) {
+          console.error('Error during registration:', error);
+          alert('An error occurred while trying to register. Please try again later.');
+        }
       }
     };
+    
   
     return (
       <div className="sign-up-page">
