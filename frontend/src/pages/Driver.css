@@ -122,3 +122,9 @@ body {
   .form-group {
     margin-bottom: 1rem;
   }
+
+
+  /* THIS NAME MUST STAY TO KEEP THE UI FOR DIRECTIONS HIDDEN */
+  .mapbox-directions-component-keyline {
+    display: none;
+  }
