@@ -1,11 +1,92 @@
 const express = require('express');
-const redisClient = require('./redisClient'); // Import Redis client
-const app = express();
+const redisClient = require('./redisClient'); 
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const { Pool } = require('pg');
+const cors = require('cors'); 
+const dotenv = require('dotenv');
 
-// Middleware to parse JSON for later
+dotenv.config();
+
+const app = express();
+const port = process.env.PORT || 3000;
+
+// Enable CORS to allow requests from your frontend (http://localhost:3001)
+app.use(cors({
+  origin: 'http://localhost:3001'  // Replace with your frontend URL
+}));
+
+// Middleware to parse JSON data
 app.use(express.json());
 
-// route to store driver location in Redis
+// Set up PostgreSQL pool
+const pool = new Pool({
+  user: process.env.PGUSER,
+  host: process.env.PGHOST,
+  database: process.env.PGDATABASE,
+  password: process.env.PGPASSWORD,
+  port: process.env.PGPORT,
+});
+
+// Function to check if the users table exists and create it if not
+const initializeDatabase = async () => {
+  try {
+    const result = await pool.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        email VARCHAR(255) UNIQUE NOT NULL,
+        password VARCHAR(255) NOT NULL
+      );
+    `);
+    console.log('Database initialized or already exists.');
+  } catch (error) {
+    console.error('Failed to initialize database:', error);
+  }
+};
+
+// Call the function to initialize the database on server startup
+initializeDatabase();
+
+// Route to register a new user
+app.post('/register', async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const result = await pool.query(
+      'INSERT INTO users (email, password) VALUES ($1, $2) RETURNING *',
+      [email, hashedPassword]
+    );
+    res.status(201).json({ message: 'User registered successfully', user: result.rows[0] });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Registration failed' });
+  }
+});
+
+// Route to log in a user
+app.post('/login', async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    if (result.rows.length === 0) {
+      return res.status(401).json({ message: 'User not found' });
+    }
+
+    const user = result.rows[0];
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+
+    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    res.json({ message: 'Login successful', token });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Login failed' });
+  }
+});
+
+// Redis route to store driver location
 app.get('/store-driver-location', (req, res) => {
   const driverID = req.query.driverID;
   const longitude = req.query.longitude;
@@ -18,7 +99,7 @@ app.get('/store-driver-location', (req, res) => {
   });
 });
 
-// route to retrieve driver location from Redis
+// Redis route to retrieve driver location
 app.get('/get-driver-location', (req, res) => {
   const driverID = req.query.driverID;
 
@@ -29,7 +110,7 @@ app.get('/get-driver-location', (req, res) => {
   });
 });
 
-// route to store session data
+// Redis route to store session data
 app.get('/store-session', (req, res) => {
   const riderID = req.query.riderID;
   const driverID = req.query.driverID;
@@ -46,7 +127,7 @@ app.get('/store-session', (req, res) => {
   });
 });
 
-// route to retrieve session data
+// Redis route to retrieve session data
 app.get('/get-session', (req, res) => {
   const riderID = req.query.riderID;
   const driverID = req.query.driverID;
@@ -58,7 +139,7 @@ app.get('/get-session', (req, res) => {
   });
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+// Start the server
+app.listen(port, () => {
+  console.log(`Server running on port ${port}`);
 });
