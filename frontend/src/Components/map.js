@@ -2,19 +2,39 @@ import './map.css';
 import { useRef, useEffect } from 'react'
 import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css';
+import MapboxDirections from '@mapbox/mapbox-gl-directions/dist/mapbox-gl-directions'
 
-export const Map = ({location}) =>{
-    const mapRef = useRef()
-    const mapContainerRef = useRef()
+export const Map = ({location, pickupLocation, dropoffLocation, showDirections, setShowDirections}) =>{
+    const mapRef = useRef();
+    const mapContainerRef = useRef();
+    const directionsRef = useRef();
 
     useEffect(() => {
         mapboxgl.accessToken = process.env.REACT_APP_MAPBOX_ACCESS_TOKEN;
+
         mapRef.current = new mapboxgl.Map({
             container: mapContainerRef.current,
             style: 'mapbox://styles/mapbox/dark-v11',
             center: location, // Starting pos from SJC
             zoom: 14 // Starting zoom
         });
+
+        //controls to navigate zoom in/out and turn map.
+        const nav = new mapboxgl.NavigationControl();
+        mapRef.current.addControl(nav, 'top-left');
+
+        // Initialize directions and add to map
+        directionsRef.current = new MapboxDirections({
+            accessToken: mapboxgl.accessToken,
+            unit: 'imperial',
+            profile: 'mapbox/driving-traffic',
+            interactive: false,
+            controls: {
+                instructions: false,
+    
+            }
+        });
+        mapRef.current.addControl(directionsRef.current, 'top-left');
 
         // Wait for the map to load
         mapRef.current.on('load', () => {
@@ -47,6 +67,18 @@ export const Map = ({location}) =>{
             mapRef.current.remove()
         }
     }, [location])
+
+    // Update directions when 'showDirections' becomes true
+    useEffect(() => {
+        if (directionsRef.current && showDirections) {
+            directionsRef.current.setOrigin(pickupLocation || '');
+            directionsRef.current.setDestination(dropoffLocation || '');
+            // Optionally reset 'showDirections' after updating directions
+            if (setShowDirections) {
+                setShowDirections(false);
+            }
+        }
+    }, [showDirections, pickupLocation, dropoffLocation, setShowDirections]);
 
     return (
         <>
