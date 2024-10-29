@@ -1,13 +1,50 @@
 import { Link } from 'react-router-dom';
-// import { useState, useEffect }  from 'react';
 // import { LoadScript, GoogleMap, Marker } from '@react-google-maps/api';
 import './App.css';
 import './Rider.css';
-
+import Map from '../Components/map';
+import { useState, useEffect } from 'react';
 
 //const MAPS_API_KEY = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
 
+const defaultLocation = [-121.92857174599622, 37.36353799938156]; // Default location (SJC)
+
 export const RiderMain = () => {
+    const [location, setLocation] = useState(defaultLocation);
+    const [pickupLocation, setPickupLocation] = useState('');
+    const [dropoffLocation, setDropoffLocation] = useState('');
+    const [showDirections, setShowDirections] = useState(false);
+       
+    useEffect(() => {
+        const getLocation = () => {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const newLocation = [
+                            position.coords.longitude,
+                            position.coords.latitude
+                        ];
+                        console.log("Location updated to:", newLocation); 
+                        setLocation(newLocation);
+                    },
+                    (error) => {
+                        console.log(`Error in fetching location: ${error.message}`);
+                        alert(`Error in fetching location: ${error.message}`);
+                    }
+                );
+            } else {
+                console.log("Geolocation is not supported by this browser.");
+                alert("Geolocation is not supported by this browser.");
+            }
+        };
+
+        getLocation();
+    }, []); // Empty dependency array to run only on mount
+
+    const handleShowDirections = () => {
+        setShowDirections(true);
+    };    
+
     return (
     <div>    
         <div className="custom-nav">
@@ -25,34 +62,53 @@ export const RiderMain = () => {
         </div>
         <div className="rider-ui">
             <div className="rider-nav-sidebar">
-                <div className="from-textbox">
-                    <input list="pickup-locations" type="text" placeholder="Pickup Location" className="from-input" />
-                    <datalist id="pickup-locations">
-                        <option value="San Francisco International Airport" />
-                        <option value="San Jose Mineta International Airport" />
-                        <option value="Oakland International Airport" />
-                    </datalist>
+                <div className="top-section">
+                    <div className="from-textbox">
+                        <input
+                            list="pickup-locations"
+                            type="text"
+                            placeholder="Pickup Location"
+                            className="from-input"
+                            value={pickupLocation || ''}
+                            onChange={(e) => setPickupLocation(e.target.value)}
+                        />
+                        <datalist id="pickup-locations">
+                            <option value="San Francisco International Airport" />
+                            <option value="San Jose Mineta International Airport" />
+                            <option value="Oakland International Airport" />
+                        </datalist>
+                    </div>
+                    <div className="to-textbox">
+                        <input
+                            list="dropoff-locations"
+                            type="text"
+                            placeholder="Where to?"
+                            className="to-input"
+                            value={dropoffLocation || ''}
+                            onChange={(e) => setDropoffLocation(e.target.value)}
+                        />
+                        <datalist id="dropoff-locations">
+                            <option value="San Francisco International Airport" />
+                            <option value="San Jose Mineta International Airport" />
+                            <option value="Oakland International Airport" />
+                        </datalist>
+                    </div>
+                    <div className="driver-button">
+                        <button onClick={handleShowDirections}>Show Directions</button>
+                    </div>
                 </div>
-                <div className="to-textbox">
-                <input list="dropoff-locations" type="text" placeholder="Where to?" className="to-input" />
-                    <datalist id="dropoff-locations">
-                        <option value="San Francisco International Airport" />
-                        <option value="San Jose Mineta International Airport" />
-                        <option value="Oakland International Airport" />
-                    </datalist>
-                </div>
-                <div className="driver-button">
+                <div className="driver-button find-driver-button">
                     <button>Find Driver</button>
                 </div>
-                
             </div>
-            <iframe
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d12641.637409132061!2d-122.39722578496227!3d37.6160577524095!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x808f778c55555555%3A0xa4f25c571acded3f!2sSan%20Francisco%20International%20Airport!5e0!3m2!1sen!2sus!4v1728510592051!5m2!1sen!2sus"
-                style={{ border: 0 }}
-                allowFullScreen
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-            ></iframe>
+
+            <Map 
+                location={location}                 
+                pickupLocation={pickupLocation}
+                dropoffLocation={dropoffLocation} 
+                showDirections={showDirections}
+                setShowDirections={setShowDirections}
+            />
         </div>
     </div> 
     );

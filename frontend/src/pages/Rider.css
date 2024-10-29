@@ -11,12 +11,21 @@
     height: calc(100vh - 70px);
 }
 
+/* Rider Navigation Sidebar */
 .rider-nav-sidebar {
     display: flex;
     flex-direction: column;
+    justify-content: space-between; /* Space elements between top and bottom */
     align-items: center;
-
+    height: 100%; /* Ensure it takes full available height */
     margin: 10px;
+}
+
+/* Top Section (inputs and Show Directions button) */
+.top-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .from-textbox,
@@ -42,11 +51,11 @@
 }
 
 .driver-button {
-    margin: 20px;
+    margin: 10px;
 }
 
 .driver-button button {
-    width: 100%; /* Full width */
+    width: 200px; /* Full width */
     height: 50px; /* Button height */
     font-size: 18px; /* Font size */
     color: #fff; /* Text color */
@@ -55,12 +64,11 @@
     border-radius: 5px; /* Rounded corners */
     cursor: pointer; /* Pointer cursor on hover */
     transition: background-color 0.3s; /* Smooth transition */
+    align-self: bottom;
 }
 
-/*-------------Map-------------*/
-iframe {
-    height: calc(100vh - 70px);
-    width: 75vw; 
+.find-driver-button {
+    margin-bottom: 40px;
 }
 
 
