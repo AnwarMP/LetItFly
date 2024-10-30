@@ -19,6 +19,7 @@
     align-items: center;
     height: 100%; /* Ensure it takes full available height */
     margin: 10px;
+    width: 30vw;
 }
 
 /* Top Section (inputs and Show Directions button) */
@@ -71,7 +72,45 @@
     margin-bottom: 40px;
 }
 
+/*Loading for the nav side bar*/
+.loading-container {
+    display: flex;
+    height: 100%;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
 
+.spinner {
+    border: 8px solid rgba(0, 0, 0, 0.1);
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    border-left-color: black;
+    animation: spin 1s ease infinite;
+    margin-bottom: 24px;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Driver info side-bar */
+.driver-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.driver-info p {
+    margin: 10px 0;
+    font-size: 18px;
+}
+
+.driver-info h5 {
+    margin-top: 20px;
+}
 
 
 
