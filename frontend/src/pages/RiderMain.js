@@ -14,7 +14,9 @@ export const RiderMain = () => {
     const [pickupLocation, setPickupLocation] = useState('');
     const [dropoffLocation, setDropoffLocation] = useState('');
     const [showDirections, setShowDirections] = useState(false);
-       
+
+    const [driverData, setDriverData] = useState(null);
+
     useEffect(() => {
         const getLocation = () => {
             if (navigator.geolocation) {
@@ -43,7 +45,22 @@ export const RiderMain = () => {
 
     const handleShowDirections = () => {
         setShowDirections(true);
-    };    
+    };
+    
+    //Find driver, temporary hardcoded for demo purposes, subject to change
+    const fetchDriverData = async () => {
+        try {
+          const response = await fetch('http://localhost:3000/get-driver?driverID=1'); // Adjust the URL/port if necessary
+          if (!response.ok) {
+            throw new Error('Failed to fetch driver data');
+          }
+          const data = await response.json();
+          setDriverData(data);
+          console.log('Driver Data:', data);
+        } catch (error) {
+          console.error('Error fetching driver data:', error);
+        }
+    };
 
     return (
     <div>    
@@ -98,7 +115,7 @@ export const RiderMain = () => {
                     </div>
                 </div>
                 <div className="driver-button find-driver-button">
-                    <button>Find Driver</button>
+                    <button onClick={fetchDriverData}>Find Driver</button>
                 </div>
             </div>
 

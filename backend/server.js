@@ -139,6 +139,25 @@ app.get('/get-session', (req, res) => {
   });
 });
 
+//Temporary to get Driver, demo purposes
+app.get('/get-driver', async (req, res) => {
+  const driverID = req.query.driverID || '1'; // Default to driver:1 if no ID is provided
+
+  try {
+    const driverData = await redisClient.hGetAll('driver:1');
+
+    if (!driverData) {
+      console.warn(`Driver data not found for driverID: ${driverID}`);
+      return res.status(404).json({ error: 'Driver not found' });
+    }
+
+    res.json(driverData);
+  } catch (err) {
+    console.error('Error fetching driver data from Redis:', err);
+    res.status(500).json({ error: 'Failed to fetch driver data' });
+  }
+});
+
 // Start the server
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
