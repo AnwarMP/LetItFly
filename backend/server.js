@@ -86,6 +86,42 @@ app.post('/login', async (req, res) => {
   }
 });
 
+
+app.post('/store-rider-location', (req, res) => {
+  const { riderID, longitude, latitude } = req.body;
+  // Storing rider location and pending drivers in Redis
+  redisClient.sAdd(`rider:${riderID}`, longitude, latitude, (err, response) => {
+    if (err) return res.status(500).send('Error creating rider');
+    else res.send('Rider location stored in cache');
+  });
+  // pendingDrive is effectively our driver:<Did>:matches -> [rider:<Rid>, rider:<Rid>, rider:<Rid>,...]
+  // for just one driver for now for our demo
+  redisClient.sAdd(`pendingDrive`, `rider:${riderID}`, (err, response) => {
+    if (err) return res.status(500).send('Error storing rider in waiting list');
+  }) 
+  
+});
+
+
+// Fetch list of pending drivers
+app.get('/driver/rides', (req, res) => {
+  redisClient.sMembers(`pendingDrive`, (err, location) => {
+    if (err) return res.status(500).send('Error fetching pending riders');
+    res.send(location);
+  });
+})
+
+// Redis route to retrieve rider location
+app.post('/get-rider-location', (req, res) => {
+  const { riderID } = req.body;
+
+  // Retrieving rider location from Redis
+  redisClient.sMembers(`rider:${riderID}`, (err, location) => {
+    if (err) return res.status(500).send('Error fetching location');
+    res.send(location);
+  });
+});
+
 // Redis route to store driver location
 app.get('/store-driver-location', (req, res) => {
   const driverID = req.query.driverID;
@@ -131,7 +167,6 @@ app.get('/store-session', (req, res) => {
 app.get('/get-session', (req, res) => {
   const riderID = req.query.riderID;
   const driverID = req.query.driverID;
-
   // Retrieving session data from Redis
   redisClient.hgetall(`session:${riderID}:${driverID}`, (err, session) => {
     if (err) return res.status(500).send('Error fetching session');

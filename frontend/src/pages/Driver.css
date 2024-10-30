@@ -128,3 +128,13 @@ body {
   .mapbox-directions-component-keyline {
     display: none;
   }
+
+
+  ul {
+    list-style-type: none;
+    padding: 0;
+  }
+
+  li {
+    margin: 10px;
+  }

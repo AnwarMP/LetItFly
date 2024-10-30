@@ -19,6 +19,7 @@ export const Driver = () => {
     const sjcLatLong = [-121.92857174599622, 37.36353799938156];
     var currentLat = 0;
     var currentLong = 0;
+    var pendingRides = [];
 
     const getDirection = () => {
         // Note: right now calling this more than once causes the route to change because the center
@@ -27,6 +28,34 @@ export const Driver = () => {
         routingRef.current.setDestination(sjcLatLong);
     }
 
+    const setDestinationTo = async (riderID) => {
+        try {
+            const response = await fetch('http://localhost:3000/get-rider-location', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                  },
+                body: JSON.stringify({ riderID: riderID }),
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+              pendingRides = data;
+              alert('Fetch successful!');
+              var riderDetails = data;
+              console.log(riderDetails);
+              document.getElementById('riders').innerHTML = '';
+              routingRef.current.setOrigin([currentLong, currentLat]);
+              routingRef.current.setDestination([riderDetails[0], riderDetails[1]]);
+            } else {
+              alert(data.message);
+            }
+
+        } catch (error) {
+            console.error('Fetch riders failed', error);
+          alert('Fetching riders failed. Please try again.');
+        }
+    }
 
     const currentPos = () => {
         // Checks if the browser and device has geolocation enabled 
@@ -53,7 +82,7 @@ export const Driver = () => {
 
 
     useEffect(() => {
-        mapboxgl.accessToken = process.env.REACT_APP_SECRET_MAP_KEY;
+        mapboxgl.accessToken = process.env.REACT_APP_MAPBOX_ACCESS_TOKEN;
         mapRef.current = new mapboxgl.Map({
             container: mapContainerRef.current, // Container
             center: [-121.92857174599622, 37.36353799938156], // Starting pos from SJC
@@ -89,6 +118,79 @@ export const Driver = () => {
     }, []);
 
 
+    const fetchRiders = async () => {
+        try {
+            const response = await fetch('http://localhost:3000/driver/rides', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                  },
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+              pendingRides = data;
+              alert('Fetch successful!');
+              document.getElementById('riders').innerHTML = '';
+              for (let i = 0; i < pendingRides.length; i++) {
+                var num = pendingRides[i].replace(/\D/g, '');
+                  document.getElementById('riders').innerHTML += 
+                  `<li id="${pendingRides.length - 1}">
+                    <button class="btn btn-dark btn-circle" id="rider_${i}">Rider ID: ${num}</button>
+                  <li>`;
+            }
+
+            for (let i = 0; i < pendingRides.length; i++) {
+                let num = pendingRides[i].replace(/\D/g, '');
+                document.getElementById(`rider_${i}`).addEventListener("click", 
+                    function() {
+                        setDestinationTo(num);
+                        // acceptRide(num);
+                    });    
+            }
+
+
+            } else {
+              alert(data.message);
+            }
+
+        } catch (error) {
+            console.error('Fetch riders failed', error);
+          alert('Fetching riders failed. Please try again.');
+        }
+    }
+
+    const acceptRide = async (riderID) => {
+        // event.preventDefault();
+        try {
+            const response = await fetch('http://localhost:3000/store-session', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                  },
+                body: JSON.stringify({ riderID: riderID, driverID: '100', fare: '0'}),
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+              pendingRides = data;
+              alert('Fetch successful!');
+
+            } else {
+              alert(data.message);
+            }
+
+        } catch (error) {
+            console.error('Accepting ride failed', error);
+          alert('Accepting ride failed. Please try again.');
+        }
+    }
+
+
+    const grabPosAndRiders = () => {
+        currentPos();
+        fetchRiders();
+    }
 
 
     return (
@@ -114,7 +216,7 @@ export const Driver = () => {
                     <img src = '/default-profile.png'></img><br/>
                     {/* This is a placeholder, replace with JS elements that get name from DB */}
                     <span id='name-text'>John Doe</span><br/><br/>
-                    <button className='btn btn-primary btn-circle btn-lg' onClick={currentPos}>Start Work</button>
+                    <button className='btn btn-primary btn-circle btn-lg' onClick={grabPosAndRiders}>Start Work</button>
 
 
                     <div className='disclaimer-text'>Note: This will use your location</div><br/>
@@ -122,8 +224,13 @@ export const Driver = () => {
 
                     <button className='btn btn-primary btn-circle btn-lg' onClick={getDirection}>Get path from current map center to SJC</button>
 
+
                     {/* This is a placeholder, replace with JS elements that get license from DB */}
                     <h6>License Plate: 0tst000</h6>
+
+                    <ul id='riders'></ul>
+
+
                 </div>      
                 <div className='right-column'>
                     <Geocoder
