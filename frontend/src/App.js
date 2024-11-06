@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Provider } from 'react-redux';
 import { store } from "./store";
+import { Navbar } from "./Components/NavBar";
 import { PrivateRoute } from "./Components/PrivateRoute";
 import { Landing } from "./pages/Landing";
 import { Login } from "./pages/Login";
@@ -13,6 +14,7 @@ function App() {
         <Provider store={store}>
             <div className="wrapper">
                 <Router>
+                    <Navbar />
                     <Routes>
                         {/* Public routes */}
                         <Route exact path="/" element={<Landing />} />

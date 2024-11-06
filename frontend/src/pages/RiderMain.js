@@ -86,19 +86,7 @@ export const RiderMain = () => {
 
     return (
     <div>    
-        <div className="custom-nav">
-            <div className="left-section">
-            <div className="logo">Let It Fly</div>
-        <ul>
-            <li><a href="#">Ride</a></li>
-            <li><a href="#">Drive</a></li>
-            <li><a href="#">About</a></li>
-        </ul>
-        </div>
-            <ul>
-            <li><a href="#">Account</a></li>
-            </ul>
-        </div>
+
         <div className="rider-ui">
             <div className="rider-nav-sidebar">
                 {loading ? (

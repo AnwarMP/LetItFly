@@ -4,7 +4,7 @@ const initialState = {
   user: null,
   token: localStorage.getItem('token') || null,
   isAuthenticated: false,
-  role: null, // 'driver' or 'rider'
+  role: null,
   loading: false,
   error: null
 };
@@ -34,6 +34,7 @@ const authSlice = createSlice({
       state.token = null;
       state.isAuthenticated = false;
       state.role = null;
+      state.error = null;
       localStorage.removeItem('token');
     },
   },
