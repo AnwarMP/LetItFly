@@ -7,20 +7,7 @@ import { Link } from 'react-router-dom';
 export const Landing = () => {
   return (
     <body>
-      <div className="custom-nav">
-        <div className="left-section">
-          <div className="logo">Let It Fly</div>
-            <ul>
-              <li><a href="#">Ride</a></li>
-              <li><a href="#">Drive</a></li>
-              <li><a href="#">About</a></li>
-            </ul>
-        </div>
-        <ul>
-          <li><Link to="/login" className='nav-button'>Log in</Link></li>
-          <li><Link to="/signup" className='nav-button'>Sign up</Link></li>
-        </ul>
-      </div>
+
       <div className="introduction">
         <div className="text">
           <div className="slogan">Fast. </div>
