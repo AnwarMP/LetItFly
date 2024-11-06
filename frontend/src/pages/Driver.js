@@ -1,122 +1,57 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import './Driver.css';
-
+import Map from '../Components/map';
 import { useRef, useEffect, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import { Geocoder } from '@mapbox/search-js-react';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import MapBoxDirections from '@mapbox/mapbox-gl-directions/dist/mapbox-gl-directions'
 
+
+const defaultLocation = [-121.92857174599622, 37.36353799938156];
 
 export const Driver = () => {
-    const mapRef = useRef();
-    const mapContainerRef = useRef();
-    const markerRef = useRef();
-    const routingRef = useRef();
-    const [, setMapLoaded] = useState(false);
-    const [inputValue, setInputValue] = useState("");
-    const sjcLatLong = [-121.92857174599622, 37.36353799938156];
-    var currentLat = 0;
-    var currentLong = 0;
+    const [location, setLocation] = useState(defaultLocation);
+    const [pickupLocation, setPickupLocation] = useState('');
+    const [dropoffLocation, setDropoffLocation] = useState('');
+    const [showDirections, setShowDirections] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [driverData, setDriverData] = useState(null);
     var pendingRides = [];
-
-    const getDirection = () => {
-        // Note: right now calling this more than once causes the route to change because the center
-        // point on the map changes every time
-        routingRef.current.setOrigin([mapRef.current.getCenter().lng, mapRef.current.getCenter().lat]);
-        routingRef.current.setDestination(sjcLatLong);
-    }
-
-    const setDestinationTo = async (riderID) => {
-        try {
-            const response = await fetch('http://localhost:3000/get-rider-location', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                  },
-                body: JSON.stringify({ riderID: riderID }),
-            });
-
-            const data = await response.json();
-            if (response.ok) {
-              pendingRides = data;
-              alert('Fetch successful!');
-              var riderDetails = data;
-              console.log(riderDetails);
-              document.getElementById('riders').innerHTML = '';
-              routingRef.current.setOrigin([currentLong, currentLat]);
-              routingRef.current.setDestination([riderDetails[0], riderDetails[1]]);
-            } else {
-              alert(data.message);
-            }
-
-        } catch (error) {
-            console.error('Fetch riders failed', error);
-          alert('Fetching riders failed. Please try again.');
-        }
-    }
-
-    const currentPos = () => {
-        // Checks if the browser and device has geolocation enabled 
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                updatePos
-            );
-        } else {
-            console.log("This browser does not support geolocation");
-        }
-    };
-
-    const updatePos = (position) => {
-        currentLat = position.coords.latitude;
-        currentLong = position.coords.longitude;
-
-        // Debug Line: 
-        // console.log("Current pos is " + currentLat + " and " + currentLong);
-
-        // Update map and marker to be on center to current location
-        mapRef.current.setCenter([currentLong, currentLat]);
-        markerRef.current.setLngLat([mapRef.current.getCenter().lng, mapRef.current.getCenter().lat]);
-    }
-
+    var currentLocation = [];
 
     useEffect(() => {
-        mapboxgl.accessToken = process.env.REACT_APP_MAPBOX_ACCESS_TOKEN;
-        mapRef.current = new mapboxgl.Map({
-            container: mapContainerRef.current, // Container
-            center: [-121.92857174599622, 37.36353799938156], // Starting pos from SJC
-            zoom: 14 // Starting zoom
-        });
-
-        markerRef.current = new mapboxgl.Marker()
-            .setLngLat([mapRef.current.getCenter().lng, mapRef.current.getCenter().lat])
-            .addTo(mapRef.current);
-
-            
-        routingRef.current = new MapBoxDirections({
-            accessToken: mapboxgl.accessToken,
-            unit:'imperial',
-            profile:'mapbox/driving-traffic',
-            interactive: false,
-            controls: {
-                instructions: false,
-    
+        const getLocation = () => {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const newLocation = [
+                            position.coords.longitude,
+                            position.coords.latitude
+                        ];
+                        currentLocation = newLocation;
+                        console.log("Location updated to:", newLocation); 
+                        setPickupLocation(newLocation);
+                        setLocation(newLocation);
+                    },
+                    (error) => {
+                        console.log(`Error in fetching location: ${error.message}`);
+                        alert(`Error in fetching location: ${error.message}`);
+                    }
+                );
+            } else {
+                console.log("Geolocation is not supported by this browser.");
+                alert("Geolocation is not supported by this browser.");
             }
-        });
+        };
 
-        mapRef.current.on("load", () => {
-            setMapLoaded(true);
-            console.log("map loaded");
-        });
-            
-        mapRef.current.addControl(routingRef.current);
-        
-        return () => {
-            mapRef.current.remove();
-        }
-    }, []);
+        getLocation();
+    }, []); // Empty dependency array to run only on mount
 
+
+    const handleShowDirections = () => {
+        setShowDirections(true);
+    };
 
     const fetchRiders = async () => {
         try {
@@ -138,18 +73,45 @@ export const Driver = () => {
                   `<li id="${pendingRides.length - 1}">
                     <button class="btn btn-dark btn-circle" id="rider_${i}">Rider ID: ${num}</button>
                   <li>`;
+                }
+
+                for (let i = 0; i < pendingRides.length; i++) {
+                    let num = pendingRides[i].replace(/\D/g, '');
+                    document.getElementById(`rider_${i}`).addEventListener("click", 
+                        function() {
+                            setDestinationTo(num);
+                            // sendDriverResponse(num);
+                        });    
+                }
+            } else {
+              alert(data.message);
             }
-
-            for (let i = 0; i < pendingRides.length; i++) {
-                let num = pendingRides[i].replace(/\D/g, '');
-                document.getElementById(`rider_${i}`).addEventListener("click", 
-                    function() {
-                        setDestinationTo(num);
-                        // acceptRide(num);
-                    });    
-            }
+        } catch (error) {
+            console.error('Fetch riders failed', error);
+          alert('Fetching riders failed. Please try again.');
+        }
+    }
 
 
+    const setDestinationTo = async (riderID) => {
+        try {
+            const response = await fetch('http://localhost:3000/get-rider-location', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                  },
+                body: JSON.stringify({ riderID: riderID }),
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+              pendingRides = data;
+              alert('Fetch successful!');
+              var riderDetails = data;
+              console.log(riderDetails);
+              document.getElementById('riders').innerHTML = '';
+              setDropoffLocation(riderDetails);
+              handleShowDirections();
             } else {
               alert(data.message);
             }
@@ -160,38 +122,23 @@ export const Driver = () => {
         }
     }
 
-    const acceptRide = async (riderID) => {
-        // event.preventDefault();
-        try {
-            const response = await fetch('http://localhost:3000/store-session', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                  },
-                body: JSON.stringify({ riderID: riderID, driverID: '100', fare: '0'}),
-            });
+    // const acceptRide = async (riderID) => {
+    //     // event.preventDefault();
+    //     try {
+    //         const response = await fetch(`http://localhost:3000/store-session?riderID=${riderID}&driverID=1&fare=0`);
 
-            const data = await response.json();
-            if (response.ok) {
-              pendingRides = data;
-              alert('Fetch successful!');
+    //         const data = await response.json();
+    //         if (response.ok) {
 
-            } else {
-              alert(data.message);
-            }
+    //         } else {
+    //           alert(data.message);
+    //         }
 
-        } catch (error) {
-            console.error('Accepting ride failed', error);
-          alert('Accepting ride failed. Please try again.');
-        }
-    }
-
-
-    const grabPosAndRiders = () => {
-        currentPos();
-        fetchRiders();
-    }
-
+    //     } catch (error) {
+    //         console.error('Accepting ride failed', error);
+    //       alert('Accepting ride failed. Please try again.');
+    //     }
+    // }
 
     return (
         <body>
@@ -216,13 +163,13 @@ export const Driver = () => {
                     <img src = '/default-profile.png'></img><br/>
                     {/* This is a placeholder, replace with JS elements that get name from DB */}
                     <span id='name-text'>John Doe</span><br/><br/>
-                    <button className='btn btn-primary btn-circle btn-lg' onClick={grabPosAndRiders}>Start Work</button>
+                    <button className='btn btn-primary btn-circle btn-lg' onClick={fetchRiders}>Start Work</button>
 
 
                     <div className='disclaimer-text'>Note: This will use your location</div><br/>
 
 
-                    <button className='btn btn-primary btn-circle btn-lg' onClick={getDirection}>Get path from current map center to SJC</button>
+                    {/* <button className='btn btn-primary btn-circle btn-lg' onClick={getDirection}>Get path from current map center to SJC</button> */}
 
 
                     {/* This is a placeholder, replace with JS elements that get license from DB */}
@@ -233,18 +180,15 @@ export const Driver = () => {
 
                 </div>      
                 <div className='right-column'>
-                    <Geocoder
-                        accessToken={mapboxgl.accessToken}
-                        map={mapRef.current}
-                        mapboxgl={mapboxgl}
-                        value={inputValue}
-                        onChange={(e) => {
-                            setInputValue(e);
-                        }}
+                    <Map 
+                    location={location}                 
+                    pickupLocation={pickupLocation}
+                    dropoffLocation={dropoffLocation} 
+                    showDirections={showDirections}
+                    setShowDirections={setShowDirections}
                     />
-
-                    <div className='map-container' ref={mapContainerRef}>
-                    </div>
+                    {/* <div className='map-container' ref={mapContainerRef}> */}
+                    {/* </div> */}
                 </div>   
 
             </div>
