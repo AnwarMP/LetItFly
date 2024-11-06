@@ -13,6 +13,7 @@ function App() {
   
         <div className="wrapper">
             <Router>
+                <AuthTest />    
                 <Routes>
                     <Route exact path="/" element={<Landing />} />
                     <Route path="/login" element={<Login />} />
