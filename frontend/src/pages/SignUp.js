@@ -43,7 +43,7 @@ function SignUp() {
         
         try {
           // Send a POST request to your backend's /register endpoint
-          const response = await fetch('http://localhost:3000/register', {
+          const response = await fetch('http://localhost:3000/auth/register', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
