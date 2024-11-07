@@ -50,39 +50,61 @@ export const RiderMain = () => {
     //Find driver, temporary hardcoded for demo purposes, subject to change
     const fetchDriverData = async () => {
         setLoading(true); // Set loading to true to show the loading animation
+        
+        awaitDriver();
 
         // Simulate a 3-second delay
-        setTimeout(async () => {
-            try {
-                const response = await fetch('http://localhost:3000/get-driver?driverID=1'); // Adjust the URL/port if necessary
-                if (!response.ok) {
-                    throw new Error('Failed to fetch driver data');
-                }
-                const data = await response.json();
-                setDriverData(data);
+        // setTimeout(async () => {
+        //     try {
+        //         const response = await fetch('http://localhost:3000/get-driver?driverID=1'); // Adjust the URL/port if necessary
+        //         if (!response.ok) {
+        //             throw new Error('Failed to fetch driver data');
+        //         }
+        //         const data = await response.json();
+        //         setDriverData(data);
 
-                // Update locations to render map of Driver going to Rider
-                if (data.longitude && data.latitude) {
-                    // Set the original pickup location as the dropoff location
-                    setDropoffLocation(pickupLocation); // Previous pickup location
+        //         // Update locations to render map of Driver going to Rider
+        //         if (data.longitude && data.latitude) {
+        //             // Set the original pickup location as the dropoff location
+        //             setDropoffLocation(pickupLocation); // Previous pickup location
 
-                    // Set driver's location as the new pickup location
-                    setPickupLocation([data.longitude, data.latitude]);
+        //             // Set driver's location as the new pickup location
+        //             setPickupLocation([data.longitude, data.latitude]);
 
-                    // Set show directions as true to rerender map
-                    handleShowDirections();
+        //             // Set show directions as true to rerender map
+        //             handleShowDirections();
 
-                    console.log("Updated new driver-rider map");
-                }
+        //             console.log("Updated new driver-rider map");
+        //         }
 
-                console.log('Driver Data:', data);
-            } catch (error) {
-                console.error('Error fetching driver data:', error);
-            } finally {
-                setLoading(false); // Hide loading animation after data is fetched
-            }
-        }, 3000);
+        //         console.log('Driver Data:', data);
+        //     } catch (error) {
+        //         console.error('Error fetching driver data:', error);
+        //     } finally {
+        //         setLoading(false); // Hide loading animation after data is fetched
+        //     }
+        // }, 3000);
     };
+
+    const awaitDriver = async () => {
+        try {
+            const response = await fetch('http://localhost:3000/await-driver?riderID=10');
+            const data = await response.json();
+            if (response.ok) {
+                console.log(data);
+                setPickupLocation(data);
+                setDropoffLocation(location);
+                handleShowDirections();
+            } else {
+            }
+        } catch (error) {
+            console.error('Await driver failed', error);
+        } finally {
+            setLoading(false);
+        }
+    }
+
+
 
     return (
     <div>    

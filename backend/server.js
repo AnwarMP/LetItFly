@@ -129,7 +129,7 @@ app.get('/store-driver-location', (req, res) => {
   const latitude = req.query.latitude;
 
   // Storing driver location in Redis
-  redisClient.sadd(`driver:${driverID}`, longitude, latitude, (err, response) => {
+  redisClient.sAdd(`driver:${driverID}`, longitude, latitude, (err, response) => {
     if (err) return res.status(500).send('Error storing location');
     res.send('Driver location stored in cache');
   });
@@ -140,7 +140,7 @@ app.get('/get-driver-location', (req, res) => {
   const driverID = req.query.driverID;
 
   // Retrieving driver location from Redis
-  redisClient.smembers(`driver:${driverID}`, (err, location) => {
+  redisClient.sMembers(`driver:${driverID}`, (err, location) => {
     if (err) return res.status(500).send('Error fetching location');
     res.send(location);
   });
@@ -174,24 +174,61 @@ app.get('/get-session', (req, res) => {
   });
 });
 
-//Temporary to get Driver, demo purposes
-app.get('/get-driver', async (req, res) => {
-  const driverID = req.query.driverID || '1'; // Default to driver:1 if no ID is provided
 
-  try {
-    const driverData = await redisClient.hGetAll('driver:1');
+app.get('/wake-rider', (req, res) => {
+  const riderID = req.query.riderID;
+  const driverID = req.query.driverID;
+  redisClient.sAdd(`ridePair:${riderID}`, driverID, (err, response) => {
+    if (err) return res.status(500).send('Error storing location');
 
-    if (!driverData) {
-      console.warn(`Driver data not found for driverID: ${driverID}`);
-      return res.status(404).json({ error: 'Driver not found' });
-    }
-
-    res.json(driverData);
-  } catch (err) {
-    console.error('Error fetching driver data from Redis:', err);
-    res.status(500).json({ error: 'Failed to fetch driver data' });
-  }
+    res.send('Wake good');
+  });
 });
+
+app.get('/await-driver', (req, res) => {
+  const riderID = req.query.riderID;
+  getDrive(riderID).then((driverID) => {
+    console.log(driverID);
+    redisClient.sMembers(`driver:${driverID}`, (err, location) => {
+      if (err) return res.status(500).send('Error fetching location');
+      console.log(location);
+      console.log(driverID);
+      res.send(location);
+    });
+  }).catch((err1) => {console.log(err1)});
+})
+
+
+function getDrive(riderID) {
+  return new Promise((resolve, rej) => {
+      redisClient.sMembers(`ridePair:${riderID}`, (err, response) => {
+        if (err) return null;
+        return resolve(response);
+      });
+  });
+
+
+
+}
+
+//Temporary to get Driver, demo purposes
+// app.get('/get-driver', async (req, res) => {
+//   const driverID = req.query.driverID || '1'; // Default to driver:1 if no ID is provided
+
+//   try {
+//     const driverData = await redisClient.hGetAll('driver:1');
+
+//     if (!driverData) {
+//       console.warn(`Driver data not found for driverID: ${driverID}`);
+//       return res.status(404).json({ error: 'Driver not found' });
+//     }
+
+//     res.json(driverData);
+//   } catch (err) {
+//     console.error('Error fetching driver data from Redis:', err);
+//     res.status(500).json({ error: 'Failed to fetch driver data' });
+//   }
+// });
 
 // Start the server
 app.listen(port, () => {
