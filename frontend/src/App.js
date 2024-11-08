@@ -5,7 +5,8 @@ import { Navbar } from "./Components/NavBar";
 import { PrivateRoute } from "./Components/PrivateRoute";
 import { Landing } from "./pages/Landing";
 import { Login } from "./pages/Login";
-import SignUp from "./pages/SignUp";
+import RiderSignUp from "./pages/RiderSignUp";
+import DriverSignUp from "./pages/DriverSignUp";
 import { Driver } from "./pages/Driver";
 import { RiderMain } from "./pages/RiderMain";
 
@@ -19,8 +20,9 @@ function App() {
                         {/* Public routes */}
                         <Route exact path="/" element={<Landing />} />
                         <Route path="/login" element={<Login />} />
-                        <Route path="/signup" element={<SignUp />} />
-                        
+                        <Route path="/driver-signup" element={<DriverSignUp />} />
+                        <Route path="/rider-signup" element={<RiderSignUp />} />
+
                         {/* Protected routes */}
                         <Route
                             path="/rider"
