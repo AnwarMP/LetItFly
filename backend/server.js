@@ -88,15 +88,20 @@ app.post('/login', async (req, res) => {
 
 
 app.post('/store-rider-location', (req, res) => {
-  const { riderID, longitude, latitude } = req.body;
+  const { rider_id, pickup_location, dropoff_location } = req.body;
   // Storing rider location and pending drivers in Redis
-  redisClient.sAdd(`rider:${riderID}`, longitude, latitude, (err, response) => {
+  const start_time = Date.now();
+  redisClient.hSet(`rider:${rider_id}`, {
+    pickup_location: pickup_location, 
+    dropoff_location: dropoff_location, 
+    start_time: start_time
+  }, (err, response) => {
     if (err) return res.status(500).send('Error creating rider');
     else res.send('Rider location stored in cache');
   });
   // pendingDrive is effectively our driver:<Did>:matches -> [rider:<Rid>, rider:<Rid>, rider:<Rid>,...]
   // for just one driver for now for our demo
-  redisClient.sAdd(`pendingDrive`, `rider:${riderID}`, (err, response) => {
+  redisClient.sAdd(`pendingDrive`, `rider:${rider_id}`, (err, response) => {
     if (err) return res.status(500).send('Error storing rider in waiting list');
   }) 
   
@@ -112,24 +117,29 @@ app.get('/driver/rides', (req, res) => {
 })
 
 // Redis route to retrieve rider location
-app.post('/get-rider-location', (req, res) => {
-  const { riderID } = req.body;
+app.get('/get-rider-location', (req, res) => {
+  const rider_id = req.query.rider_id;
 
-  // Retrieving rider location from Redis
-  redisClient.sMembers(`rider:${riderID}`, (err, location) => {
+  // Retrieving rider location from Redis, set to hGetAll for now but can choose a location
+  redisClient.hGetAll(`rider:${rider_id}`, (err, location) => {
     if (err) return res.status(500).send('Error fetching location');
     res.send(location);
   });
 });
 
+
 // Redis route to store driver location
-app.get('/store-driver-location', (req, res) => {
-  const driverID = req.query.driverID;
-  const longitude = req.query.longitude;
-  const latitude = req.query.latitude;
+app.post('/store-driver-location', (req, res) => {
+  const { driver_id, current_location, name, car, license_plate } = req.body;
 
   // Storing driver location in Redis
-  redisClient.sAdd(`driver:${driverID}`, longitude, latitude, (err, response) => {
+  redisClient.hSet(`driver:${driverID}`, {
+    driver_id: driver_id, 
+    location: current_location, 
+    name: name,
+    car: car, 
+    license_plate: license_plate,
+  }, (err, response) => {
     if (err) return res.status(500).send('Error storing location');
     res.send('Driver location stored in cache');
   });
@@ -140,23 +150,28 @@ app.get('/get-driver-location', (req, res) => {
   const driverID = req.query.driverID;
 
   // Retrieving driver location from Redis
-  redisClient.sMembers(`driver:${driverID}`, (err, location) => {
+  redisClient.hGet(`driver:${driverID}`, current_location, (err, location) => {
     if (err) return res.status(500).send('Error fetching location');
     res.send(location);
   });
 });
 
 // Redis route to store session data
-app.get('/store-session', (req, res) => {
-  const riderID = req.query.riderID;
-  const driverID = req.query.driverID;
-  const fare = req.query.fare;
+app.post('/store-session', (req, res) => {
+  const { rider_id, driver_id, pickup_location, dropoff_location, 
+      confirm_pickup, confirm_dropoff, session_start_time, end_time, fare } = req.body;
 
   // Storing session data in Redis
-  redisClient.hmset(`session:${riderID}:${driverID}`, {
-    fare: fare,
+  redisClient.hSet(`session:${rider_id}:${driver_id}`, {
+    pickup_location: pickup_location,
+    dropoff_location: dropoff_location,
+    confirm_pickup: confirm_pickup,
+    confirm_dropoff: confirm_dropoff,
+    status: 'in-progress',
+    session_start_time: session_start_time,
     start_time: Date.now(),
-    status: 'in-progress'
+    end_time: end_time,
+    fare: fare,
   }, (err, response) => {
     if (err) return res.status(500).send('Error storing session');
     res.send('Session stored in cache');
@@ -165,10 +180,10 @@ app.get('/store-session', (req, res) => {
 
 // Redis route to retrieve session data
 app.get('/get-session', (req, res) => {
-  const riderID = req.query.riderID;
-  const driverID = req.query.driverID;
+  const rider_id = req.query.rider_id;
+  const driver_id = req.query.driver_id;
   // Retrieving session data from Redis
-  redisClient.hgetall(`session:${riderID}:${driverID}`, (err, session) => {
+  redisClient.hGetAll(`session:${rider_id}:${driver_id}`, (err, session) => {
     if (err) return res.status(500).send('Error fetching session');
     res.send(session);
   });
@@ -206,9 +221,6 @@ function getDrive(riderID) {
         return resolve(response);
       });
   });
-
-
-
 }
 
 //Temporary to get Driver, demo purposes
