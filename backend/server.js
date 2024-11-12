@@ -91,11 +91,11 @@ app.post('/store-rider-location', (req, res) => {
   const { rider_id, pickup_location, dropoff_location } = req.body;
   // Storing rider location and pending drivers in Redis
   const start_time = Date.now();
-  redisClient.hSet(`rider:${rider_id}`, {
-    pickup_location: pickup_location, 
-    dropoff_location: dropoff_location, 
-    start_time: start_time
-  }, (err, response) => {
+  redisClient.hSet(`rider:${rider_id}`,
+    "pickup_location", pickup_location, 
+    "dropoff_location", dropoff_location, 
+    "start_time", start_time, 
+  (err, response) => {
     if (err) return res.status(500).send('Error creating rider');
     else res.send('Rider location stored in cache');
   });
@@ -107,6 +107,16 @@ app.post('/store-rider-location', (req, res) => {
   
 });
 
+// Redis route to retrieve rider location
+app.get('/get-rider-location', (req, res) => {
+  const rider_id = req.query.rider_id;
+  
+  // Retrieving rider location from Redis, set to hGetAll for now but can choose a location
+  redisClient.hGetAll(`rider:${rider_id}`, (err, location) => {
+    if (err) return res.status(500).send('Error fetching location');
+    res.send(location);
+  });
+});
 
 // Fetch list of pending drivers
 app.get('/driver/rides', (req, res) => {
@@ -116,30 +126,18 @@ app.get('/driver/rides', (req, res) => {
   });
 })
 
-// Redis route to retrieve rider location
-app.get('/get-rider-location', (req, res) => {
-  const rider_id = req.query.rider_id;
-
-  // Retrieving rider location from Redis, set to hGetAll for now but can choose a location
-  redisClient.hGetAll(`rider:${rider_id}`, (err, location) => {
-    if (err) return res.status(500).send('Error fetching location');
-    res.send(location);
-  });
-});
-
-
 // Redis route to store driver location
 app.post('/store-driver-location', (req, res) => {
   const { driver_id, current_location, name, car, license_plate } = req.body;
 
   // Storing driver location in Redis
-  redisClient.hSet(`driver:${driverID}`, {
-    driver_id: driver_id, 
-    location: current_location, 
-    name: name,
-    car: car, 
-    license_plate: license_plate,
-  }, (err, response) => {
+  redisClient.hSet(`driver:${driverID}`,
+    "driver_id", driver_id, 
+    "location", current_location, 
+    "name", name,
+    "car", car, 
+    "license_plate", license_plate,
+  (err, response) => {
     if (err) return res.status(500).send('Error storing location');
     res.send('Driver location stored in cache');
   });
@@ -162,17 +160,17 @@ app.post('/store-session', (req, res) => {
       confirm_pickup, confirm_dropoff, session_start_time, end_time, fare } = req.body;
 
   // Storing session data in Redis
-  redisClient.hSet(`session:${rider_id}:${driver_id}`, {
-    pickup_location: pickup_location,
-    dropoff_location: dropoff_location,
-    confirm_pickup: confirm_pickup,
-    confirm_dropoff: confirm_dropoff,
-    status: 'in-progress',
-    session_start_time: session_start_time,
-    start_time: Date.now(),
-    end_time: end_time,
-    fare: fare,
-  }, (err, response) => {
+  redisClient.hSet(`session:${rider_id}:${driver_id}`,
+    "pickup_location", pickup_location,
+    "dropoff_location", dropoff_location,
+    "confirm_pickup", confirm_pickup,
+    "confirm_dropoff", confirm_dropoff,
+    "status", 'in-progress',
+    "session_start_time", session_start_time,
+    "start_time", Date.now(),
+    "end_time", end_time,
+    "fare", fare,
+  (err, response) => {
     if (err) return res.status(500).send('Error storing session');
     res.send('Session stored in cache');
   });
