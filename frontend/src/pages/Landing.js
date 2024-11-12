@@ -1,26 +1,26 @@
-
+import React, { useState } from 'react';
 import './App.css';
-
-import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 export const Landing = () => {
+  const [showSignUpOptions, setShowSignUpOptions] = useState(false);
+  const navigate = useNavigate();
+
+  const handleSignUpClick = () => {
+    setShowSignUpOptions(true);
+  };
+
+  const handleOptionClick = (role) => {
+    setShowSignUpOptions(false);
+    navigate(`/signup/${role}`);
+};
+
+  const handleClose = () => {
+    setShowSignUpOptions(false);
+  };
+
   return (
-    <body>
-      <div className="custom-nav">
-        <div className="left-section">
-          <div className="logo">Let It Fly</div>
-            <ul>
-              <li><a href="#">Ride</a></li>
-              <li><a href="#">Drive</a></li>
-              <li><a href="#">About</a></li>
-            </ul>
-        </div>
-        <ul>
-          <li><Link to="/login" className='nav-button'>Log in</Link></li>
-          <li><Link to="/signup" className='nav-button'>Sign up</Link></li>
-        </ul>
-      </div>
+    <div>
       <div className="introduction">
         <div className="text">
           <div className="slogan">Fast. </div>
@@ -53,7 +53,15 @@ export const Landing = () => {
           <div className="small-text">Free of charge</div>
         </div>
       </div>
-    </body>
+
+      {showSignUpOptions && (
+        <div className="signup-options-slide">
+          <button className="close-button" onClick={handleClose}>×</button>
+          <p className="role-option" onClick={() => handleOptionClick('rider')}>Sign Up as Rider</p>
+          <p className="role-option" onClick={() => handleOptionClick('driver')}>Sign Up as Driver</p>
+        </div>
+      )}
+    </div>
   );
 }
 

@@ -1,29 +1,50 @@
-import { useState } from 'react';
-import ReactDOM from 'react-dom/client';
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { Provider } from 'react-redux';
+import { store } from "./store";
+import { Navbar } from "./Components/NavBar";
+import { PrivateRoute } from "./Components/PrivateRoute";
 import { Landing } from "./pages/Landing";
 import { Login } from "./pages/Login";
-import SignUp from "./pages/SignUp";
+import RiderSignUp from "./pages/RiderSignUp";
+import DriverSignUp from "./pages/DriverSignUp";
 import { Driver } from "./pages/Driver";
-import { RiderMain } from "./pages/RiderMain.js";
+import { RiderMain } from "./pages/RiderMain";
 
 function App() {
+    return (
+        <Provider store={store}>
+            <div className="wrapper">
+                <Router>
+                    <Navbar />
+                    <Routes>
+                        {/* Public routes */}
+                        <Route exact path="/" element={<Landing />} />
+                        <Route path="/login" element={<Login />} />
+                        <Route path="/driver-signup" element={<DriverSignUp />} />
+                        <Route path="/rider-signup" element={<RiderSignUp />} />
 
-  return (
-  
-        <div className="wrapper">
-            <Router>
-                <Routes>
-                    <Route exact path="/" element={<Landing />} />
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/rider" element={<RiderMain />} />
-                    <Route path="/signup" element={<SignUp />} />
-                    <Route path="/driver" element={<Driver />} />
-                </Routes>
-            </Router>
-        </div>
-
-  );
+                        {/* Protected routes */}
+                        <Route
+                            path="/rider"
+                            element={
+                                <PrivateRoute roles={['rider']}>
+                                    <RiderMain />
+                                </PrivateRoute>
+                            }
+                        />
+                        <Route
+                            path="/driver"
+                            element={
+                                <PrivateRoute roles={['driver']}>
+                                    <Driver />
+                                </PrivateRoute>
+                            }
+                        />
+                    </Routes>
+                </Router>
+            </div>
+        </Provider>
+    );
 }
 
 export default App;
