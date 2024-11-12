@@ -1,10 +1,7 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 import './Driver.css';
 import Map from '../Components/map';
-import { useRef, useEffect, useState } from 'react';
-import mapboxgl from 'mapbox-gl';
-import { Geocoder } from '@mapbox/search-js-react';
+import { useEffect, useState } from 'react';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
 
@@ -15,10 +12,10 @@ export const Driver = () => {
     const [pickupLocation, setPickupLocation] = useState('');
     const [dropoffLocation, setDropoffLocation] = useState('');
     const [showDirections, setShowDirections] = useState(false);
-    const [loading, setLoading] = useState(false);
-    const [driverData, setDriverData] = useState(null);
-    var pendingRides = [];
+    let pendingRides = [];
     var currentPos = [];
+    let rider_confirm = false;
+    let intID;
 
     useEffect(() => {
         const getLocation = () => {
@@ -68,9 +65,21 @@ export const Driver = () => {
 
     }
 
+    const loopFetch = async () => {
+        intID = setInterval(async () => {
+            fetchRiders();  
+        }, 1000);
+        // while (rider_confirm === false) {
+        //     console.log('waut');    
+        // }
+    }
+
+
     // Fetches riders currently waiting
     const fetchRiders = async () => {
         try {
+            // Keep trying to fetch available riders every second until the driver confirms a rider they want
+            console.log("try to fetch riders");
             const response = await fetch('http://localhost:3000/driver/rides');
 
             const data = await response.json();
@@ -94,21 +103,35 @@ export const Driver = () => {
                             setDestinationTo(num);
                             storeDriverLocation();
                             sendDriverResponse(num);
+                            clearInterval(intID);
                         });
                 }
             } else {
                 console.log(data.message);
             }
-        } catch (error) {
+    } catch (error) {
             console.error('Fetch riders failed', error);
             alert('Fetching riders failed. Please try again.');
         }
     }
 
     const storeDriverLocation = async () => {
+        
         try {
             getCurrentPos();
-            const response = await fetch(`http://localhost:3000/store-driver-location?driverID=1&longitude=${currentPos[0]}&latitude=${currentPos[1]}`);
+            const driver_data = {
+                driver_id: 1,                                       // Hard-coded driver_id for now, fetch from db later
+                current_location: [currentPos[0], currentPos[1]],
+                name: 'John Doe',                                   // Hard-coded name for now, fetch from db later
+                car: '2006 Toyota Hilux',                           // Hard-coded car for now, fetch from db later
+                license_plate: '1abc234'                            // Hard-coded licence plate for now, fetch from db later
+            };
+            const response = await fetch('http://localhost:3000/store-driver-location', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(driver_data),
+              }
+            );
             if (response.ok) {
                 console.log('Stored driver location success');
             }
@@ -119,7 +142,7 @@ export const Driver = () => {
 
     const sendDriverResponse = async (riderID) => {
         try {
-            const response = await fetch(`http://localhost:3000/wake-rider?riderID=${riderID}&driverID=1`);
+            const response = await fetch(`http://localhost:3000/wake-rider?rider_id=${riderID}&driver_id=1`);
             // const data = await response2.json();
             if (response.ok) {
                 console.log('Wake works');
@@ -131,7 +154,7 @@ export const Driver = () => {
 
     const grabPosAndRiders = () => {
         getCurrentPos();
-        fetchRiders();
+        loopFetch();
     }
 
 
@@ -139,13 +162,7 @@ export const Driver = () => {
     // On button select, set destination on map
     const setDestinationTo = async (riderID) => {
         try {
-            const response = await fetch('http://localhost:3000/get-rider-location', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ riderID: riderID }),
-            });
+            const response = await fetch(`http://localhost:3000/get-rider-location?rider_id=${riderID}`);
 
             const data = await response.json();
             if (response.ok) {
@@ -156,6 +173,7 @@ export const Driver = () => {
                 document.getElementById('riders').innerHTML = '';
                 setDropoffLocation(riderDetails);
                 handleShowDirections();
+                rider_confirm = true;
             } else {
                 alert(data.message);
             }
@@ -190,7 +208,7 @@ export const Driver = () => {
             <div className='box-container'>
                 <div className='left-column text-center'>
                     <br/><br/><br/><br/><br/><br/><br/>
-                    <img src='/default-profile.png'></img><br/>
+                    <img src='/default-profile.png' alt='profile-picture'></img><br/>
                     {/* This is a placeholder, replace with JS elements that get name from DB */}
                     <span id='name-text'>John Doe</span><br/><br/>
                     <button className='btn btn-primary btn-circle btn-lg' onClick={grabPosAndRiders}>Start Work</button>

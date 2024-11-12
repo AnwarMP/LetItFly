@@ -134,7 +134,7 @@ app.get('/get-session', (req, res) => {
 app.get('/wake-rider', (req, res) => {
   const riderID = req.query.riderID;
   const driverID = req.query.driverID;
-  redisClient.sAdd(`ridePair:${riderID}`, driverID, (err, response) => {
+  redisClient.hSet(`ridePair:${riderID}`, driverID, (err, response) => {
     if (err) return res.status(500).send('Error storing location');
 
     res.send('Wake good');
@@ -145,7 +145,7 @@ app.get('/await-driver', (req, res) => {
   const riderID = req.query.riderID;
   getDrive(riderID).then((driverID) => {
     console.log(driverID);
-    redisClient.sMembers(`driver:${driverID}`, (err, location) => {
+    redisClient.hGetAll(`driver:${driverID}`, (err, location) => {
       if (err) return res.status(500).send('Error fetching location');
       console.log(location);
       console.log(driverID);
