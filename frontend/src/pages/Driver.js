@@ -2,22 +2,28 @@ import React from 'react';
 import './Driver.css';
 import Map from '../Components/map';
 import { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { jwtDecode } from 'jwt-decode';
 
 
 const defaultLocation = [-121.92857174599622, 37.36353799938156];
 
+
 export const Driver = () => {
+    const { isAuthenticated, user, role } = useSelector(state => state.auth);
     const [location, setLocation] = useState(defaultLocation);
     const [pickupLocation, setPickupLocation] = useState('');
     const [dropoffLocation, setDropoffLocation] = useState('');
     const [showDirections, setShowDirections] = useState(false);
     const token = localStorage.getItem('token');
+    const [riderData, setRiderData] = useState(null);
+
     let driver_id;
     let pendingRides = [];
     var currentPos = [];
     let intervalID;
+    // For grabbing rider chosen details
     let rider_pickup_location;
     let rider_dropoff_location;
     let rider_start;
@@ -138,6 +144,7 @@ export const Driver = () => {
             const data = await response.json();
             if (response.ok) {
                 pendingRides = data;
+                setRiderData(data);
                 document.getElementById('riders').innerHTML = '';
                 setDropoffLocation(pendingRides.pickup_location);
                 handleShowDirections();
@@ -158,12 +165,15 @@ export const Driver = () => {
             getCurrentPos();
 
             const driver_data = {
-                driver_id: driver_id,                                       // Hard-coded driver_id for now, fetch from db later
+                driver_id: driver_id,
                 current_location: `[${currentPos[0]}, ${currentPos[1]}]`,
-                name: 'John Doe',                                   // Hard-coded name for now, fetch from db later
-                car: '2006 Toyota Hilux',                           // Hard-coded car for now, fetch from db later
-                license_plate: '1abc234'                            // Hard-coded licence plate for now, fetch from db later
+                name: `${user?.first_name} ${user?.last_name}`,
+                car: `2022 Toyota Camry`,                                   // Hard-coded car for now, fetch from db later
+                license_plate: `1abc234`                                    // Hard-coded licence plate for now, fetch from db later
             };
+
+            console.log("car " + user?.car_model);
+
             const response = await fetch('http://localhost:3000/store-driver-location', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -191,14 +201,8 @@ export const Driver = () => {
     }
 
     const acceptRide = async (rider_id) => {
-        // event.preventDefault();
+        // Waits for GET to fetch locations and time before creating session
         const riderResponse = await grabRiderDetails(rider_id);
-        console.log("driver_id" + driver_id);
-        console.log("rider_id" + rider_id);
-        console.log("rider_pickup_location" + rider_pickup_location);
-        console.log("rider_dropoff_location" + rider_dropoff_location);
-        console.log("start_time" + rider_start);
-        
 
         const sessionDetails = {
             rider_id: rider_id,
@@ -208,8 +212,8 @@ export const Driver = () => {
             confirm_pickup: 'false',
             confirm_dropoff: 'false',
             start_time: rider_start,
-            end_time: 0,
-            fare: 0
+            end_time: 0,                    // 0 for now, need to implement time and fare
+            fare: 0                         // 0 for now, need to implement time and fare
         }
         
         try {
@@ -259,23 +263,35 @@ export const Driver = () => {
 
             <div className='box-container'>
                 <div className='left-column text-center'>
-                    <br/><br/><br/><br/><br/><br/><br/>
-                    <img src='/default-profile.png' alt='profile-picture'></img><br/>
-                    {/* This is a placeholder, replace with JS elements that get name from DB */}
-                    <span id='name-text'>John Doe</span><br/><br/>
-                    <button className='btn btn-primary btn-circle btn-lg' onClick={grabPosAndRiders}>Start Work</button>
-
-
-                    <div className='disclaimer-text'>Note: This will use your location</div><br/>
-
-
-                    {/* <button className='btn btn-primary btn-circle btn-lg' onClick={getDirection}>Get path from current map center to SJC</button> */}
-
-
-                    {/* This is a placeholder, replace with JS elements that get license from DB */}
-                    <h6>License Plate: 0tst000</h6>
-
-                    <ul id='riders'></ul>
+                    {riderData ? (
+                        <div className="rider-info">
+                            <h3>Rider for Pickup</h3>
+                            <p><strong>Rider's ID:</strong> {riderData.rider_id}</p>
+                            <p><strong>Pickup Location:</strong> {riderData.pickup_location}</p>
+                            <p><strong>Dropoff Location:</strong> {riderData.dropoff_location}</p>
+                        </div>
+                    )
+                    : (
+                        <div className='default-container'>
+                            <br/><br/><br/><br/><br/>
+                            <img src='/default-profile.png' alt='profile-picture'></img><br/>
+                            {/* This is a placeholder, replace with JS elements that get name from DB */}
+                            <span id='name-text'>{user?.first_name} {user?.last_name}</span><br/><br/>
+                            <button className='btn btn-primary btn-circle btn-lg' onClick={grabPosAndRiders}>Start Work</button>
+        
+        
+                            <div className='disclaimer-text'>Note: This will use your location</div><br/>
+        
+        
+                            {/* <button className='btn btn-primary btn-circle btn-lg' onClick={getDirection}>Get path from current map center to SJC</button> */}
+        
+        
+                            {/* This is a placeholder, replace with JS elements that get license from DB */}
+                            <h6>License Plate: 0tst000</h6>
+        
+                            <ul id='riders'></ul>
+                        </div>
+                    )}
 
 
                 </div>

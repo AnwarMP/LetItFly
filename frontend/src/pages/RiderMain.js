@@ -71,50 +71,15 @@ export const RiderMain = () => {
             const response = await fetch('http://localhost:3000/store-rider-location', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                // Hardcoded rider_id for now, locations use fields in menu
                 body: JSON.stringify({rider_id: rider_id, pickup_location: pickupLocation, dropoff_location: dropoffLocation}),
               }
             );
             if (response.ok)
               console.log("Stored success");
-            // const data = await response.json();
         } catch (error) {
             console.error('Store rider location information failed', error);
         }
         intervalID = setInterval(async () => {awaitDriver();}, 1000);
-
-
-        // Simulate a 3-second delay
-        // setTimeout(async () => {
-            // try {
-            //     const response = await fetch('http://localhost:3000/get-driver?driverID=1'); // Adjust the URL/port if necessary
-            //     if (!response.ok) {
-            //         throw new Error('Failed to fetch driver data');
-            //     }
-            //     const data = await response.json();
-            //     setDriverData(data);
-
-            //     // Update locations to render map of Driver going to Rider
-            //     if (data.longitude && data.latitude) {
-            //         // Set the original pickup location as the dropoff location
-            //         setDropoffLocation(pickupLocation); // Previous pickup location
-
-            //         // Set driver's location as the new pickup location
-            //         setPickupLocation([data.longitude, data.latitude]);
-
-            //         // Set show directions as true to rerender map
-            //         handleShowDirections();
-
-            //         console.log("Updated new driver-rider map");
-            //     }
-
-            //     console.log('Driver Data:', data);
-            // } catch (error) {
-            //     console.error('Error fetching driver data:', error);
-            // } finally {
-            //     setLoading(false); // Hide loading animation after data is fetched
-            // }
-        // }, 3000);
     };
 
     const awaitDriver = async () => {
@@ -126,6 +91,7 @@ export const RiderMain = () => {
                 if (!(Object.keys(data).length === 0)) {
                     clearInterval(intervalID);
                     fetchDriver(data.driver_id);
+                    const wait = await showDriverDetails(data.driver_id);
                     setLoading(false);
                 }
             } else {
@@ -150,6 +116,36 @@ export const RiderMain = () => {
         }
     }
 
+
+    const showDriverDetails = async (driver_id) => {
+        try {
+            const response = await fetch(`http://localhost:3000/get-driver?driverID=${driver_id}`); // Adjust the URL/port if necessary
+            if (!response.ok) {
+                throw new Error('Failed to fetch driver data');
+            }
+            const data = await response.json();
+            setDriverData(data);
+
+            // // Update locations to render map of Driver going to Rider
+            // if (data.longitude && data.latitude) {
+            //     // Set the original pickup location as the dropoff location
+            //     setDropoffLocation(pickupLocation); // Previous pickup location
+
+            //     // Set driver's location as the new pickup location
+            //     setPickupLocation([data.longitude, data.latitude]);
+
+            //     // Set show directions as true to rerender map
+            //     handleShowDirections();
+
+            //     console.log("Updated new driver-rider map");
+            // }
+
+            console.log('Driver Data:', data);
+        } catch (error) {
+            console.error('Error fetching driver data:', error);
+        }
+}
+
     return (
     <div>    
 
@@ -168,7 +164,7 @@ export const RiderMain = () => {
                         <h3>Your Driver</h3>
                         <p><strong>Name:</strong> {driverData.name}</p>
                         <p><strong>Car:</strong> {driverData.car}</p>
-                        <p><strong>License Plate:</strong> {driverData.plate}</p>
+                        <p><strong>License Plate:</strong> {driverData.license_plate}</p>
                         <h5>{driverData.name} is on their way!</h5>
                     </div>
                 ) 
