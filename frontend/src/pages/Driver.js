@@ -14,8 +14,8 @@ export const Driver = () => {
     const [showDirections, setShowDirections] = useState(false);
     let pendingRides = [];
     var currentPos = [];
-    let rider_confirm = false;
-    let intID;
+    // let rider_confirm = false;
+    let intervalID;
 
     useEffect(() => {
         const getLocation = () => {
@@ -66,9 +66,7 @@ export const Driver = () => {
     }
 
     const loopFetch = async () => {
-        intID = setInterval(async () => {
-            fetchRiders();  
-        }, 1000);
+        intervalID = setInterval(async () => {fetchRiders();}, 1000);
         // while (rider_confirm === false) {
         //     console.log('waut');    
         // }
@@ -103,7 +101,7 @@ export const Driver = () => {
                             setDestinationTo(num);
                             storeDriverLocation();
                             sendDriverResponse(num);
-                            clearInterval(intID);
+                            clearInterval(intervalID);
                         });
                 }
             } else {
@@ -119,17 +117,24 @@ export const Driver = () => {
         
         try {
             getCurrentPos();
-            const driver_data = {
-                driver_id: 1,                                       // Hard-coded driver_id for now, fetch from db later
-                current_location: [currentPos[0], currentPos[1]],
-                name: 'John Doe',                                   // Hard-coded name for now, fetch from db later
-                car: '2006 Toyota Hilux',                           // Hard-coded car for now, fetch from db later
-                license_plate: '1abc234'                            // Hard-coded licence plate for now, fetch from db later
-            };
+
+            // const driver_data = {
+            //     driver_id: 1,                                       // Hard-coded driver_id for now, fetch from db later
+            //     current_location: [currentPos[0], currentPos[1]],
+            //     name: 'John Doe',                                   // Hard-coded name for now, fetch from db later
+            //     car: '2006 Toyota Hilux',                           // Hard-coded car for now, fetch from db later
+            //     license_plate: '1abc234'                            // Hard-coded licence plate for now, fetch from db later
+            // };
             const response = await fetch('http://localhost:3000/store-driver-location', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(driver_data),
+                body: JSON.stringify({
+                    driver_id: 1,                                       // Hard-coded driver_id for now, fetch from db later
+                    current_location: `[${currentPos[0]}, ${currentPos[1]}]`,
+                    name: 'John Doe',                                   // Hard-coded name for now, fetch from db later
+                    car: '2006 Toyota Hilux',                           // Hard-coded car for now, fetch from db later
+                    license_plate: '1abc234'                            // Hard-coded licence plate for now, fetch from db later
+                }),
               }
             );
             if (response.ok) {
@@ -167,13 +172,10 @@ export const Driver = () => {
             const data = await response.json();
             if (response.ok) {
                 pendingRides = data;
-                alert('Fetch successful!');
-                var riderDetails = data;
-                console.log(riderDetails);
                 document.getElementById('riders').innerHTML = '';
-                setDropoffLocation(riderDetails);
+                setDropoffLocation(pendingRides.pickup_location);
                 handleShowDirections();
-                rider_confirm = true;
+                // rider_confirm = true;
             } else {
                 alert(data.message);
             }

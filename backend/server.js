@@ -74,9 +74,9 @@ app.post('/store-driver-location', (req, res) => {
   const { driver_id, current_location, name, car, license_plate } = req.body;
 
   // Storing driver location in Redis
-  redisClient.hSet(`driver:${driverID}`,
+  redisClient.hSet(`driver:${driver_id}`,
     "driver_id", driver_id, 
-    "location", current_location, 
+    "current_location", current_location, 
     "name", name,
     "car", car, 
     "license_plate", license_plate,
@@ -88,10 +88,10 @@ app.post('/store-driver-location', (req, res) => {
 
 // Redis route to retrieve driver location
 app.get('/get-driver-location', (req, res) => {
-  const driverID = req.query.driverID;
+  const driver_id = req.query.driver_id;
 
   // Retrieving driver location from Redis
-  redisClient.hGet(`driver:${driverID}`, current_location, (err, location) => {
+  redisClient.hGet(`driver:${driver_id}`, "current_location", (err, location) => {
     if (err) return res.status(500).send('Error fetching location');
     res.send(location);
   });
@@ -132,56 +132,45 @@ app.get('/get-session', (req, res) => {
 
 
 app.get('/wake-rider', (req, res) => {
-  const riderID = req.query.riderID;
-  const driverID = req.query.driverID;
-  redisClient.hSet(`ridePair:${riderID}`, driverID, (err, response) => {
-    if (err) return res.status(500).send('Error storing location');
-
+  const rider_id = req.query.rider_id;
+  const driver_id = req.query.driver_id;
+  redisClient.hSet(`ridePair:${rider_id}`, "driver_id", driver_id, (err, response) => {
+    if (err) return res.status(500).send('Error storing rider-driver pair');
     res.send('Wake good');
   });
+
 });
 
 app.get('/await-driver', (req, res) => {
-  const riderID = req.query.riderID;
-  getDrive(riderID).then((driverID) => {
-    console.log(driverID);
-    redisClient.hGetAll(`driver:${driverID}`, (err, location) => {
-      if (err) return res.status(500).send('Error fetching location');
-      console.log(location);
-      console.log(driverID);
+  const rider_id = req.query.rider_id;
+    redisClient.hGetAll(`ridePair:${rider_id}`, (err, location) => {
+      if (err) return res.status(500).send('Error fetching rider-driver pair');
       res.send(location);
     });
-  }).catch((err1) => {console.log(err1)});
+
+    // redisClient.del(`ridePair:${rider_id}` (err, response) => {
+    //   if (err) return res.status(500).send("Error deleting pair");
+    // })
 })
 
-
-function getDrive(riderID) {
-  return new Promise((resolve, rej) => {
-      redisClient.sMembers(`ridePair:${riderID}`, (err, response) => {
-        if (err) return null;
-        return resolve(response);
-      });
-  });
-}
-
 //Temporary to get Driver, demo purposes
-// app.get('/get-driver', async (req, res) => {
-//   const driverID = req.query.driverID || '1'; // Default to driver:1 if no ID is provided
+app.get('/get-driver', async (req, res) => {
+  const driverID = req.query.driverID || '1'; // Default to driver:1 if no ID is provided
 
-//   try {
-//     const driverData = await redisClient.hGetAll('driver:1');
+  try {
+    const driverData = await redisClient.hGetAll('driver:1');
 
-//     if (!driverData) {
-//       console.warn(`Driver data not found for driverID: ${driverID}`);
-//       return res.status(404).json({ error: 'Driver not found' });
-//     }
+    if (!driverData) {
+      console.warn(`Driver data not found for driverID: ${driverID}`);
+      return res.status(404).json({ error: 'Driver not found' });
+    }
 
-//     res.json(driverData);
-//   } catch (err) {
-//     console.error('Error fetching driver data from Redis:', err);
-//     res.status(500).json({ error: 'Failed to fetch driver data' });
-//   }
-// });
+    res.json(driverData);
+  } catch (err) {
+    console.error('Error fetching driver data from Redis:', err);
+    res.status(500).json({ error: 'Failed to fetch driver data' });
+  }
+});
 
 // Start the server
 app.listen(port, () => {
