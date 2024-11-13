@@ -14,8 +14,18 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 // Enable CORS to allow requests from your frontend (http://localhost:3001)
+const allowedOrigins = ['http://localhost:3001', 'http://localhost:3002'];
+
 app.use(cors({
-  origin: 'http://localhost:3001'  // Replace with your frontend URL
+  origin: function (origin, callback) {
+    // Allow requests with no origin, like mobile apps or curl requests
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  }
 }));
 
 // Middleware to parse JSON data
