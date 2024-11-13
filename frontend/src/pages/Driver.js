@@ -100,7 +100,7 @@ export const Driver = () => {
         try {
             // Keep trying to fetch available riders every second until the driver confirms a rider they want
             console.log("try to fetch riders");
-            const response = await fetch('http://localhost:3000/driver/rides');
+            const response = await fetch('http://localhost:3000/driver-pending-rides');
 
             const data = await response.json();
             if (response.ok) {
@@ -120,6 +120,7 @@ export const Driver = () => {
                     let num = pendingRides[i].replace(/\D/g, '');
                     document.getElementById(`rider_${i}`).addEventListener("click",
                         function () {
+                            deleteRiderEntry(num);
                             setDestinationTo(num);
                             storeDriverLocation();
                             sendDriverResponse(num);
@@ -133,6 +134,18 @@ export const Driver = () => {
     } catch (error) {
             console.error('Fetch riders failed', error);
             alert('Fetching riders failed. Please try again.');
+        }
+    }
+
+    const deleteRiderEntry = async (rider_id) => {
+        try {
+            const response = await fetch(`http://localhost:3000/delete-waiting-ride?rider_id=${rider_id}`);
+            const data = await response.json();
+            if (response.ok) {
+                console.log("Delete pending rider entry success");
+            }
+        } catch (error) {
+            console.error("Could not delete pending rider entry", error);
         }
     }
 
@@ -275,16 +288,9 @@ export const Driver = () => {
                         <div className='default-container'>
                             <br/><br/><br/><br/><br/>
                             <img src='/default-profile.png' alt='profile-picture'></img><br/>
-                            {/* This is a placeholder, replace with JS elements that get name from DB */}
                             <span id='name-text'>{user?.first_name} {user?.last_name}</span><br/><br/>
                             <button className='btn btn-primary btn-circle btn-lg' onClick={grabPosAndRiders}>Start Work</button>
-        
-        
                             <div className='disclaimer-text'>Note: This will use your location</div><br/>
-        
-        
-                            {/* <button className='btn btn-primary btn-circle btn-lg' onClick={getDirection}>Get path from current map center to SJC</button> */}
-        
         
                             {/* This is a placeholder, replace with JS elements that get license from DB */}
                             <h6>License Plate: 0tst000</h6>

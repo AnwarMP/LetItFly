@@ -92,6 +92,7 @@ export const RiderMain = () => {
                     clearInterval(intervalID);
                     fetchDriver(data.driver_id);
                     const wait = await showDriverDetails(data.driver_id);
+                    const wait2 = await deleteRidePair();
                     setLoading(false);
                 }
             } else {
@@ -144,8 +145,16 @@ export const RiderMain = () => {
         } catch (error) {
             console.error('Error fetching driver data:', error);
         }
-}
+    }
 
+    const deleteRidePair = async () => {
+        const response = await fetch(`http://localhost:3000/delete-ride-pair?rider_id=${rider_id}`);
+        const data = await response.json();
+        if (response.ok) {
+            console.log(data);
+        }
+    }
+    
     return (
     <div>    
 

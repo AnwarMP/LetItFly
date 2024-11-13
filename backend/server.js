@@ -65,11 +65,19 @@ app.get('/get-rider-location', (req, res) => {
 
 
 // Fetch list of pending drivers
-app.get('/driver/rides', (req, res) => {
+app.get('/driver-pending-rides', (req, res) => {
   redisClient.sMembers(`pendingDrive`, (err, location) => {
     if (err) return res.status(500).send('Error fetching pending riders');
     res.send(location);
   });
+})
+
+app.get('/delete-waiting-ride', (req, res) => {
+  const rider_id = req.query.rider_id;
+  redisClient.sRem(`pendingDrive`, `rider:${rider_id}`, (err, response) => {
+    if (err) return res.status(500).send('Error deleting rider-driver pair');
+    res.send('Delete pending rider success');
+  })
 })
 
 // Redis route to store driver location
@@ -147,14 +155,22 @@ app.get('/wake-rider', (req, res) => {
 
 app.get('/await-driver', (req, res) => {
   const rider_id = req.query.rider_id;
-    redisClient.hGetAll(`ridePair:${rider_id}`, (err, location) => {
+    redisClient.hGetAll(`ridePair:${rider_id}`, (err, pair) => {
       if (err) return res.status(500).send('Error fetching rider-driver pair');
-      res.send(location);
+      res.send(pair);
     });
 
     // redisClient.del(`ridePair:${rider_id}` (err, response) => {
     //   if (err) return res.status(500).send("Error deleting pair");
     // })
+})
+
+app.get('/delete-ride-pair', (req, res) => {
+  const rider_id = req.query.rider_id;
+  redisClient.del(`ridePair:${rider_id}`, (err, response) => {
+    if (err) return res.status(500).send('Error deleting rider-driver pair');
+    res.send('Delete ride pair success');
+  })
 })
 
 //Temporary to get Driver, demo purposes
@@ -182,6 +198,7 @@ app.get('/get-driver', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch driver data' });
   }
 });
+
 
 // Start the server
 app.listen(port, () => {
