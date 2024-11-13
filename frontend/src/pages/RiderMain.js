@@ -4,6 +4,7 @@ import './App.css';
 import './Rider.css';
 import Map from '../Components/map';
 import { useState, useEffect } from 'react';
+import { jwtDecode } from 'jwt-decode';
 
 //const MAPS_API_KEY = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
 
@@ -16,6 +17,9 @@ export const RiderMain = () => {
     const [showDirections, setShowDirections] = useState(false);
     const [loading, setLoading] = useState(false);
     const [driverData, setDriverData] = useState(null);
+    const token = localStorage.getItem('token');
+    let rider_id;
+    let intervalID;
 
     useEffect(() => {
         const getLocation = () => {
@@ -47,42 +51,114 @@ export const RiderMain = () => {
         setShowDirections(true);
     };
     
-    //Find driver, temporary hardcoded for demo purposes, subject to change
-    const fetchDriverData = async () => {
+    const handleRide = async () => {
         setLoading(true); // Set loading to true to show the loading animation
 
-        // Simulate a 3-second delay
-        setTimeout(async () => {
+        if (token) {
             try {
-                const response = await fetch('http://localhost:3000/get-driver?driverID=1'); // Adjust the URL/port if necessary
-                if (!response.ok) {
-                    throw new Error('Failed to fetch driver data');
-                }
-                const data = await response.json();
-                setDriverData(data);
-
-                // Update locations to render map of Driver going to Rider
-                if (data.longitude && data.latitude) {
-                    // Set the original pickup location as the dropoff location
-                    setDropoffLocation(pickupLocation); // Previous pickup location
-
-                    // Set driver's location as the new pickup location
-                    setPickupLocation([data.longitude, data.latitude]);
-
-                    // Set show directions as true to rerender map
-                    handleShowDirections();
-
-                    console.log("Updated new driver-rider map");
-                }
-
-                console.log('Driver Data:', data);
+                const decoded = jwtDecode(token);
+                rider_id = decoded.userId;
             } catch (error) {
-                console.error('Error fetching driver data:', error);
-            } finally {
-                setLoading(false); // Hide loading animation after data is fetched
+                console.error("Could not decode JWT token");
             }
-        }, 3000);
+        } else {
+            console.error("No JWT token found");
+        }
+
+        try {
+            console.log("pickup_location " + pickupLocation);
+            console.log("dropoff_location " + dropoffLocation);
+            const response = await fetch('http://localhost:3000/store-rider-location', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({rider_id: rider_id, pickup_location: pickupLocation, dropoff_location: dropoffLocation}),
+              }
+            );
+            if (response.ok)
+              console.log("Stored success");
+        } catch (error) {
+            console.error('Store rider location information failed', error);
+        }
+        intervalID = setInterval(async () => {awaitDriver();}, 1000);
     };
+
+    const awaitDriver = async () => {
+        try {
+            const response = await fetch(`http://localhost:3000/await-driver?rider_id=${rider_id}`);
+            const data = await response.json();
+            if (response.ok) {
+                // For checking if the response was empty
+                if (!(Object.keys(data).length === 0)) {
+                    clearInterval(intervalID);
+                    fetchDriver(data.driver_id);
+                    const wait = await showDriverDetails(data.driver_id);
+                    const wait2 = await deleteRidePair();
+                    setLoading(false);
+                }
+            } else {
+                console.log("not ok");
+            }
+        } catch (error) {
+            console.error('Await driver failed', error);
+        }
+    }
+
+    const fetchDriver = async (driver_id) => {
+        try {
+            const response = await fetch(`http://localhost:3000/get-driver-location?driver_id=${driver_id}`);
+            const data = await response.json();
+            if (response.ok) {
+                setPickupLocation(data);
+                setDropoffLocation(pickupLocation);
+                handleShowDirections();
+            }
+        } catch (error) {
+            console.error('Fetch driver error', error);
+        }
+    }
+
+
+    const showDriverDetails = async (driver_id) => {
+        try {
+            const response = await fetch(`http://localhost:3000/get-driver?driverID=${driver_id}`); // Adjust the URL/port if necessary
+            if (!response.ok) {
+                throw new Error('Failed to fetch driver data');
+            }
+            const data = await response.json();
+            setDriverData(data);
+
+            // // Update locations to render map of Driver going to Rider
+            // if (data.longitude && data.latitude) {
+            //     // Set the original pickup location as the dropoff location
+            //     setDropoffLocation(pickupLocation); // Previous pickup location
+
+            //     // Set driver's location as the new pickup location
+            //     setPickupLocation([data.longitude, data.latitude]);
+
+            //     // Set show directions as true to rerender map
+            //     handleShowDirections();
+
+            //     console.log("Updated new driver-rider map");
+            // }
+
+            console.log('Driver Data:', data);
+        } catch (error) {
+            console.error('Error fetching driver data:', error);
+        }
+    }
+
+    const deleteRidePair = async () => {
+        try {
+            const response = await fetch(`http://localhost:3000/delete-ride-pair?rider_id=${rider_id}`);
+            const data = await response.json();
+            if (response.ok) {
+                console.log(data);
+            }
+        } catch (error) {
+            console.error("Could not delete", error);
+            
+        }
+    }
 
     return (
     <div>    
@@ -102,7 +178,7 @@ export const RiderMain = () => {
                         <h3>Your Driver</h3>
                         <p><strong>Name:</strong> {driverData.name}</p>
                         <p><strong>Car:</strong> {driverData.car}</p>
-                        <p><strong>License Plate:</strong> {driverData.plate}</p>
+                        <p><strong>License Plate:</strong> {driverData.license_plate}</p>
                         <h5>{driverData.name} is on their way!</h5>
                     </div>
                 ) 
@@ -120,7 +196,9 @@ export const RiderMain = () => {
                             />
                             <datalist id="pickup-locations">
                                 <option value="San Francisco International Airport" />
-                                <option value="San Jose Mineta International Airport" />
+                                {/* For some reason, adding Mineta to the SJ Interantional Airport name sends the route down to Costa Rica,
+                                    so removing the Mineta in the name description for now */}
+                                <option value="San Jose International Airport" />
                                 <option value="Oakland International Airport" />
                             </datalist>
                         </div>
@@ -135,7 +213,9 @@ export const RiderMain = () => {
                             />
                             <datalist id="dropoff-locations">
                                 <option value="San Francisco International Airport" />
-                                <option value="San Jose Mineta International Airport" />
+                                {/* For some reason, adding Mineta to the SJ Interantional Airport name sends the route down to Costa Rica,
+                                    so removing the Mineta in the name description for now */}
+                                <option value="San Jose International Airport" />
                                 <option value="Oakland International Airport" />
                             </datalist>
                         </div>
@@ -146,7 +226,7 @@ export const RiderMain = () => {
                 )}
                 <div className="driver-button find-driver-button"> 
                     {!driverData && !loading && ( //Remove Find Driver button once you select 'Find Driver'
-                        <button onClick={fetchDriverData}>Find Driver</button>
+                        <button onClick={handleRide}>Find Driver</button>
                     )}
                 </div>
             </div>

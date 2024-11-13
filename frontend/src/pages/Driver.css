@@ -62,8 +62,8 @@ body {
 }
 
 .left-column {
-    flex-basis: 20%;
-    width: 20%;
+    flex-basis: 25%;
+    width: 25%;
     justify-content: center;
     align-items: center;
 }
@@ -75,8 +75,8 @@ body {
 }
 
 .right-column {
-    flex-basis: 80%;
-    width: 80%;
+    flex-basis: 75%;
+    width: 75%;
 }
 
 
@@ -127,4 +127,14 @@ body {
   /* THIS NAME MUST STAY TO KEEP THE UI FOR DIRECTIONS HIDDEN */
   .mapbox-directions-component-keyline {
     display: none;
+  }
+
+
+  ul {
+    list-style-type: none;
+    padding: 0;
+  }
+
+  li {
+    margin: 10px;
   }
