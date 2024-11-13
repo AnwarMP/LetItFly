@@ -100,17 +100,18 @@ app.get('/get-driver-location', (req, res) => {
 // Redis route to store session data
 app.post('/store-session', (req, res) => {
   const { rider_id, driver_id, pickup_location, dropoff_location, 
-      confirm_pickup, confirm_dropoff, session_start_time, end_time, fare } = req.body;
+      confirm_pickup, confirm_dropoff, start_time, end_time, fare } = req.body;
 
   // Storing session data in Redis
-  redisClient.hSet(`session:${rider_id}:${driver_id}`,
+  redisClient.hSet(`session:rider:${rider_id}:driver:${driver_id}`,
+    "driverID", driver_id,
+    "riderID", rider_id,
     "pickup_location", pickup_location,
     "dropoff_location", dropoff_location,
     "confirm_pickup", confirm_pickup,
     "confirm_dropoff", confirm_dropoff,
-    "status", 'in-progress',
-    "session_start_time", session_start_time,
-    "start_time", Date.now(),
+    "start_time", start_time,
+    "session_start_time", Date.now(),
     "end_time", end_time,
     "fare", fare,
   (err, response) => {

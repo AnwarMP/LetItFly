@@ -4,6 +4,7 @@ import './App.css';
 import './Rider.css';
 import Map from '../Components/map';
 import { useState, useEffect } from 'react';
+import { jwtDecode } from 'jwt-decode';
 
 //const MAPS_API_KEY = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
 
@@ -16,6 +17,8 @@ export const RiderMain = () => {
     const [showDirections, setShowDirections] = useState(false);
     const [loading, setLoading] = useState(false);
     const [driverData, setDriverData] = useState(null);
+    const token = localStorage.getItem('token');
+    let rider_id;
     let intervalID;
 
     useEffect(() => {
@@ -51,6 +54,17 @@ export const RiderMain = () => {
     const handleRide = async () => {
         setLoading(true); // Set loading to true to show the loading animation
 
+        if (token) {
+            try {
+                const decoded = jwtDecode(token);
+                rider_id = decoded.userId;
+            } catch (error) {
+                console.error("Could not decode JWT token");
+            }
+        } else {
+            console.error("No JWT token found");
+        }
+
         try {
             console.log("pickup_location " + pickupLocation);
             console.log("dropoff_location " + dropoffLocation);
@@ -58,7 +72,7 @@ export const RiderMain = () => {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 // Hardcoded rider_id for now, locations use fields in menu
-                body: JSON.stringify({rider_id: 10, pickup_location: pickupLocation, dropoff_location: dropoffLocation}),
+                body: JSON.stringify({rider_id: rider_id, pickup_location: pickupLocation, dropoff_location: dropoffLocation}),
               }
             );
             if (response.ok)
@@ -105,7 +119,7 @@ export const RiderMain = () => {
 
     const awaitDriver = async () => {
         try {
-            const response = await fetch('http://localhost:3000/await-driver?rider_id=10');
+            const response = await fetch(`http://localhost:3000/await-driver?rider_id=${rider_id}`);
             const data = await response.json();
             if (response.ok) {
                 // For checking if the response was empty

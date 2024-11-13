@@ -3,6 +3,7 @@ import './Driver.css';
 import Map from '../Components/map';
 import { useEffect, useState } from 'react';
 import 'mapbox-gl/dist/mapbox-gl.css';
+import { jwtDecode } from 'jwt-decode';
 
 
 const defaultLocation = [-121.92857174599622, 37.36353799938156];
@@ -12,10 +13,15 @@ export const Driver = () => {
     const [pickupLocation, setPickupLocation] = useState('');
     const [dropoffLocation, setDropoffLocation] = useState('');
     const [showDirections, setShowDirections] = useState(false);
+    const token = localStorage.getItem('token');
+    let driver_id;
     let pendingRides = [];
     var currentPos = [];
-    // let rider_confirm = false;
     let intervalID;
+    let rider_pickup_location;
+    let rider_dropoff_location;
+    let rider_start;
+
 
     useEffect(() => {
         const getLocation = () => {
@@ -49,6 +55,22 @@ export const Driver = () => {
         setShowDirections(true);
     };
 
+    const grabPosAndRiders = () => {
+        if (token) {
+            try {
+                const decoded = jwtDecode(token);
+                driver_id = decoded.userId;
+            } catch (error) {
+                console.error("Could not decode JWT token");
+            }
+        } else {
+            console.error("No JWT token found");
+        }
+        
+        getCurrentPos();
+        loopFetch();
+    }
+    
     const getCurrentPos = async () => {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
@@ -60,18 +82,12 @@ export const Driver = () => {
     }
 
     const updatePos = (position) => {
-
         currentPos = [position.coords.longitude, position.coords.latitude];
-
     }
 
     const loopFetch = async () => {
         intervalID = setInterval(async () => {fetchRiders();}, 1000);
-        // while (rider_confirm === false) {
-        //     console.log('waut');    
-        // }
     }
-
 
     // Fetches riders currently waiting
     const fetchRiders = async () => {
@@ -102,6 +118,7 @@ export const Driver = () => {
                             storeDriverLocation();
                             sendDriverResponse(num);
                             clearInterval(intervalID);
+                            acceptRide(num);
                         });
                 }
             } else {
@@ -113,61 +130,10 @@ export const Driver = () => {
         }
     }
 
-    const storeDriverLocation = async () => {
-        
-        try {
-            getCurrentPos();
-
-            // const driver_data = {
-            //     driver_id: 1,                                       // Hard-coded driver_id for now, fetch from db later
-            //     current_location: [currentPos[0], currentPos[1]],
-            //     name: 'John Doe',                                   // Hard-coded name for now, fetch from db later
-            //     car: '2006 Toyota Hilux',                           // Hard-coded car for now, fetch from db later
-            //     license_plate: '1abc234'                            // Hard-coded licence plate for now, fetch from db later
-            // };
-            const response = await fetch('http://localhost:3000/store-driver-location', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    driver_id: 1,                                       // Hard-coded driver_id for now, fetch from db later
-                    current_location: `[${currentPos[0]}, ${currentPos[1]}]`,
-                    name: 'John Doe',                                   // Hard-coded name for now, fetch from db later
-                    car: '2006 Toyota Hilux',                           // Hard-coded car for now, fetch from db later
-                    license_plate: '1abc234'                            // Hard-coded licence plate for now, fetch from db later
-                }),
-              }
-            );
-            if (response.ok) {
-                console.log('Stored driver location success');
-            }
-        } catch (error) {
-            console.error('Store driver failed', error);
-        }
-    }
-
-    const sendDriverResponse = async (riderID) => {
-        try {
-            const response = await fetch(`http://localhost:3000/wake-rider?rider_id=${riderID}&driver_id=1`);
-            // const data = await response2.json();
-            if (response.ok) {
-                console.log('Wake works');
-            }
-        } catch (error) {
-            console.error('Wake rider failed', error);
-        }
-    }
-
-    const grabPosAndRiders = () => {
-        getCurrentPos();
-        loopFetch();
-    }
-
-
-
     // On button select, set destination on map
-    const setDestinationTo = async (riderID) => {
+    const setDestinationTo = async (rider_id) => {
         try {
-            const response = await fetch(`http://localhost:3000/get-rider-location?rider_id=${riderID}`);
+            const response = await fetch(`http://localhost:3000/get-rider-location?rider_id=${rider_id}`);
 
             const data = await response.json();
             if (response.ok) {
@@ -186,23 +152,107 @@ export const Driver = () => {
         }
     }
 
-    // const acceptRide = async (riderID) => {
-    //     // event.preventDefault();
-    //     try {
-    //         const response = await fetch(`http://localhost:3000/store-session?riderID=${riderID}&driverID=1&fare=0`);
+    const storeDriverLocation = async () => {
+        
+        try {
+            getCurrentPos();
 
-    //         const data = await response.json();
-    //         if (response.ok) {
+            const driver_data = {
+                driver_id: driver_id,                                       // Hard-coded driver_id for now, fetch from db later
+                current_location: `[${currentPos[0]}, ${currentPos[1]}]`,
+                name: 'John Doe',                                   // Hard-coded name for now, fetch from db later
+                car: '2006 Toyota Hilux',                           // Hard-coded car for now, fetch from db later
+                license_plate: '1abc234'                            // Hard-coded licence plate for now, fetch from db later
+            };
+            const response = await fetch('http://localhost:3000/store-driver-location', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(driver_data),
+              }
+            );
+            if (response.ok) {
+                console.log('Stored driver location success');
+            }
+        } catch (error) {
+            console.error('Store driver failed', error);
+        }
+    }
 
-    //         } else {
-    //           alert(data.message);
-    //         }
+    const sendDriverResponse = async (rider_id) => {
+        try {
+            const response = await fetch(`http://localhost:3000/wake-rider?rider_id=${rider_id}&driver_id=${driver_id}`);
+            // const data = await response2.json();
+            if (response.ok) {
+                console.log('Wake works');
+            }
+        } catch (error) {
+            console.error('Wake rider failed', error);
+        }
+    }
 
-    //     } catch (error) {
-    //         console.error('Accepting ride failed', error);
-    //       alert('Accepting ride failed. Please try again.');
-    //     }
-    // }
+    const acceptRide = async (rider_id) => {
+        // event.preventDefault();
+        const riderResponse = await grabRiderDetails(rider_id);
+        console.log("driver_id" + driver_id);
+        console.log("rider_id" + rider_id);
+        console.log("rider_pickup_location" + rider_pickup_location);
+        console.log("rider_dropoff_location" + rider_dropoff_location);
+        console.log("start_time" + rider_start);
+        
+
+        const sessionDetails = {
+            rider_id: rider_id,
+            driver_id: driver_id,
+            pickup_location: rider_pickup_location, 
+            dropoff_location: rider_dropoff_location, 
+            confirm_pickup: 'false',
+            confirm_dropoff: 'false',
+            start_time: rider_start,
+            end_time: 0,
+            fare: 0
+        }
+        
+        try {
+            const response = await fetch(`http://localhost:3000/store-session`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(sessionDetails),
+              }
+            );
+
+            const data = await response.json();
+            if (response.ok) {
+                console.log("Create and store session success");
+            } else {
+              alert(data.message);
+            }
+
+        } catch (error) {
+            console.error('Accepting ride failed', error);
+        }
+    }
+
+    const grabRiderDetails = async (rider_id) => {
+        try {
+            const response = await fetch(`http://localhost:3000/get-rider-location?rider_id=${rider_id}`);
+
+            const data = await response.json();
+            if (response.ok) {
+                pendingRides = data;
+                rider_dropoff_location = pendingRides.dropoff_location;
+                rider_pickup_location = pendingRides.pickup_location;
+                rider_start = pendingRides.start_time;
+            } else {
+                alert(data.message);
+            }
+
+        } catch (error) {
+            console.error('Fetch riders failed', error);
+            alert('Fetching riders failed. Please try again.');
+        }
+    }
+
+
 
     return (
         <body>
