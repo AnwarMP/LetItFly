@@ -148,13 +148,18 @@ export const RiderMain = () => {
     }
 
     const deleteRidePair = async () => {
-        const response = await fetch(`http://localhost:3000/delete-ride-pair?rider_id=${rider_id}`);
-        const data = await response.json();
-        if (response.ok) {
-            console.log(data);
+        try {
+            const response = await fetch(`http://localhost:3000/delete-ride-pair?rider_id=${rider_id}`);
+            const data = await response.json();
+            if (response.ok) {
+                console.log(data);
+            }
+        } catch (error) {
+            console.error("Could not delete", error);
+            
         }
     }
-    
+
     return (
     <div>    
 
@@ -191,7 +196,9 @@ export const RiderMain = () => {
                             />
                             <datalist id="pickup-locations">
                                 <option value="San Francisco International Airport" />
-                                <option value="San Jose Mineta International Airport" />
+                                {/* For some reason, adding Mineta to the SJ Interantional Airport name sends the route down to Costa Rica,
+                                    so removing the Mineta in the name description for now */}
+                                <option value="San Jose International Airport" />
                                 <option value="Oakland International Airport" />
                             </datalist>
                         </div>

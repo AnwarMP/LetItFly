@@ -120,12 +120,12 @@ export const Driver = () => {
                     let num = pendingRides[i].replace(/\D/g, '');
                     document.getElementById(`rider_${i}`).addEventListener("click",
                         function () {
-                            deleteRiderEntry(num);
+                            clearInterval(intervalID);
                             setDestinationTo(num);
                             storeDriverLocation();
                             sendDriverResponse(num);
-                            clearInterval(intervalID);
                             acceptRide(num);
+                            deleteRiderEntry(num);
                         });
                 }
             } else {
