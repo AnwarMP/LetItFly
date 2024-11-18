@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../store/authSlice';
 import { Card, CardHeader, CardTitle, CardContent } from '../Components/Card';
+import './Settings.css';
 
 const Settings = () => {
   const { user, role } = useSelector((state) => state.auth);
@@ -86,155 +87,145 @@ const Settings = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 py-8">
-      <div className="max-w-3xl mx-auto px-4">
-        <Card>
-          <CardHeader>
-            <CardTitle>Account Settings</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium">First Name</label>
-                  <input
-                    type="text"
-                    name="first_name"
-                    value={formData.first_name || ''}
-                    onChange={handleChange}
-                    disabled={!isEditing}
-                    className="mt-1 block w-full rounded-md border border-gray-300 p-2"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium">Last Name</label>
-                  <input
-                    type="text"
-                    name="last_name"
-                    value={formData.last_name || ''}
-                    onChange={handleChange}
-                    disabled={!isEditing}
-                    className="mt-1 block w-full rounded-md border border-gray-300 p-2"
-                  />
-                </div>
+    <div className="min-h-screen settings-container fade-in">
+      <Card className="card">
+        <CardHeader className="card-header">
+          <CardTitle className="card-title">Account Settings</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="grid-form">
+            <div className="form-group">
+              <label>First Name</label>
+              <input
+                type="text"
+                name="first_name"
+                value={formData.first_name || ''}
+                onChange={handleChange}
+                disabled={!isEditing}
+              />
+            </div>
+            
+            <div className="form-group">
+              <label>Last Name</label>
+              <input
+                type="text"
+                name="last_name"
+                value={formData.last_name || ''}
+                onChange={handleChange}
+                disabled={!isEditing}
+              />
+            </div>
 
-                <div>
-                  <label className="block text-sm font-medium">Email</label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email || ''}
-                    onChange={handleChange}
-                    disabled={true}
-                    className="mt-1 block w-full rounded-md border border-gray-300 p-2 bg-gray-50"
-                  />
-                </div>
+            <div className="form-group">
+              <label>Email</label>
+              <input
+                type="email"
+                name="email"
+                value={formData.email || ''}
+                onChange={handleChange}
+                disabled={true}
+                className="bg-gray-50"
+              />
+            </div>
 
-                <div>
-                  <label className="block text-sm font-medium">Phone Number</label>
-                  <input
-                    type="text"
-                    name="phone_number"
-                    value={formData.phone_number || ''}
-                    onChange={handleChange}
-                    disabled={!isEditing}
-                    className="mt-1 block w-full rounded-md border border-gray-300 p-2"
-                  />
-                </div>
+            <div className="form-group">
+              <label>Phone Number</label>
+              <input
+                type="text"
+                name="phone_number"
+                value={formData.phone_number || ''}
+                onChange={handleChange}
+                disabled={!isEditing}
+              />
+            </div>
 
-                {role === 'rider' && (
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium">Home Address</label>
-                    <input
-                      type="text"
-                      name="home_address"
-                      value={formData.home_address || ''}
-                      onChange={handleChange}
-                      disabled={!isEditing}
-                      className="mt-1 block w-full rounded-md border border-gray-300 p-2"
-                    />
-                  </div>
-                )}
-
-                {role === 'driver' && (
-                  <>
-                    <div>
-                      <label className="block text-sm font-medium">Car Model</label>
-                      <input
-                        type="text"
-                        name="car_model"
-                        value={formData.car_model || ''}
-                        onChange={handleChange}
-                        disabled={!isEditing}
-                        className="mt-1 block w-full rounded-md border border-gray-300 p-2"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium">License Plate</label>
-                      <input
-                        type="text"
-                        name="car_license_plate"
-                        value={formData.car_license_plate || ''}
-                        onChange={handleChange}
-                        disabled={!isEditing}
-                        className="mt-1 block w-full rounded-md border border-gray-300 p-2"
-                      />
-                    </div>
-                  </>
-                )}
+            {role === 'rider' && (
+              <div className="form-group full-width">
+                <label>Home Address</label>
+                <input
+                  type="text"
+                  name="home_address"
+                  value={formData.home_address || ''}
+                  onChange={handleChange}
+                  disabled={!isEditing}
+                />
               </div>
+            )}
 
-              {error && (
-                <div className="text-red-600 text-sm mt-2">{error}</div>
-              )}
-              
-              {successMessage && (
-                <div className="text-green-600 text-sm mt-2">{successMessage}</div>
-              )}
+            {role === 'driver' && (
+              <>
+                <div className="form-group">
+                  <label>Car Model</label>
+                  <input
+                    type="text"
+                    name="car_model"
+                    value={formData.car_model || ''}
+                    onChange={handleChange}
+                    disabled={!isEditing}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>License Plate</label>
+                  <input
+                    type="text"
+                    name="car_license_plate"
+                    value={formData.car_license_plate || ''}
+                    onChange={handleChange}
+                    disabled={!isEditing}
+                  />
+                </div>
+              </>
+            )}
 
-              <div className="flex justify-between mt-6">
-                {!isEditing ? (
-                  <button
-                    type="button"
-                    onClick={() => setIsEditing(true)}
-                    className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-                  >
-                    Edit Profile
-                  </button>
-                ) : (
-                  <div className="space-x-4">
-                    <button
-                      type="submit"
-                      disabled={loading}
-                      className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
-                    >
-                      {loading ? 'Saving...' : 'Save Changes'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsEditing(false);
-                        fetchUserProfile();
-                      }}
-                      className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                )}
+            {error && (
+              <div className="error-message full-width">{error}</div>
+            )}
+            
+            {successMessage && (
+              <div className="success-message full-width">{successMessage}</div>
+            )}
+
+            <div className="button-group full-width">
+              {!isEditing ? (
                 <button
                   type="button"
-                  onClick={handleLogout}
-                  className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
+                  onClick={() => setIsEditing(true)}
+                  className="btn btn-edit"
                 >
-                  Logout
+                  Edit Profile
                 </button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
+              ) : (
+                <div>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="btn btn-save"
+                  >
+                    {loading ? 'Saving...' : 'Save Changes'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsEditing(false);
+                      fetchUserProfile();
+                    }}
+                    className="btn btn-cancel"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="btn btn-logout"
+              >
+                Logout
+              </button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 };
