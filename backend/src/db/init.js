@@ -13,7 +13,7 @@ const pool = new Pool({
 
 const initializeDatabase = async () => {
   try {
-    // Create users table with all fields
+    // Create users table with all fields and constraints
     await pool.query(`
       CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
@@ -27,15 +27,11 @@ const initializeDatabase = async () => {
         car_model VARCHAR(100),
         car_license_plate VARCHAR(20),
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-      );
-
-      -- Add constraints for role-specific fields
-      ALTER TABLE users 
-      ADD CONSTRAINT check_rider_fields 
-      CHECK (
-        (role = 'rider' AND home_address IS NOT NULL AND car_model IS NULL AND car_license_plate IS NULL) OR
-        (role = 'driver' AND home_address IS NULL AND car_model IS NOT NULL AND car_license_plate IS NOT NULL)
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT check_rider_fields CHECK (
+          (role = 'rider' AND home_address IS NOT NULL AND car_model IS NULL AND car_license_plate IS NULL) OR
+          (role = 'driver' AND home_address IS NULL AND car_model IS NOT NULL AND car_license_plate IS NOT NULL)
+        )
       );
     `);
 
