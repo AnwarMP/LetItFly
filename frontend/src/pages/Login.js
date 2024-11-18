@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { loginStart, loginSuccess, loginFailure } from '../store/authSlice';
 import './Login.css';
@@ -8,6 +8,7 @@ export const Login = () => {
     const [inputs, setInputs] = useState({});
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [showSignUpOptions, setShowSignUpOptions] = useState(false);
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
@@ -17,6 +18,20 @@ export const Login = () => {
         setInputs(values => ({...values, [name]: value}));
         setError(null);
     }
+
+    const handleSignUpClick = (e) => {
+        e.preventDefault();
+        setShowSignUpOptions(true);
+    };
+
+    const handleOptionClick = (role) => {
+        setShowSignUpOptions(false);
+        navigate(`/${role}-signup`);
+    };
+
+    const handleClose = () => {
+        setShowSignUpOptions(false);
+    };
 
     const handleSubmit = async (event) => {
         event.preventDefault();
@@ -65,55 +80,65 @@ export const Login = () => {
     };
 
     return (
-        <div className="login-page">
-            <div className="login-container">
-                <h2 className="login-header">Login</h2>
-                
-                <form onSubmit={handleSubmit}>
-                    <div className="form-group">
-                        <label>Email Address:</label>
-                        <input 
-                            type="email" 
-                            name="email"
-                            required 
-                            value={inputs.email || ""}
-                            onChange={handleSetValue}
-                            disabled={loading}
-                        />
-                    </div>
-
-                    <div className="form-group">
-                        <label>Password:</label>
-                        <input 
-                            type="password" 
-                            name="pass"
-                            required 
-                            value={inputs.pass || ""}
-                            onChange={handleSetValue}
-                            disabled={loading}
-                        />
-                    </div>
-
-                    <button 
-                        type="submit" 
-                        className="login-button"
-                        disabled={loading}
-                    >
-                        {loading ? 'Logging in...' : 'Login'}
-                    </button>
-
-                    {error && (
-                        <div className="alert alert-danger">
-                            {error}
+        <>
+            <div className="login-page">
+                <div className="login-container">
+                    <h2 className="login-header">Login</h2>
+                    
+                    <form onSubmit={handleSubmit}>
+                        <div className="form-group">
+                            <label>Email Address:</label>
+                            <input 
+                                type="email" 
+                                name="email"
+                                required 
+                                value={inputs.email || ""}
+                                onChange={handleSetValue}
+                                disabled={loading}
+                            />
                         </div>
-                    )}
 
-                    <div className="redirect-signup">
-                        Don't have an account? <Link to="/signup">Sign up</Link>
-                    </div>
-                </form>
+                        <div className="form-group">
+                            <label>Password:</label>
+                            <input 
+                                type="password" 
+                                name="pass"
+                                required 
+                                value={inputs.pass || ""}
+                                onChange={handleSetValue}
+                                disabled={loading}
+                            />
+                        </div>
+
+                        <button 
+                            type="submit" 
+                            className="login-button"
+                            disabled={loading}
+                        >
+                            {loading ? 'Logging in...' : 'Login'}
+                        </button>
+
+                        {error && (
+                            <div className="alert alert-danger">
+                                {error}
+                            </div>
+                        )}
+
+                        <div className="redirect-signup">
+                            Don't have an account? <a href="#" onClick={handleSignUpClick} className="signup-link">Sign up</a>
+                        </div>
+                    </form>
+                </div>
             </div>
-        </div>
+
+            {showSignUpOptions && (
+                <div className="signup-options-slide">
+                    <button className="close-button" onClick={handleClose}>×</button>
+                    <p className="role-option" onClick={() => handleOptionClick('rider')}>Sign up as a rider</p>
+                    <p className="role-option" onClick={() => handleOptionClick('driver')}>Sign up as driver</p>
+                </div>
+            )}
+        </>
     );
 };
 
