@@ -117,6 +117,19 @@ body {
     font-weight: bold;
   }
 
+  .rider-info {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .rider-info p {
+    margin: 10px 0;
+    font-size: 18px;
+  }
+
+  .rider-info h3 {
+    margin-top: 20px;
+}
 
   /*--------------------Forms---------------------------*/
   .form-group {

@@ -18,7 +18,8 @@ export const Driver = () => {
     const [showDirections, setShowDirections] = useState(false);
     const token = localStorage.getItem('token');
     const [riderData, setRiderData] = useState(null);
-    const [pickupConfirm, setPickupConfirm] = useState(null);
+    const [sessionStage0, setStage0] = useState(null);
+    const [sessionPickupStage, setPickupConfirm] = useState(null);
 
     let driver_id;
     let pendingRides = [];
@@ -244,6 +245,7 @@ export const Driver = () => {
             // const data = await response.json();
             if (response.ok) {
                 console.log("Create and store session success");
+                setStage0(true);
             } else {
             //   alert(data.message);
             }
@@ -273,7 +275,7 @@ export const Driver = () => {
         }
     }
 
-    const setConfirmPickup = async () => {
+    const confirmPickup = async () => {
         const wait = await getTokenID();
         console.log(driver_id);
         console.log(riderData.rider_id);
@@ -292,8 +294,11 @@ export const Driver = () => {
 
             if (response.ok) {
                 console.log("Confirm session for pickup good");
-                setPickupConfirm(riderData.rider_id);
-
+                setStage0(false);
+                setPickupConfirm(true);
+                setPickupLocation(riderData.pickup_location);
+                setDropoffLocation(riderData.dropoff_location);
+                setShowDirections(true);
             }
         } catch (error) {
             console.error('Fetch riders failed', error);
@@ -305,19 +310,31 @@ export const Driver = () => {
         <body>
 
             <div className='box-container'>
-                <div className='left-column text-center'>
-                    {riderData ? (
+                <div className='left-column'>
+                    {sessionStage0 ? (
                         <div className="rider-info">
                             <h3>Rider for Pickup</h3>
                             <p><strong>Rider's ID:</strong> {riderData.rider_id}</p>
                             <p><strong>Pickup Location:</strong> {riderData.pickup_location}</p>
                             <p><strong>Dropoff Location:</strong> {riderData.dropoff_location}</p>
-                            <br/><br/><br/><br/>
-                            <button className='btn btn-primary btn-circle btn-dark' onClick={setConfirmPickup}>Click to confirm pickup</button>
+                            <p><strong>Session Status:</strong> Awaiting Pickup</p>
+                            <button className='btn btn-primary btn-circle btn-dark' onClick={confirmPickup}>Click to confirm pickup</button>
                         </div>
-                    )
-                    : (
-                        <div className='default-container'>
+                    ):
+
+                    sessionPickupStage ? (
+                        <div className="rider-info">
+                            <h3>Rider for Pickup</h3>
+                            <p><strong>Rider's ID:</strong> {riderData.rider_id}</p>
+                            <p><strong>Pickup Location:</strong> {riderData.pickup_location}</p>
+                            <p><strong>Dropoff Location:</strong> {riderData.dropoff_location}</p>
+                            <p><strong>Session Status:</strong> Driving to Dropoff</p>
+                            <button className='btn btn-primary btn-circle btn-dark' onClick={confirmPickup}>Click to confirm dropoff</button>
+                        </div>
+                    ):
+
+                    (
+                        <div className='default-container text-center'>
                             <br/><br/><br/><br/><br/>
                             <img src='/default-profile.png' alt='profile-picture'></img><br/>
                             <span id='name-text'>{user?.first_name} {user?.last_name}</span><br/><br/>
