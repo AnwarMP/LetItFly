@@ -1,4 +1,4 @@
-/* Navbar Styling */
+/* Base Navbar Styling */
 .custom-nav {
     display: flex;
     justify-content: space-between;
@@ -6,24 +6,28 @@
     width: 100%;
     height: 70px;
     background-color: #060606;
+    padding: 0 20px;
 }
 
 .left-section {
     display: flex;
-    margin: 70px;
+    align-items: center;
+    margin: 0;
+    padding: 0 20px;
 }
 
 .logo {
     color: white;
     font-size: 20px;
     font-weight: 900;
+    margin-right: 40px;
 }
 
-.custom-nav ul {
+.nav-links {
     display: flex;
     align-items: center;
     list-style: none;
-    margin: 0 70px;
+    margin: 0;
     padding: 0;
     gap: 40px;
 }
@@ -69,24 +73,75 @@
     opacity: 0.8;
 }
 
-/* Full-Screen Dark Background Overlay for Sign-Up Options */
+/* Hamburger Menu */
+.hamburger {
+    display: none;
+    flex-direction: column;
+    cursor: pointer;
+    padding: 10px;
+    background: none;
+    border: none;
+}
+
+.hamburger span {
+    width: 25px;
+    height: 3px;
+    background-color: white;
+    margin: 2px 0;
+    transition: all 0.3s ease;
+}
+
+/* Mobile Menu */
+.mobile-menu {
+    display: none;
+    position: absolute;
+    top: 70px;
+    left: 0;
+    right: 0;
+    background-color: #060606;
+    padding: 20px;
+    z-index: 1000;
+}
+
+.mobile-menu.active {
+    display: flex;
+    flex-direction: column;
+}
+
+.mobile-menu a,
+.mobile-menu button {
+    color: white;
+    padding: 15px 20px;
+    text-decoration: none;
+    border: none;
+    background: none;
+    text-align: left;
+    font-size: 16px;
+    width: 100%;
+}
+
+.mobile-menu a:hover,
+.mobile-menu button:hover {
+    background-color: #333;
+}
+
+/* Sign Up Options Slide */
 .signup-options-slide {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.9); /* Dark semi-transparent background */
+    background: rgba(0, 0, 0, 0.9);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    color: white; /* Set text color to white */
+    color: white;
     z-index: 1000;
     animation: slideUp 0.5s ease-out forwards;
 }
 
-/* Close Button */
 .close-button {
     position: absolute;
     top: 20px;
@@ -104,27 +159,60 @@
     color: #ff6666;
 }
 
-/* Text-based role option styling */
 .role-option {
-    font-size: 36px; /* Large font size for prominence */
+    font-size: 36px;
     font-weight: bold;
     color: white;
     margin: 20px 0;
     cursor: pointer;
     transition: color 0.3s;
-    text-decoration: none; /* No underline */
+    text-decoration: none;
 }
 
 .role-option:hover {
-    color: #cccccc; /* Light gray on hover */
+    color: #cccccc;
 }
 
-/* Slide-up animation */
 @keyframes slideUp {
     from {
         transform: translateY(100%);
     }
     to {
         transform: translateY(0);
+    }
+}
+
+/* Responsive Design */
+@media screen and (max-width: 768px) {
+    .left-section {
+        margin: 0;
+    }
+
+    .nav-links {
+        display: none;
+    }
+
+    .hamburger {
+        display: flex;
+    }
+
+    .mobile-menu .nav-links {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .custom-nav ul:not(.mobile-menu ul) {
+        display: none;
+    }
+
+    .mobile-menu.active ul {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .welcome-text {
+        display: none;
     }
 }
