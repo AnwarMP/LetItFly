@@ -117,7 +117,6 @@ const login = async (req, res) => {
   }
 };
 
-// Add this new function
 const getProfile = async (req, res) => {
   try {
     const result = await pool.query(
@@ -148,8 +147,79 @@ const getProfile = async (req, res) => {
   }
 };
 
+const updateProfile = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const updates = req.body;
+    
+    // Remove sensitive/immutable fields
+    delete updates.id;
+    delete updates.password;
+    delete updates.role;
+    delete updates.created_at;
+    delete updates.updated_at;
+
+    let query;
+    let values;
+    const role = req.user.role;
+
+    if (role === 'rider') {
+      query = `
+        UPDATE users 
+        SET first_name = $1, 
+            last_name = $2,
+            phone_number = $3,
+            home_address = $4
+        WHERE id = $5
+        RETURNING id, email, role, first_name, last_name, phone_number, home_address`;
+      values = [
+        updates.first_name,
+        updates.last_name,
+        updates.phone_number,
+        updates.home_address,
+        userId
+      ];
+    } else if (role === 'driver') {
+      query = `
+        UPDATE users 
+        SET first_name = $1, 
+            last_name = $2,
+            phone_number = $3,
+            car_model = $4,
+            car_license_plate = $5
+        WHERE id = $6
+        RETURNING id, email, role, first_name, last_name, phone_number, car_model, car_license_plate`;
+      values = [
+        updates.first_name,
+        updates.last_name,
+        updates.phone_number,
+        updates.car_model,
+        updates.car_license_plate,
+        userId
+      ];
+    } else {
+      return res.status(400).json({ message: 'Invalid role' });
+    }
+
+    const result = await pool.query(query, values);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.json({
+      message: 'Profile updated successfully',
+      user: result.rows[0]
+    });
+  } catch (error) {
+    console.error('Profile update error:', error);
+    res.status(500).json({ error: 'Failed to update profile' });
+  }
+};
+
 module.exports = {
   register,
   login,
-  getProfile
+  getProfile,
+  updateProfile
 };

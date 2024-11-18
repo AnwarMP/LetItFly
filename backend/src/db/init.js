@@ -29,8 +29,20 @@ const initializeDatabase = async () => {
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
+    `);
 
-      -- Add constraints for role-specific fields
+    // First, try to drop the existing constraint if it exists
+    try {
+      await pool.query(`
+        ALTER TABLE users 
+        DROP CONSTRAINT IF EXISTS check_rider_fields;
+      `);
+    } catch (error) {
+      console.log('No existing constraint to drop');
+    }
+
+    // Add constraints for role-specific fields
+    await pool.query(`
       ALTER TABLE users 
       ADD CONSTRAINT check_rider_fields 
       CHECK (
@@ -39,7 +51,7 @@ const initializeDatabase = async () => {
       );
     `);
 
-    // Create trigger for updated_at
+    // Handle the updated_at trigger
     await pool.query(`
       CREATE OR REPLACE FUNCTION update_updated_at_column()
       RETURNS TRIGGER AS $$
@@ -50,6 +62,7 @@ const initializeDatabase = async () => {
       $$ language 'plpgsql';
 
       DROP TRIGGER IF EXISTS update_users_updated_at ON users;
+      
       CREATE TRIGGER update_users_updated_at
           BEFORE UPDATE ON users
           FOR EACH ROW
