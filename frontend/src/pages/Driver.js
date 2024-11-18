@@ -18,6 +18,7 @@ export const Driver = () => {
     const [showDirections, setShowDirections] = useState(false);
     const token = localStorage.getItem('token');
     const [riderData, setRiderData] = useState(null);
+    const [pickupConfirm, setPickupConfirm] = useState(null);
 
     let driver_id;
     let pendingRides = [];
@@ -61,7 +62,7 @@ export const Driver = () => {
         setShowDirections(true);
     };
 
-    const grabPosAndRiders = () => {
+    const getTokenID = async () => {
         if (token) {
             try {
                 const decoded = jwtDecode(token);
@@ -72,7 +73,10 @@ export const Driver = () => {
         } else {
             console.error("No JWT token found");
         }
-        
+    }
+
+    const grabPosAndRiders = () => {
+        getTokenID();
         getCurrentPos();
         loopFetch();
     }
@@ -112,7 +116,7 @@ export const Driver = () => {
                     var num = pendingRides[i].replace(/\D/g, '');
                     document.getElementById('riders').innerHTML +=
                     `<li id="${pendingRides.length - 1}">
-                        <button class="btn btn-dark btn-circle" id="rider_${i}">Rider ID: ${num}</button>
+                        <button class="btn btn-dark btn-circle animate-ping" id="rider_${i}">Rider ID: ${num}</button>
                     <li>`;
                 }
                 // Implements button functionality
@@ -140,7 +144,7 @@ export const Driver = () => {
     const deleteRiderEntry = async (rider_id) => {
         try {
             const response = await fetch(`http://localhost:3000/delete-waiting-ride?rider_id=${rider_id}`);
-            const data = await response.json();
+            // const data = await response.json();
             if (response.ok) {
                 console.log("Delete pending rider entry success");
             }
@@ -237,11 +241,11 @@ export const Driver = () => {
               }
             );
 
-            const data = await response.json();
+            // const data = await response.json();
             if (response.ok) {
                 console.log("Create and store session success");
             } else {
-              alert(data.message);
+            //   alert(data.message);
             }
 
         } catch (error) {
@@ -269,7 +273,33 @@ export const Driver = () => {
         }
     }
 
+    const setConfirmPickup = async () => {
+        const wait = await getTokenID();
+        console.log(driver_id);
+        console.log(riderData.rider_id);
+        
+        try {
+            const response = await fetch(`http://localhost:3000/update-session-pickup`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    driver_id: driver_id,
+                    rider_id: riderData.rider_id,
+                    confirm_pickup: 'true'
+                }),
+              }
+            );
 
+            if (response.ok) {
+                console.log("Confirm session for pickup good");
+                setPickupConfirm(riderData.rider_id);
+
+            }
+        } catch (error) {
+            console.error('Fetch riders failed', error);
+            alert('Fetching riders failed. Please try again.');
+        }
+    }
 
     return (
         <body>
@@ -282,6 +312,8 @@ export const Driver = () => {
                             <p><strong>Rider's ID:</strong> {riderData.rider_id}</p>
                             <p><strong>Pickup Location:</strong> {riderData.pickup_location}</p>
                             <p><strong>Dropoff Location:</strong> {riderData.dropoff_location}</p>
+                            <br/><br/><br/><br/>
+                            <button className='btn btn-primary btn-circle btn-dark' onClick={setConfirmPickup}>Click to confirm pickup</button>
                         </div>
                     )
                     : (
