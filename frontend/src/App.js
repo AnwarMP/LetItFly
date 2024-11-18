@@ -9,6 +9,7 @@ import RiderSignUp from "./pages/RiderSignUp";
 import DriverSignUp from "./pages/DriverSignUp";
 import { Driver } from "./pages/Driver";
 import { RiderMain } from "./pages/RiderMain";
+import Settings from './pages/Settings'; 
 
 function App() {
     return (
@@ -37,6 +38,14 @@ function App() {
                             element={
                                 <PrivateRoute roles={['driver']}>
                                     <Driver />
+                                </PrivateRoute>
+                            }
+                        />
+                        <Route
+                            path="/settings"
+                            element={
+                                <PrivateRoute roles={['rider', 'driver']}>
+                                <Settings />
                                 </PrivateRoute>
                             }
                         />
