@@ -40,14 +40,21 @@ initializeDatabase().catch(console.error);
 app.use('/auth', authRoutes);
 
 
-app.post('/store-rider-location', (req, res) => {
-  const { rider_id, pickup_location, dropoff_location } = req.body;
+app.post('/store-rider-info', (req, res) => {
+  const { rider_id, pickup_location, dropoff_location, num_passengers, allow_rideshare } = req.body;
+  console.log('rider_id:', rider_id);
+  console.log('pickup_location:', pickup_location);
+  console.log('dropoff_location:', dropoff_location);
+  console.log('num_passengers:', num_passengers);
+  console.log('allow_rideshare:', allow_rideshare);
   // Storing rider location and pending drivers in Redis
   const start_time = Date.now();
   redisClient.hSet(`rider:${rider_id}`,
     "rider_id", rider_id,
     "pickup_location", pickup_location, 
-    "dropoff_location", dropoff_location, 
+    "dropoff_location", dropoff_location,
+    "num_passengers", String(num_passengers),
+    "allow_rideshare", String(allow_rideshare), 
     "start_time", start_time, 
   (err, response) => {
     if (err) return res.status(500).send('Error creating rider');
