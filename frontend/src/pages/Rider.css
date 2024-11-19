@@ -1,13 +1,8 @@
-/* * {
-    outline: 2px solid red;
-} */
-
 /*-------------Rider Nav Side Bar-------------*/
 
 .rider-ui {
     display: flex;
     justify-content: space-between;
-
     height: calc(100vh - 70px);
 }
 
@@ -30,12 +25,16 @@
 }
 
 .from-textbox,
-.to-textbox {
+.to-textbox,
+.num-passengers,
+.allow-rideshare {
     margin: 10px 0;
+    width: 100%;
 }
 
 .from-input,
-.to-input {
+.to-input,
+.input-field {
     width: 25vw; /* Full width */
     height: 50px; /* Adjust height */
     padding: 10px; /* Inner spacing */
@@ -47,8 +46,53 @@
 
 /* Placeholder text color */
 .from-input::placeholder,
-.to-input::placeholder {
-    color: #999; 
+.to-input::placeholder,
+.input-field option[value=""][disabled] {
+    color: #999;
+}
+
+/* Styles for the select dropdown */
+.input-field {
+    appearance: none;
+    background-color: #fff;
+    background-image: url("data:image/svg+xml;charset=US-ASCII,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'><path fill='%23999' d='M2 0L0 2h4z'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 8px 10px;
+    cursor: pointer;
+}
+
+/* Style for the select element when the placeholder is selected */
+.input-field {
+    color: #999;
+}
+
+/* Style for the select element when a valid option is selected */
+.input-field:valid {
+    color: #000;
+}
+
+/* Hide the placeholder option in the dropdown */
+.input-field option[value=""][disabled][hidden] {
+    display: none;
+}
+
+.input-field::-ms-expand {
+    display: none;
+}
+
+/* Styles for the checkbox */
+.allow-rideshare .checkbox-label {
+    display: flex;
+    align-items: center;
+    font-size: 16px;
+}
+
+.allow-rideshare input[type="checkbox"] {
+    margin-left: 10px;
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
 }
 
 .driver-button {
@@ -66,6 +110,12 @@
     cursor: pointer; /* Pointer cursor on hover */
     transition: background-color 0.3s; /* Smooth transition */
     align-self: bottom;
+}
+
+/* New styles for the disabled state of the button */
+.driver-button button:disabled {
+    background-color: darkgrey; /* Change background to dark grey */
+    cursor: not-allowed; /* Change cursor to indicate it's not clickable */
 }
 
 .find-driver-button {
@@ -112,5 +162,10 @@
     margin-top: 20px;
 }
 
-
-
+/* Error message styling */
+.error-message {
+    max-width: 20vw;
+    color: red;
+    font-size: 14px;
+    margin-top: 10px;
+}
