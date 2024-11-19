@@ -18,7 +18,7 @@ export const Driver = () => {
     const [showDirections, setShowDirections] = useState(false);
     const token = localStorage.getItem('token');
     const [riderData, setRiderData] = useState(null);
-    const [sessionStage0, setStage0] = useState(null);
+    const [sessionStart, setSessionStart] = useState(null);
     const [sessionPickupStage, setPickupConfirm] = useState(null);
 
     let driver_id;
@@ -245,7 +245,7 @@ export const Driver = () => {
             // const data = await response.json();
             if (response.ok) {
                 console.log("Create and store session success");
-                setStage0(true);
+                setSessionStart(true);
             } else {
             //   alert(data.message);
             }
@@ -277,8 +277,6 @@ export const Driver = () => {
 
     const confirmPickup = async () => {
         const wait = await getTokenID();
-        console.log(driver_id);
-        console.log(riderData.rider_id);
         
         try {
             const response = await fetch(`http://localhost:3000/update-session-pickup`, {
@@ -294,7 +292,7 @@ export const Driver = () => {
 
             if (response.ok) {
                 console.log("Confirm session for pickup good");
-                setStage0(false);
+                setSessionStart(false);
                 setPickupConfirm(true);
                 setPickupLocation(riderData.pickup_location);
                 setDropoffLocation(riderData.dropoff_location);
@@ -306,12 +304,39 @@ export const Driver = () => {
         }
     }
 
+    const confirmDropoff = async () => {
+        const wait = await getTokenID();
+
+        try {
+            const response = await fetch('http://localhost:3000/update-session-dropoff', {
+                method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        driver_id: driver_id,
+                        rider_id: riderData.rider_id,
+                        confirm_dropoff: 'true',
+                    }),
+                }
+            );
+            
+            if (response.ok) {
+                // Set up a display for how much driver makes from fares, then returns back to old screen
+                document.getElementById('completeDisplay').innerHTML += `Thank you for your service!`
+                setTimeout(function() {setPickupConfirm(false);}, 5000);
+            }
+
+
+        } catch (error) {
+            console.error("Bad update on session dropoff", error)
+        }
+    }
+
     return (
         <body>
 
             <div className='box-container'>
                 <div className='left-column'>
-                    {sessionStage0 ? (
+                    {sessionStart ? (
                         <div className="rider-info">
                             <h3>Rider for Pickup</h3>
                             <p><strong>Rider's ID:</strong> {riderData.rider_id}</p>
@@ -329,7 +354,9 @@ export const Driver = () => {
                             <p><strong>Pickup Location:</strong> {riderData.pickup_location}</p>
                             <p><strong>Dropoff Location:</strong> {riderData.dropoff_location}</p>
                             <p><strong>Session Status:</strong> Driving to Dropoff</p>
-                            <button className='btn btn-primary btn-circle btn-dark' onClick={confirmPickup}>Click to confirm dropoff</button>
+                            <button className='btn btn-primary btn-circle btn-dark' onClick={confirmDropoff}>Click to confirm dropoff</button>
+
+                            <p id='completeDisplay'><strong></strong></p>
                         </div>
                     ):
 

@@ -166,6 +166,20 @@ app.post('/update-session-pickup', (req, res) => {
   });
 });
 
+app.post('/update-session-dropoff', (req, res) => {
+  const { rider_id, driver_id, confirm_dropoff} = req.body;
+
+// Storing session data in Redis
+  redisClient.hSet(`session:rider:${rider_id}:driver:${driver_id}`,
+    "driverID", driver_id,
+    "riderID", rider_id,
+    "confirm_dropoff", confirm_dropoff,
+    "end_time", Date.now(),
+  (err, response) => {
+    if (err) return res.status(500).send('Error storing session');
+    res.send('Session stored in cache');
+  });
+});
 
 app.get('/wake-rider', (req, res) => {
   const rider_id = req.query.rider_id;
