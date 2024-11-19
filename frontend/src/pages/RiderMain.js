@@ -21,6 +21,7 @@ export const RiderMain = () => {
     const [numPassengers, setNumPassengers] = useState(''); // Changed to empty string
     const [allowRideshare, setAllowRideshare] = useState(false);
     const token = localStorage.getItem('token');
+    const [routeInfo, setRouteInfo] = useState({ duration: 0, distance: 0 }); // Added routeInfo state
     let rider_id;
     let intervalID;
 
@@ -53,6 +54,21 @@ export const RiderMain = () => {
 
     // Updated validation logic
     const canFindDriver = hasPickup && hasDropoff && atLeastOneAirport && differentLocations && hasNumPassengers;
+
+    // Utility function to calculate fare
+    const calculateFare = (distance) => {
+        const perMileRate = 1.75; // Set dollar rate per mile
+        const freeMiles = 2; // First 2 miles are free
+        const minimumFare = 15; // Minimum fare
+
+        // Calculate chargeable distance
+        const chargeableDistance = Math.max(0, distance - freeMiles);
+
+        // Calculate total fare
+        const fare = Math.max(minimumFare, chargeableDistance * perMileRate);
+
+        return fare.toFixed(2); // Return fare as a string with 2 decimal places
+    };
 
     // Update showDirections whenever pickup or dropoff location changes
     useEffect(() => {
@@ -292,6 +308,13 @@ export const RiderMain = () => {
                     
                 )}
                 <div className="driver-button find-driver-button"> 
+                    {canFindDriver && routeInfo.duration > 0 && routeInfo.distance > 0 && (
+                        <div className="route-info">
+                            <p>Estimated Time: <span className="bold">{routeInfo.duration} minutes</span></p>
+                            <p>Total Distance: <span className="bold">{routeInfo.distance} miles</span></p>
+                            <p>Estimated Fare: <span className="bold">${calculateFare(routeInfo.distance)}</span></p>
+                        </div>
+                    )}
                     {!driverData && !loading && ( //Remove Find Driver button once you select 'Find Driver'
                         <button onClick={handleRide} disabled={!canFindDriver}>Find Driver</button>
                     )}
@@ -304,6 +327,7 @@ export const RiderMain = () => {
                 dropoffLocation={dropoffLocation} 
                 showDirections={showDirections}
                 setShowDirections={setShowDirections}
+                setRouteInfo={setRouteInfo}
             />
         </div>
     </div> 
