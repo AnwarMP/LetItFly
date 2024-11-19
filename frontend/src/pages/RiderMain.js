@@ -5,7 +5,7 @@ import './Rider.css';
 import Map from '../Components/map';
 import { useState, useEffect } from 'react';
 // Note: Corrected the import statement for jwtDecode
-import { jwtDecode }  from 'jwt-decode';
+import { jwtDecode } from 'jwt-decode';
 
 //const MAPS_API_KEY = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
 
@@ -91,8 +91,8 @@ export const RiderMain = () => {
     }, []); // Empty dependency array to run only on mount
     
     const handleRide = async () => {
-        setLoading(true);
-    
+        setLoading(true); // Set loading to true to show the loading animation
+
         if (token) {
             try {
                 const decoded = jwtDecode(token);
@@ -103,26 +103,30 @@ export const RiderMain = () => {
         } else {
             console.error("No JWT token found");
         }
-    
+
         try {
-            const response = await fetch('http://localhost:3000/store-rider-location', {
+            console.log("pickup_location: " + pickupLocation);
+            console.log("dropoff_location: " + dropoffLocation);
+            console.log("num_passengers: " + numPassengers);
+            console.log("allow_ridershare: " + allowRideshare);
+            const response = await fetch('http://localhost:3000/store-rider-info', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    rider_id: rider_id,
-                    pickup_location: pickupLocation,
+                    rider_id: rider_id, 
+                    pickup_location: pickupLocation, 
                     dropoff_location: dropoffLocation,
                     num_passengers: numPassengers,
-                    allow_rideshare: allowRideshare,
+                    allow_rideshare: allowRideshare
                 }),
-            });
-            if (response.ok) console.log("Stored success");
+              }
+            );
+            if (response.ok)
+              console.log("Stored success");
         } catch (error) {
             console.error('Store rider location information failed', error);
         }
-        intervalID = setInterval(async () => {
-            awaitDriver();
-        }, 1000);
+        intervalID = setInterval(async () => {awaitDriver();}, 1000);
     };
 
     const awaitDriver = async () => {
