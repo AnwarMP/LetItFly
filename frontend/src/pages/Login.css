@@ -58,6 +58,11 @@
     background: #333;
 }
 
+.login-button:disabled {
+    background: #666;
+    cursor: not-allowed;
+}
+
 .alert {
     margin-top: 15px;
     padding: 10px;
@@ -76,18 +81,76 @@
     color: #666;
 }
 
-.redirect-signup a {
+/* Updated signup link styles */
+.signup-link {
+    background: none;
+    border: none;
     color: #007bff;
-    text-decoration: none;
+    padding: 0;
+    margin: 0;
+    font: inherit;
     font-weight: 500;
-}
-
-.redirect-signup a:hover {
+    cursor: pointer;
     text-decoration: underline;
 }
 
-/* For the loading state */
-.login-button:disabled {
-    background: #666;
-    cursor: not-allowed;
+.signup-link:hover {
+    color: #0056b3;
+}
+
+/* Signup options slide styles */
+.signup-options-slide {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.9);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    z-index: 1000;
+    animation: slideUp 0.5s ease-out forwards;
+}
+
+.close-button {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: color 0.3s;
+}
+
+.close-button:hover {
+    color: #ff6666;
+}
+
+.role-option {
+    font-size: 36px;
+    font-weight: bold;
+    color: white;
+    margin: 20px 0;
+    cursor: pointer;
+    transition: color 0.3s;
+    text-decoration: none;
+}
+
+.role-option:hover {
+    color: #cccccc;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(100%);
+    }
+    to {
+        transform: translateY(0);
+    }
 }

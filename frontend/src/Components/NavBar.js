@@ -9,18 +9,22 @@ export const Navbar = () => {
     const navigate = useNavigate();
     const { isAuthenticated, user, role } = useSelector(state => state.auth);
     const [showSignUpOptions, setShowSignUpOptions] = useState(false);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     const handleLogout = () => {
         dispatch(logout());
         navigate('/');
+        setIsMobileMenuOpen(false);
     };
 
     const handleSignUpClick = () => {
         setShowSignUpOptions(true);
+        setIsMobileMenuOpen(false);
     };
 
     const handleOptionClick = (role) => {
         setShowSignUpOptions(false);
+        setIsMobileMenuOpen(false);
         navigate(`/${role}-signup`);
     };
 
@@ -28,28 +32,37 @@ export const Navbar = () => {
         setShowSignUpOptions(false);
     };
 
+    const toggleMobileMenu = () => {
+        setIsMobileMenuOpen(!isMobileMenuOpen);
+    };
+
     return (
         <div>
             <div className="custom-nav">
                 <div className="left-section">
-                    <div className="logo">Let It Fly</div>
-                    <ul>
-                        <li><Link to="/">Home</Link></li>
+                    <Link to="/" className="logo">Let It Fly</Link>
+                    <ul className="nav-links">
                         {isAuthenticated && role === 'rider' && (
                             <li><Link to="/rider">Book a Ride</Link></li>
                         )}
                         {isAuthenticated && role === 'driver' && (
                             <li><Link to="/driver">Driver Dashboard</Link></li>
                         )}
-                        <li><a href="#">About</a></li>
                     </ul>
                 </div>
-                <ul>
+
+                <button className="hamburger" onClick={toggleMobileMenu}>
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+
+                <ul className="nav-links">
                     {!isAuthenticated ? (
                         <>
-                            <li><Link to="/login" className='nav-button'>Log in</Link></li>
+                            <li><Link to="/login" className="nav-button">Log in</Link></li>
                             <li>
-                                <button onClick={handleSignUpClick} className='nav-button'>Sign up</button>
+                                <button onClick={handleSignUpClick} className="nav-button">Sign up</button>
                             </li>
                         </>
                     ) : (
@@ -60,10 +73,10 @@ export const Navbar = () => {
                                 </span>
                             </li>
                             <li>
-                                <button 
-                                    onClick={handleLogout}
-                                    className="nav-button logout-button"
-                                >
+                                <Link to="/settings" className="nav-button">Settings</Link>
+                            </li>
+                            <li>
+                                <button onClick={handleLogout} className="nav-button logout-button">
                                     Logout
                                 </button>
                             </li>
@@ -72,6 +85,31 @@ export const Navbar = () => {
                 </ul>
             </div>
 
+            {/* Mobile Menu */}
+            <div className={`mobile-menu ${isMobileMenuOpen ? 'active' : ''}`}>
+                <ul className="nav-links">
+                    {isAuthenticated && role === 'rider' && (
+                        <li><Link to="/rider" onClick={() => setIsMobileMenuOpen(false)}>Book a Ride</Link></li>
+                    )}
+                    {isAuthenticated && role === 'driver' && (
+                        <li><Link to="/driver" onClick={() => setIsMobileMenuOpen(false)}>Driver Dashboard</Link></li>
+                    )}
+                    <li><a href="#" onClick={() => setIsMobileMenuOpen(false)}>About</a></li>
+                    {!isAuthenticated ? (
+                        <>
+                            <li><Link to="/login" onClick={() => setIsMobileMenuOpen(false)}>Log in</Link></li>
+                            <li><button onClick={handleSignUpClick}>Sign up</button></li>
+                        </>
+                    ) : (
+                        <>
+                            <li><Link to="/settings" onClick={() => setIsMobileMenuOpen(false)}>Settings</Link></li>
+                            <li><button onClick={handleLogout}>Logout</button></li>
+                        </>
+                    )}
+                </ul>
+            </div>
+
+            {/* Sign Up Options Modal */}
             {showSignUpOptions && (
                 <div className="signup-options-slide">
                     <button className="close-button" onClick={handleClose}>×</button>

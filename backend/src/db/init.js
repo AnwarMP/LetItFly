@@ -13,7 +13,7 @@ const pool = new Pool({
 
 const initializeDatabase = async () => {
   try {
-    // Create users table with all fields and constraints
+    // Create users table with all fields
     await pool.query(`
       CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
@@ -27,15 +27,31 @@ const initializeDatabase = async () => {
         car_model VARCHAR(100),
         car_license_plate VARCHAR(20),
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-        CONSTRAINT check_rider_fields CHECK (
-          (role = 'rider' AND home_address IS NOT NULL AND car_model IS NULL AND car_license_plate IS NULL) OR
-          (role = 'driver' AND home_address IS NULL AND car_model IS NOT NULL AND car_license_plate IS NOT NULL)
-        )
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
     `);
 
-    // Create trigger for updated_at
+    // First, try to drop the existing constraint if it exists
+    try {
+      await pool.query(`
+        ALTER TABLE users 
+        DROP CONSTRAINT IF EXISTS check_rider_fields;
+      `);
+    } catch (error) {
+      console.log('No existing constraint to drop');
+    }
+
+    // Add constraints for role-specific fields
+    await pool.query(`
+      ALTER TABLE users 
+      ADD CONSTRAINT check_rider_fields 
+      CHECK (
+        (role = 'rider' AND home_address IS NOT NULL AND car_model IS NULL AND car_license_plate IS NULL) OR
+        (role = 'driver' AND home_address IS NULL AND car_model IS NOT NULL AND car_license_plate IS NOT NULL)
+      );
+    `);
+
+    // Handle the updated_at trigger
     await pool.query(`
       CREATE OR REPLACE FUNCTION update_updated_at_column()
       RETURNS TRIGGER AS $$
@@ -46,6 +62,7 @@ const initializeDatabase = async () => {
       $$ language 'plpgsql';
 
       DROP TRIGGER IF EXISTS update_users_updated_at ON users;
+      
       CREATE TRIGGER update_users_updated_at
           BEFORE UPDATE ON users
           FOR EACH ROW
