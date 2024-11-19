@@ -11,7 +11,7 @@ const defaultLocation = [-121.92857174599622, 37.36353799938156];
 
 
 export const Driver = () => {
-    const { isAuthenticated, user, role } = useSelector(state => state.auth);
+    const { user, role } = useSelector(state => state.auth);
     const [location, setLocation] = useState(defaultLocation);
     const [pickupLocation, setPickupLocation] = useState('');
     const [dropoffLocation, setDropoffLocation] = useState('');
@@ -20,7 +20,15 @@ export const Driver = () => {
     const [riderData, setRiderData] = useState(null);
     const [sessionStart, setSessionStart] = useState(null);
     const [sessionPickupStage, setPickupConfirm] = useState(null);
-
+    const [driverData, setDriverData] = useState({
+        first_name: '',
+        last_name: '',
+        email: '',
+        phone_number: '',
+        home_address: '',
+        car_model: '',
+        car_license_plate: ''
+      });
     let driver_id;
     let pendingRides = [];
     var currentPos = [];
@@ -56,7 +64,26 @@ export const Driver = () => {
         };
 
         getLocation();
+        fetchUserProfile();
     }, []); // Empty dependency array to run only on mount
+
+    const fetchUserProfile = async () => {
+        try {
+          const response = await fetch('http://localhost:3000/auth/profile', {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+          });
+          const data = await response.json();
+          if (response.ok) {
+            setDriverData(data.user);
+          } else {
+            console.error('Failed to fetch profile data');
+          }
+        } catch (error) {
+          console.error('Error loading profile');
+        }
+      };
 
 
     const handleShowDirections = () => {
@@ -186,8 +213,8 @@ export const Driver = () => {
                 driver_id: driver_id,
                 current_location: `[${currentPos[0]}, ${currentPos[1]}]`,
                 name: `${user?.first_name} ${user?.last_name}`,
-                car: `2022 Toyota Camry`,                                   // Hard-coded car for now, fetch from db later
-                license_plate: `1abc234`                                    // Hard-coded licence plate for now, fetch from db later
+                car: `${driverData?.car_model}`,
+                license_plate: `${driverData?.car_license_plate}`
             };
 
             console.log("car " + user?.car_model);
@@ -368,8 +395,7 @@ export const Driver = () => {
                             <button className='btn btn-primary btn-circle btn-lg' onClick={grabPosAndRiders}>Start Work</button>
                             <div className='disclaimer-text'>Note: This will use your location</div><br/>
         
-                            {/* This is a placeholder, replace with JS elements that get license from DB */}
-                            <h6>License Plate: 0tst000</h6>
+                            <h6>License Plate: {driverData.car_license_plate}</h6>
         
                             <ul id='riders'></ul>
                         </div>
