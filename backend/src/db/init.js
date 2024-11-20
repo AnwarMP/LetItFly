@@ -13,6 +13,10 @@ const pool = new Pool({
 
 const initializeDatabase = async () => {
   try {
+    await pool.query('DROP TABLE IF EXISTS ride_payments CASCADE;');
+    await pool.query('DROP TABLE IF EXISTS transactions CASCADE;');
+
+
     // Create users table (existing)
     await pool.query(`
       CREATE TABLE IF NOT EXISTS users (
@@ -77,19 +81,19 @@ const initializeDatabase = async () => {
 
     // Create transactions table
     await pool.query(`
-      CREATE TABLE IF NOT EXISTS transactions (
-        id SERIAL PRIMARY KEY,
-        ride_id INTEGER REFERENCES rides(id) NOT NULL,
-        rider_id INTEGER REFERENCES users(id) NOT NULL,
-        driver_id INTEGER REFERENCES users(id) NOT NULL,
-        amount DECIMAL(10,2) NOT NULL,
-        status VARCHAR(20) NOT NULL CHECK (status IN ('pending', 'completed', 'failed', 'refunded')),
-        type VARCHAR(20) NOT NULL CHECK (type IN ('ride_payment', 'driver_payout', 'refund')),
-        payment_method_id INTEGER REFERENCES payment_methods(id),
-        platform_fee DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-        driver_earnings DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-        completed_at TIMESTAMP WITH TIME ZONE
+      CREATE TABLE transactions (
+          id SERIAL PRIMARY KEY,
+          ride_id INTEGER REFERENCES rides(id), -- Make ride_id nullable
+          rider_id INTEGER REFERENCES users(id) NOT NULL,
+          driver_id INTEGER REFERENCES users(id) NOT NULL,
+          amount DECIMAL(10,2) NOT NULL,
+          status VARCHAR(20) NOT NULL CHECK (status IN ('pending', 'completed', 'failed', 'refunded')),
+          type VARCHAR(20) NOT NULL CHECK (type IN ('ride_payment', 'driver_payout', 'wallet_topup', 'refund')),
+          payment_method_id INTEGER REFERENCES payment_methods(id),
+          platform_fee DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+          driver_earnings DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+          completed_at TIMESTAMP WITH TIME ZONE
       );
     `);
 
