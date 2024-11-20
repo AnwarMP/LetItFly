@@ -7,8 +7,6 @@ import { useState, useEffect } from 'react';
 // Note: Corrected the import statement for jwtDecode
 import { jwtDecode } from 'jwt-decode';
 
-//const MAPS_API_KEY = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
-
 const defaultLocation = [-121.92857174599622, 37.36353799938156]; // Default location (SJC)
 
 export const RiderMain = () => {
@@ -21,13 +19,14 @@ export const RiderMain = () => {
     const [numPassengers, setNumPassengers] = useState(''); // Changed to empty string
     const [allowRideshare, setAllowRideshare] = useState(false);
     const token = localStorage.getItem('token');
+    const [routeInfo, setRouteInfo] = useState({ duration: 0, distance: 0 }); // Added routeInfo state
     let rider_id;
     let intervalID;
 
     //Define the list of airports**
     const airports = [
         "San Francisco International Airport",
-        "San José International Airport",
+        "(SJC) San José Mineta InternationalAirport",
         "Oakland International Airport"
     ];
 
@@ -53,6 +52,24 @@ export const RiderMain = () => {
 
     // Updated validation logic
     const canFindDriver = hasPickup && hasDropoff && atLeastOneAirport && differentLocations && hasNumPassengers;
+
+    // Utility function to calculate fare
+    const calculateFare = (distance) => {
+        const perMileRate = 1.75; // Set dollar rate per mile
+        const freeMiles = 2; // First 2 miles are free
+        const minimumFare = 15; // Minimum fare
+        let rideshareDiscount = 0;
+
+        // Calculate chargeable distance
+        const chargeableDistance = Math.max(0, distance - freeMiles);
+
+        if(allowRideshare) rideshareDiscount = 10;
+
+        // Calculate total fare
+        const fare = Math.max(minimumFare, (chargeableDistance * perMileRate) - rideshareDiscount);
+
+        return fare.toFixed(2); // Return fare as a string with 2 decimal places
+    };
 
     // Update showDirections whenever pickup or dropoff location changes
     useEffect(() => {
@@ -230,10 +247,12 @@ export const RiderMain = () => {
                             />
                             <datalist id="pickup-locations">
                                 <option value="San Francisco International Airport" />
-                                <option value="San José International Airport" />
+                                {/* This is the closet I can get to the San Jose Airport without Mapbox confusion */}
+                                <option value="(SJC) San José Mineta InternationalAirport" />
                                 <option value="Oakland International Airport" />
                             </datalist>
                         </div>
+
                         <div className="to-textbox">
                             <input
                                 list="dropoff-locations"
@@ -247,7 +266,7 @@ export const RiderMain = () => {
                             />
                             <datalist id="dropoff-locations">
                                 <option value="San Francisco International Airport" />
-                                <option value="San José International Airport" />
+                                <option value="(SJC) San José Mineta InternationalAirport" />
                                 <option value="Oakland International Airport" />
                             </datalist>
                         </div>
@@ -282,16 +301,23 @@ export const RiderMain = () => {
                                 />
                             </label>
                         </div>
-                        {/* Display error message if validation fails */}
-                        {!canFindDriver && (
-                            <div className="error-message">
-                                Please ensure you have filled all required fields and are going to or from one of the 3 given Bay Area airports.
-                            </div>
-                        )}
                     </div>
                     
                 )}
                 <div className="driver-button find-driver-button"> 
+                    {/* Display error message if validation fails */}
+                    {!canFindDriver && !loading && (
+                        <div className="error-message">
+                            Please ensure you have selected number of passengers and are going to or from one of the 3 given Bay Area airports.
+                        </div>
+                    )}
+                    {!loading && canFindDriver && routeInfo.duration > 0 && routeInfo.distance > 0 && (
+                        <div className="route-info">
+                            <p>Estimated Time: <span className="bold">{routeInfo.duration} minutes</span></p>
+                            <p>Total Distance: <span className="bold">{routeInfo.distance} miles</span></p>
+                            <p>Estimated Fare: <span className="bold">${calculateFare(routeInfo.distance)}</span></p>
+                        </div>
+                    )}
                     {!driverData && !loading && ( //Remove Find Driver button once you select 'Find Driver'
                         <button onClick={handleRide} disabled={!canFindDriver}>Find Driver</button>
                     )}
@@ -304,6 +330,7 @@ export const RiderMain = () => {
                 dropoffLocation={dropoffLocation} 
                 showDirections={showDirections}
                 setShowDirections={setShowDirections}
+                setRouteInfo={setRouteInfo}
             />
         </div>
     </div> 
