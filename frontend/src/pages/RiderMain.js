@@ -269,7 +269,6 @@ export const RiderMain = () => {
                         <p><strong>Name:</strong> {driverData.name}</p>
                         <p><strong>Car:</strong> {driverData.car}</p>
                         <p><strong>License Plate:</strong> {driverData.license_plate}</p>
-                        <h5>{driverData.name} is on their way!</h5>
 
                         {/* Display session data */}
                         {sessionData && (
@@ -277,8 +276,17 @@ export const RiderMain = () => {
                                 <h3>Ride Status</h3>
                                 <p><strong>Pickup Location:</strong> {sessionData.pickup_location}</p>
                                 <p><strong>Dropoff Location:</strong> {sessionData.dropoff_location}</p>
+                                <p><strong>Fare:</strong> {sessionData.fare}</p>
                                 {/* Add more fields as needed */}
                             </div>
+                        )}
+
+                        {sessionData && (
+                        sessionData.confirm_pickup.toLowerCase() === "false" ? (
+                            <h5>{driverData.name} is <span className="bold">{routeInfo.duration} minutes</span> away!</h5>
+                        ) : (
+                            <h5>Time till arrival:  <span className="bold">{routeInfo.duration} minutes</span></h5>
+                        )
                         )}
 
                     </div>
