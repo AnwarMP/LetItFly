@@ -1,4 +1,3 @@
-// backend/src/tests/paymentTestData.js
 const { pool } = require('../db/init');
 const bcrypt = require('bcryptjs');
 

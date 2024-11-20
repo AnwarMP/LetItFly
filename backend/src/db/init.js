@@ -11,13 +11,29 @@ const pool = new Pool({
   port: process.env.PGPORT,
 });
 
+const testConnection = async () => {
+  try {
+    const client = await pool.connect();
+    console.log('Successfully connected to the database');
+    client.release();
+    return true;
+  } catch (error) {
+    console.error('Database connection error:', error);
+    return false;
+  }
+};
+
 const initializeDatabase = async () => {
   try {
+    // Drop existing tables in correct order
     await pool.query('DROP TABLE IF EXISTS ride_payments CASCADE;');
     await pool.query('DROP TABLE IF EXISTS transactions CASCADE;');
+    await pool.query('DROP TABLE IF EXISTS payment_methods CASCADE;');
+    await pool.query('DROP TABLE IF EXISTS wallets CASCADE;');
+    await pool.query('DROP TABLE IF EXISTS rides CASCADE;');
+    await pool.query('DROP TABLE IF EXISTS users CASCADE;');
 
-
-    // Create users table (existing)
+    // Create users table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
@@ -35,7 +51,7 @@ const initializeDatabase = async () => {
       );
     `);
 
-    // Create rides table to track ride history
+    // Create rides table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS rides (
         id SERIAL PRIMARY KEY,
@@ -43,7 +59,9 @@ const initializeDatabase = async () => {
         driver_id INTEGER REFERENCES users(id) NOT NULL,
         pickup_location TEXT NOT NULL,
         dropoff_location TEXT NOT NULL,
-        ride_status VARCHAR(50) NOT NULL CHECK (ride_status IN ('pending', 'accepted', 'in_progress', 'completed', 'cancelled')),
+        ride_status VARCHAR(50) NOT NULL CHECK (
+          ride_status IN ('pending', 'accepted', 'in_progress', 'completed', 'cancelled')
+        ),
         start_time TIMESTAMP WITH TIME ZONE,
         end_time TIMESTAMP WITH TIME ZONE,
         distance_miles DECIMAL(10,2),
@@ -54,19 +72,7 @@ const initializeDatabase = async () => {
       );
     `);
 
-    // Create wallets table
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS wallets (
-        id SERIAL PRIMARY KEY,
-        user_id INTEGER REFERENCES users(id) NOT NULL,
-        balance DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-        CONSTRAINT unique_user_wallet UNIQUE (user_id)
-      );
-    `);
-
-    // Create payment methods table
+    // Create payment_methods table (for both riders and drivers)
     await pool.query(`
       CREATE TABLE IF NOT EXISTS payment_methods (
         id SERIAL PRIMARY KEY,
@@ -79,36 +85,55 @@ const initializeDatabase = async () => {
       );
     `);
 
-    // Create transactions table
+    // Create wallets table (drivers only)
     await pool.query(`
-      CREATE TABLE transactions (
-          id SERIAL PRIMARY KEY,
-          ride_id INTEGER REFERENCES rides(id), -- Make ride_id nullable
-          rider_id INTEGER REFERENCES users(id) NOT NULL,
-          driver_id INTEGER REFERENCES users(id) NOT NULL,
-          amount DECIMAL(10,2) NOT NULL,
-          status VARCHAR(20) NOT NULL CHECK (status IN ('pending', 'completed', 'failed', 'refunded')),
-          type VARCHAR(20) NOT NULL CHECK (type IN ('ride_payment', 'driver_payout', 'wallet_topup', 'refund')),
-          payment_method_id INTEGER REFERENCES payment_methods(id),
-          platform_fee DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-          driver_earnings DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-          created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-          completed_at TIMESTAMP WITH TIME ZONE
+      CREATE TABLE IF NOT EXISTS wallets (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id) NOT NULL,
+        balance DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+        last_payout_date TIMESTAMP WITH TIME ZONE,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT unique_user_wallet UNIQUE (user_id)
       );
     `);
 
-    // Create ride_payments table for detailed payment info
+    // Create transactions table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS transactions (
+        id SERIAL PRIMARY KEY,
+        ride_id INTEGER REFERENCES rides(id),
+        rider_id INTEGER REFERENCES users(id),
+        driver_id INTEGER REFERENCES users(id) NOT NULL,
+        amount DECIMAL(10,2) NOT NULL,
+        status VARCHAR(20) NOT NULL CHECK (
+          status IN ('pending', 'completed', 'failed', 'refunded')
+        ),
+        type VARCHAR(20) NOT NULL CHECK (
+          type IN ('ride_payment', 'driver_payout', 'refund')
+        ),
+        payment_method_id INTEGER REFERENCES payment_methods(id),
+        platform_fee DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+        driver_earnings DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        completed_at TIMESTAMP WITH TIME ZONE
+      );
+    `);
+
+    // Create ride_payments table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS ride_payments (
         id SERIAL PRIMARY KEY,
         ride_id INTEGER REFERENCES rides(id) NOT NULL,
+        transaction_id INTEGER REFERENCES transactions(id),
         base_fare DECIMAL(10,2) NOT NULL DEFAULT 15.00,
         distance_fare DECIMAL(10,2) NOT NULL DEFAULT 0.00,
         time_fare DECIMAL(10,2) NOT NULL DEFAULT 0.00,
         rideshare_discount DECIMAL(10,2) DEFAULT 0.00,
         total_amount DECIMAL(10,2) NOT NULL,
-        status VARCHAR(20) NOT NULL CHECK (status IN ('pending', 'completed', 'failed', 'refunded')),
-        transaction_id INTEGER REFERENCES transactions(id),
+        status VARCHAR(20) NOT NULL CHECK (
+          status IN ('pending', 'completed', 'failed', 'refunded')
+        ),
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         CONSTRAINT unique_ride_payment UNIQUE (ride_id)
@@ -126,7 +151,7 @@ const initializeDatabase = async () => {
       $$ language 'plpgsql';
     `);
 
-    // Create triggers for all tables with updated_at
+    // Create triggers for tables with updated_at
     const tables = ['users', 'rides', 'wallets', 'ride_payments'];
     for (const table of tables) {
       await pool.query(`
@@ -139,23 +164,32 @@ const initializeDatabase = async () => {
       `);
     }
 
-    // Create function to automatically create wallet for new users
+    // Create function to manage driver wallets
     await pool.query(`
-      CREATE OR REPLACE FUNCTION create_user_wallet()
+      CREATE OR REPLACE FUNCTION manage_driver_wallet()
       RETURNS TRIGGER AS $$
       BEGIN
-          INSERT INTO wallets (user_id)
-          VALUES (NEW.id);
+          -- Only create wallet for drivers
+          IF NEW.role = 'driver' THEN
+              INSERT INTO wallets (user_id)
+              VALUES (NEW.id);
+          END IF;
+    
+          -- If role changed from driver to rider, remove wallet
+          IF TG_OP = 'UPDATE' AND OLD.role = 'driver' AND NEW.role = 'rider' THEN
+              DELETE FROM wallets WHERE user_id = NEW.id;
+          END IF;
+    
           RETURN NEW;
       END;
-      $$ language 'plpgsql';
-
-      DROP TRIGGER IF EXISTS create_wallet_for_new_user ON users;
+      $$ LANGUAGE 'plpgsql';
+    
+      DROP TRIGGER IF EXISTS manage_driver_wallet_trigger ON users;
       
-      CREATE TRIGGER create_wallet_for_new_user
-          AFTER INSERT ON users
+      CREATE TRIGGER manage_driver_wallet_trigger
+          AFTER INSERT OR UPDATE ON users
           FOR EACH ROW
-          EXECUTE FUNCTION create_user_wallet();
+          EXECUTE FUNCTION manage_driver_wallet();
     `);
 
     console.log('Database initialized successfully');
@@ -165,7 +199,18 @@ const initializeDatabase = async () => {
   }
 };
 
+// Export both the pool and the initialization function
 module.exports = {
   pool,
-  initializeDatabase
+  testConnection,
+  initializeDatabase: async () => {
+    try {
+      await testConnection();
+      // Your existing initialization code...
+      await initializeDatabase();
+    } catch (error) {
+      console.error('Failed to initialize database:', error);
+      throw error;
+    }
+  }
 };

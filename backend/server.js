@@ -41,8 +41,6 @@ initializeDatabase().catch(console.error);
 app.use('/auth', authRoutes);
 app.use('/payment', paymentRoutes);
 
-
-
 app.post('/store-rider-info', (req, res) => {
   const { rider_id, pickup_location, dropoff_location, num_passengers, allow_rideshare } = req.body;
   console.log('rider_id:', rider_id);
@@ -129,26 +127,69 @@ app.get('/get-driver-location', (req, res) => {
 });
 
 // Redis route to store session data
-app.post('/store-session', (req, res) => {
-  const { rider_id, driver_id, pickup_location, dropoff_location, 
-      confirm_pickup, confirm_dropoff, start_time, end_time, fare } = req.body;
+// app.post('/store-session', (req, res) => {
+//   const { rider_id, driver_id, pickup_location, dropoff_location, 
+//       confirm_pickup, confirm_dropoff, start_time, end_time, fare } = req.body;
 
-  // Storing session data in Redis
-  redisClient.hSet(`session:rider:${rider_id}:driver:${driver_id}`,
-    "driverID", driver_id,
-    "riderID", rider_id,
+//   // Storing session data in Redis
+//   redisClient.hSet(`session:rider:${rider_id}:driver:${driver_id}`,
+//     "driverID", driver_id,
+//     "riderID", rider_id,
+//     "pickup_location", pickup_location,
+//     "dropoff_location", dropoff_location,
+//     "confirm_pickup", confirm_pickup,
+//     "confirm_dropoff", confirm_dropoff,
+//     "start_time", start_time,
+//     "session_start_time", Date.now(),
+//     "end_time", end_time,
+//     "fare", fare,
+//   (err, response) => {
+//     if (err) return res.status(500).send('Error storing session');
+//     res.send('Session stored in cache');
+//   });
+// });
+
+app.post('/store-session', (req, res) => {
+  const { 
+    rider_id, 
+    driver_id, 
+    pickup_location, 
+    dropoff_location,
+    confirm_pickup, 
+    confirm_dropoff, 
+    start_time, 
+    end_time, 
+    fare 
+  } = req.body;
+
+  // Storing session data in Redis with field-value pairs as separate arguments
+  redisClient.hSet(
+    `session:rider:${rider_id}:driver:${driver_id}`,
+    "driverID", driver_id.toString(),
+    "riderID", rider_id.toString(),
     "pickup_location", pickup_location,
     "dropoff_location", dropoff_location,
-    "confirm_pickup", confirm_pickup,
-    "confirm_dropoff", confirm_dropoff,
-    "start_time", start_time,
-    "session_start_time", Date.now(),
-    "end_time", end_time,
-    "fare", fare,
-  (err, response) => {
-    if (err) return res.status(500).send('Error storing session');
-    res.send('Session stored in cache');
-  });
+    "confirm_pickup", confirm_pickup.toString(),
+    "confirm_dropoff", confirm_dropoff.toString(),
+    "start_time", start_time || new Date().toISOString(),
+    "session_start_time", Date.now().toString(),
+    "end_time", end_time ? end_time.toString() : '',
+    "fare", fare.toString(),
+    (err, response) => {
+      if (err) {
+        console.error('Redis error:', err);
+        return res.status(500).json({ 
+          error: 'Failed to store session', 
+          details: err.message 
+        });
+      }
+      res.json({ 
+        success: true, 
+        message: 'Session stored successfully',
+        sessionKey: `session:rider:${rider_id}:driver:${driver_id}`
+      });
+    }
+  );
 });
 
 // Redis route to retrieve session data

@@ -1,27 +1,30 @@
 const express = require('express');
 const router = express.Router();
-const { authenticateToken } = require('../middleware/auth');
-const paymentController = require('../controllers/paymentController');
+const { authenticateToken, checkRole } = require('../middleware/auth');
+const {
+    paymentMethodController,
+    driverPaymentController,
+    riderPaymentController
+} = require('../controllers/paymentController');
 
-// Payment Method Management
-router.post('/methods', authenticateToken, paymentController.addPaymentMethod);
-router.get('/methods', authenticateToken, paymentController.getPaymentMethods);
-router.delete('/methods/:id', authenticateToken, paymentController.removePaymentMethod);
-router.put('/methods/:id/default', authenticateToken, paymentController.setDefaultPaymentMethod);
+// Payment Method Management (Common for both riders and drivers)
+router.post('/methods', authenticateToken, paymentMethodController.addPaymentMethod);
+router.get('/methods', authenticateToken, paymentMethodController.getPaymentMethods);
+router.delete('/methods/:id', authenticateToken, paymentMethodController.removePaymentMethod);
+router.put('/methods/:id/default', authenticateToken, paymentMethodController.setDefaultPaymentMethod);
 
-// Wallet Management
-router.get('/wallet', authenticateToken, paymentController.getWalletBalance);
-router.post('/wallet/topup', authenticateToken, paymentController.topUpWallet);
+// Add the calculate fare route
+router.post('/rides/calculate', authenticateToken, paymentMethodController.calculateRideFare);
 
-// Ride Payments
-router.post('/rides/calculate', authenticateToken, paymentController.calculateRideFare);
-router.post('/rides/process', authenticateToken, paymentController.processRidePayment);
+// Ride Payment Processing
+router.post('/rides/process', authenticateToken, riderPaymentController.processRidePayment);
+
+// Driver-specific routes
+router.get('/wallet', authenticateToken, checkRole(['driver']), driverPaymentController.getWalletBalance);
+router.get('/earnings', authenticateToken, checkRole(['driver']), driverPaymentController.getEarnings);
+router.post('/payout', authenticateToken, checkRole(['driver']), driverPaymentController.requestPayout);
 
 // Transaction History
-router.get('/transactions', authenticateToken, paymentController.getTransactionHistory);
-
-// Driver Earnings
-router.get('/earnings', authenticateToken, paymentController.getDriverEarnings);
-router.post('/earnings/payout', authenticateToken, paymentController.requestPayout);
+router.get('/transactions', authenticateToken, paymentMethodController.getTransactionHistory);
 
 module.exports = router;
