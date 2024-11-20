@@ -41,7 +41,7 @@ app.use('/auth', authRoutes);
 
 
 app.post('/store-rider-info', (req, res) => {
-  const { rider_id, pickup_location, dropoff_location, num_passengers, allow_rideshare } = req.body;
+  const { rider_id, rider_name, pickup_location, dropoff_location, num_passengers, allow_rideshare, est_time, fare } = req.body;
   console.log('rider_id:', rider_id);
   console.log('pickup_location:', pickup_location);
   console.log('dropoff_location:', dropoff_location);
@@ -51,11 +51,14 @@ app.post('/store-rider-info', (req, res) => {
   const start_time = Date.now();
   redisClient.hSet(`rider:${rider_id}`,
     "rider_id", rider_id,
+    "rider_name", rider_name,
     "pickup_location", pickup_location, 
     "dropoff_location", dropoff_location,
     "num_passengers", String(num_passengers),
     "allow_rideshare", String(allow_rideshare), 
     "start_time", start_time, 
+    "est_time", est_time,
+    "fare", fare,
   (err, response) => {
     if (err) return res.status(500).send('Error creating rider');
     else res.send('Rider location stored in cache');
@@ -174,14 +177,14 @@ app.post('/update-session-pickup', (req, res) => {
 });
 
 app.post('/update-session-dropoff', (req, res) => {
-  const { rider_id, driver_id, confirm_dropoff} = req.body;
+  const { rider_id, driver_id, confirm_dropoff, end_time} = req.body;
 
 // Storing session data in Redis
   redisClient.hSet(`session:rider:${rider_id}:driver:${driver_id}`,
     "driverID", driver_id,
     "riderID", rider_id,
     "confirm_dropoff", confirm_dropoff,
-    "end_time", Date.now(),
+    "end_time", end_time,
   (err, response) => {
     if (err) return res.status(500).send('Error storing session');
     res.send('Session stored in cache');
