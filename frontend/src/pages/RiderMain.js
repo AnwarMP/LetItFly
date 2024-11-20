@@ -35,8 +35,8 @@ export const RiderMain = () => {
     const isAirport = (location) => airports.includes(location);
 
     // Check that both pickup and dropoff locations have input
-    const hasPickup = pickupLocation.trim() !== '';
-    const hasDropoff = dropoffLocation.trim() !== '';
+    const hasPickup = pickupLocation !== '';
+    const hasDropoff = dropoffLocation !== '';
 
     // Check if the pickup and dropoff locations are airports
     const isPickupAirport = isAirport(pickupLocation);
