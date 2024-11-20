@@ -306,12 +306,12 @@ export const RiderMain = () => {
                 )}
                 <div className="driver-button find-driver-button"> 
                     {/* Display error message if validation fails */}
-                    {!canFindDriver && (
+                    {!canFindDriver && !loading && (
                         <div className="error-message">
                             Please ensure you have selected number of passengers and are going to or from one of the 3 given Bay Area airports.
                         </div>
                     )}
-                    {canFindDriver && routeInfo.duration > 0 && routeInfo.distance > 0 && (
+                    {!loading && canFindDriver && routeInfo.duration > 0 && routeInfo.distance > 0 && (
                         <div className="route-info">
                             <p>Estimated Time: <span className="bold">{routeInfo.duration} minutes</span></p>
                             <p>Total Distance: <span className="bold">{routeInfo.distance} miles</span></p>
