@@ -1,2 +1,5 @@
 repomix-output.txt
 */repomix-output.txt
+
+.env
+*.txt

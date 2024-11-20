@@ -13,7 +13,7 @@ const pool = new Pool({
 
 const initializeDatabase = async () => {
   try {
-    // Create users table with all fields
+    // Create users table (existing)
     await pool.query(`
       CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
@@ -31,27 +31,87 @@ const initializeDatabase = async () => {
       );
     `);
 
-    // First, try to drop the existing constraint if it exists
-    try {
-      await pool.query(`
-        ALTER TABLE users 
-        DROP CONSTRAINT IF EXISTS check_rider_fields;
-      `);
-    } catch (error) {
-      console.log('No existing constraint to drop');
-    }
-
-    // Add constraints for role-specific fields
+    // Create rides table to track ride history
     await pool.query(`
-      ALTER TABLE users 
-      ADD CONSTRAINT check_rider_fields 
-      CHECK (
-        (role = 'rider' AND home_address IS NOT NULL AND car_model IS NULL AND car_license_plate IS NULL) OR
-        (role = 'driver' AND home_address IS NULL AND car_model IS NOT NULL AND car_license_plate IS NOT NULL)
+      CREATE TABLE IF NOT EXISTS rides (
+        id SERIAL PRIMARY KEY,
+        rider_id INTEGER REFERENCES users(id) NOT NULL,
+        driver_id INTEGER REFERENCES users(id) NOT NULL,
+        pickup_location TEXT NOT NULL,
+        dropoff_location TEXT NOT NULL,
+        ride_status VARCHAR(50) NOT NULL CHECK (ride_status IN ('pending', 'accepted', 'in_progress', 'completed', 'cancelled')),
+        start_time TIMESTAMP WITH TIME ZONE,
+        end_time TIMESTAMP WITH TIME ZONE,
+        distance_miles DECIMAL(10,2),
+        duration_minutes INTEGER,
+        allow_rideshare BOOLEAN DEFAULT false,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
     `);
 
-    // Handle the updated_at trigger
+    // Create wallets table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS wallets (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id) NOT NULL,
+        balance DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT unique_user_wallet UNIQUE (user_id)
+      );
+    `);
+
+    // Create payment methods table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS payment_methods (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id) NOT NULL,
+        card_last_four VARCHAR(4) NOT NULL,
+        card_type VARCHAR(20) NOT NULL,
+        is_default BOOLEAN DEFAULT false,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT valid_card_type CHECK (card_type IN ('visa', 'mastercard', 'amex', 'discover'))
+      );
+    `);
+
+    // Create transactions table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS transactions (
+        id SERIAL PRIMARY KEY,
+        ride_id INTEGER REFERENCES rides(id) NOT NULL,
+        rider_id INTEGER REFERENCES users(id) NOT NULL,
+        driver_id INTEGER REFERENCES users(id) NOT NULL,
+        amount DECIMAL(10,2) NOT NULL,
+        status VARCHAR(20) NOT NULL CHECK (status IN ('pending', 'completed', 'failed', 'refunded')),
+        type VARCHAR(20) NOT NULL CHECK (type IN ('ride_payment', 'driver_payout', 'refund')),
+        payment_method_id INTEGER REFERENCES payment_methods(id),
+        platform_fee DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+        driver_earnings DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        completed_at TIMESTAMP WITH TIME ZONE
+      );
+    `);
+
+    // Create ride_payments table for detailed payment info
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS ride_payments (
+        id SERIAL PRIMARY KEY,
+        ride_id INTEGER REFERENCES rides(id) NOT NULL,
+        base_fare DECIMAL(10,2) NOT NULL DEFAULT 15.00,
+        distance_fare DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+        time_fare DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+        rideshare_discount DECIMAL(10,2) DEFAULT 0.00,
+        total_amount DECIMAL(10,2) NOT NULL,
+        status VARCHAR(20) NOT NULL CHECK (status IN ('pending', 'completed', 'failed', 'refunded')),
+        transaction_id INTEGER REFERENCES transactions(id),
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT unique_ride_payment UNIQUE (ride_id)
+      );
+    `);
+
+    // Create trigger function for updating timestamps
     await pool.query(`
       CREATE OR REPLACE FUNCTION update_updated_at_column()
       RETURNS TRIGGER AS $$
@@ -60,13 +120,38 @@ const initializeDatabase = async () => {
           RETURN NEW;
       END;
       $$ language 'plpgsql';
+    `);
 
-      DROP TRIGGER IF EXISTS update_users_updated_at ON users;
+    // Create triggers for all tables with updated_at
+    const tables = ['users', 'rides', 'wallets', 'ride_payments'];
+    for (const table of tables) {
+      await pool.query(`
+        DROP TRIGGER IF EXISTS update_${table}_updated_at ON ${table};
+        
+        CREATE TRIGGER update_${table}_updated_at
+            BEFORE UPDATE ON ${table}
+            FOR EACH ROW
+            EXECUTE FUNCTION update_updated_at_column();
+      `);
+    }
+
+    // Create function to automatically create wallet for new users
+    await pool.query(`
+      CREATE OR REPLACE FUNCTION create_user_wallet()
+      RETURNS TRIGGER AS $$
+      BEGIN
+          INSERT INTO wallets (user_id)
+          VALUES (NEW.id);
+          RETURN NEW;
+      END;
+      $$ language 'plpgsql';
+
+      DROP TRIGGER IF EXISTS create_wallet_for_new_user ON users;
       
-      CREATE TRIGGER update_users_updated_at
-          BEFORE UPDATE ON users
+      CREATE TRIGGER create_wallet_for_new_user
+          AFTER INSERT ON users
           FOR EACH ROW
-          EXECUTE FUNCTION update_updated_at_column();
+          EXECUTE FUNCTION create_user_wallet();
     `);
 
     console.log('Database initialized successfully');

@@ -75,6 +75,7 @@ If you are using Docker to run PostgreSQL, you can connect to the database insid
    docker exec -it letitfly_postgres psql -U admin -d letitfly_db
    ```
    Once in the cli run
-   `SELECT * FROM users;`
+   * `SELECT * FROM users;` shows current users
+   * `\dt+` lists all tables
    
 
