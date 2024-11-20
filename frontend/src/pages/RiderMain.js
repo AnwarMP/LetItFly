@@ -19,9 +19,23 @@ export const RiderMain = () => {
     const [numPassengers, setNumPassengers] = useState(''); // Changed to empty string
     const [allowRideshare, setAllowRideshare] = useState(false);
     const token = localStorage.getItem('token');
+    const [sessionData, setSessionData] = useState(null); // State to hold session data
     const [routeInfo, setRouteInfo] = useState({ duration: 0, distance: 0 }); // Added routeInfo state
-    let rider_id;
+    const [riderId, setRiderId] = useState('');
     let intervalID;
+
+    useEffect(() => {
+        if (token) {
+            try {
+                const decoded = jwtDecode(token);
+                setRiderId(decoded.userId);
+            } catch (error) {
+                console.error("Could not decode JWT token");
+            }
+        } else {
+            console.error("No JWT token found");
+        }
+    })
 
     //Define the list of airports**
     const airports = [
@@ -81,45 +95,34 @@ export const RiderMain = () => {
         }
     }, [pickupLocation, dropoffLocation, differentLocations]);
 
-    useEffect(() => {
-        const getLocation = () => {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        const newLocation = [
-                            position.coords.longitude,
-                            position.coords.latitude
-                        ];
-                        console.log("Location updated to:", newLocation); 
-                        setLocation(newLocation);
-                    },
-                    (error) => {
-                        console.log(`Error in fetching location: ${error.message}`);
-                        alert(`Error in fetching location: ${error.message}`);
-                    }
-                );
-            } else {
-                console.log("Geolocation is not supported by this browser.");
-                alert("Geolocation is not supported by this browser.");
-            }
-        };
+    const getLocation = () => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const newLocation = [
+                        position.coords.longitude,
+                        position.coords.latitude
+                    ];
+                    console.log("Location updated to:", newLocation); 
+                    setLocation(newLocation);
+                },
+                (error) => {
+                    console.log(`Error in fetching location: ${error.message}`);
+                    alert(`Error in fetching location: ${error.message}`);
+                }
+            );
+        } else {
+            console.log("Geolocation is not supported by this browser.");
+            alert("Geolocation is not supported by this browser.");
+        }
+    };
 
+    useEffect(() => {
         getLocation();
     }, []); // Empty dependency array to run only on mount
     
     const handleRide = async () => {
         setLoading(true); // Set loading to true to show the loading animation
-
-        if (token) {
-            try {
-                const decoded = jwtDecode(token);
-                rider_id = decoded.userId;
-            } catch (error) {
-                console.error("Could not decode JWT token");
-            }
-        } else {
-            console.error("No JWT token found");
-        }
 
         try {
             console.log("pickup_location: " + pickupLocation);
@@ -130,7 +133,7 @@ export const RiderMain = () => {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    rider_id: rider_id, 
+                    rider_id: riderId, 
                     pickup_location: pickupLocation, 
                     dropoff_location: dropoffLocation,
                     num_passengers: numPassengers,
@@ -148,7 +151,7 @@ export const RiderMain = () => {
 
     const awaitDriver = async () => {
         try {
-            const response = await fetch(`http://localhost:3000/await-driver?rider_id=${rider_id}`);
+            const response = await fetch(`http://localhost:3000/await-driver?rider_id=${riderId}`);
             const data = await response.json();
             if (response.ok) {
                 // For checking if the response was empty
@@ -198,7 +201,7 @@ export const RiderMain = () => {
 
     const deleteRidePair = async () => {
         try {
-            const response = await fetch(`http://localhost:3000/delete-ride-pair?rider_id=${rider_id}`);
+            const response = await fetch(`http://localhost:3000/delete-ride-pair?rider_id=${riderId}`);
             const data = await response.json();
             if (response.ok) {
                 console.log(data);
@@ -208,6 +211,88 @@ export const RiderMain = () => {
             
         }
     }
+
+    // Function to fetch session data
+    const fetchSessionData = async () => {
+        console.log("Fetching session data: " + riderId + " " + driverData.driver_id);
+        if (driverData) {
+            try {
+                const response = await fetch(`http://localhost:3000/get-session?rider_id=${riderId}&driver_id=${driverData.driver_id}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    setSessionData(data); // Update session data state
+                    console.log("Fetched session data!: ", { ...data});
+
+                    if (data.confirm_pickup.toLowerCase() === "true") {
+                        setPickupLocation(data.pickup_location);
+                        setDropoffLocation(data.dropoff_location);
+                    }
+
+                    if (data.confirm_dropoff.toLowerCase() === "true") {
+                        console.log("Confirmed dropped off");
+                        //reset rider ui
+                        setDriverData(null);
+                        setPickupLocation('');
+                        setDropoffLocation('');
+                        setNumPassengers('');
+                        setAllowRideshare(false);
+                        getLocation(); // Update the user's current location
+
+                        //Maybe here can update SQL database to record the session information for rider/driver transaction history.
+
+                        //Do this only after transaction recored
+                        //Delete related redis keys
+                        deleteRideKeys(riderId, driverData.driver_id);
+
+                    }
+
+                } else {
+                    console.error('Failed to fetch session data');
+                }
+            } catch (error) {
+                console.error('Error fetching session data:', error);
+            }
+        }
+    };
+
+    // useEffect to fetch session data every second when driverData is set
+    useEffect(() => {
+        let intervalID;
+        if (driverData) {
+            intervalID = setInterval(() => {
+                fetchSessionData();
+            }, 1000);
+
+            // Clean up the interval on unmount or when dependencies change
+            return () => clearInterval(intervalID);
+        }
+    }, [driverData]);
+
+    const deleteRideKeys = async (riderId, driverId) => {
+        try {
+            const response = await fetch('http://localhost:3000/delete-ride-keys', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    keys: [
+                        `rider:${riderId}`,
+                        `session:rider:${riderId}:driver:${driverId}`,
+                        `driver:${driverId}`
+                    ]
+                })
+            });
+    
+            if (response.ok) {
+                console.log('Ride keys deleted successfully');
+            } else {
+                console.error('Failed to delete ride keys');
+            }
+        } catch (error) {
+            console.error('Error deleting ride keys:', error);
+        }
+    };
 
     return (
     <div>    
@@ -223,13 +308,40 @@ export const RiderMain = () => {
                 ) 
                 :driverData ? (
                     // Display driver information if driverData is not null
-                    <div className="driver-info">
-                        <h3>Your Driver</h3>
-                        <p><strong>Name:</strong> {driverData.name}</p>
-                        <p><strong>Car:</strong> {driverData.car}</p>
-                        <p><strong>License Plate:</strong> {driverData.license_plate}</p>
-                        <h5>{driverData.name} is on their way!</h5>
+                <div className="driver-info">
+                <h3>Your Driver</h3>
+                <div className="driver-details">
+                    <p><strong>Name:</strong> {driverData.name}</p>
+                    <p><strong>Car:</strong> {driverData.car}</p>
+                    <p><strong>License Plate:</strong> {driverData.license_plate}</p>
+                </div>
+
+                {/* Display session data */}
+                {sessionData && (
+                    <div className="session-info">
+                    <h3>Your Ride</h3>
+                    <p><strong>Pickup Location:</strong> {sessionData.pickup_location}</p>
+                    <p><strong>Dropoff Location:</strong> {sessionData.dropoff_location}</p>
+                    <p><strong>Fare (USD):</strong> {sessionData.fare}</p>
+                    {/* Add more fields as needed */}
                     </div>
+                )}
+
+                {sessionData && (
+                    <div className="eta-info">
+                    {sessionData.confirm_pickup.toLowerCase() === "false" ? (
+                        <h5>
+                        {driverData.name} is <span className="bold">{routeInfo.duration} minutes</span> away!
+                        </h5>
+                    ) : (
+                        <h5>
+                        ETA: <span className="bold">{routeInfo.duration} minutes</span>
+                        </h5>
+                    )}
+                    </div>
+                )}
+                </div>
+
                 ) 
                 : (
                     // Default UI if no driverData is available

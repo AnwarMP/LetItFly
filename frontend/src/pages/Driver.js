@@ -38,31 +38,30 @@ export const Driver = () => {
     let rider_dropoff_location;
     let rider_start;
 
+    const getLocation = () => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const newLocation = [
+                        position.coords.longitude,
+                        position.coords.latitude
+                    ];
+                    console.log("Location updated to:", newLocation);
+                    setPickupLocation(newLocation);
+                    setLocation(newLocation);
+                },
+                (error) => {
+                    console.log(`Error in fetching location: ${error.message}`);
+                    alert(`Error in fetching location: ${error.message}`);
+                }
+            );
+        } else {
+            console.log("Geolocation is not supported by this browser.");
+            alert("Geolocation is not supported by this browser.");
+        }
+    };
 
     useEffect(() => {
-        const getLocation = () => {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        const newLocation = [
-                            position.coords.longitude,
-                            position.coords.latitude
-                        ];
-                        console.log("Location updated to:", newLocation);
-                        setPickupLocation(newLocation);
-                        setLocation(newLocation);
-                    },
-                    (error) => {
-                        console.log(`Error in fetching location: ${error.message}`);
-                        alert(`Error in fetching location: ${error.message}`);
-                    }
-                );
-            } else {
-                console.log("Geolocation is not supported by this browser.");
-                alert("Geolocation is not supported by this browser.");
-            }
-        };
-
         getLocation();
         fetchUserProfile();
     }, []); // Empty dependency array to run only on mount
@@ -356,6 +355,8 @@ export const Driver = () => {
         } catch (error) {
             console.error("Bad update on session dropoff", error)
         }
+
+        getLocation() //Updated map to just user location once confirmed dropoff is true
     }
 
     return (
