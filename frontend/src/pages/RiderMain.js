@@ -34,8 +34,8 @@ export const RiderMain = () => {
     const isAirport = (location) => airports.includes(location);
 
     // Check that both pickup and dropoff locations have input
-    const hasPickup = pickupLocation.trim() !== '';
-    const hasDropoff = dropoffLocation.trim() !== '';
+    const hasPickup = pickupLocation !== '';
+    const hasDropoff = dropoffLocation !== '';
 
     // Check if the pickup and dropoff locations are airports
     const isPickupAirport = isAirport(pickupLocation);
@@ -301,16 +301,16 @@ export const RiderMain = () => {
                                 />
                             </label>
                         </div>
-                        {/* Display error message if validation fails */}
-                        {!canFindDriver && (
-                            <div className="error-message">
-                                Please ensure you have selected number of passengers and are going to or from one of the 3 given Bay Area airports.
-                            </div>
-                        )}
                     </div>
                     
                 )}
                 <div className="driver-button find-driver-button"> 
+                    {/* Display error message if validation fails */}
+                    {!canFindDriver && (
+                        <div className="error-message">
+                            Please ensure you have selected number of passengers and are going to or from one of the 3 given Bay Area airports.
+                        </div>
+                    )}
                     {canFindDriver && routeInfo.duration > 0 && routeInfo.distance > 0 && (
                         <div className="route-info">
                             <p>Estimated Time: <span className="bold">{routeInfo.duration} minutes</span></p>
