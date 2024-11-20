@@ -229,6 +229,11 @@ export const RiderMain = () => {
                     setSessionData(data); // Update session data state
                     console.log("Fetched session data!: ", { ...data});
 
+                    if (data.confirm_pickup.toLowerCase() === "false") {
+                        setPickupLocation(driverData.location);
+                        setDropoffLocation(data.pickupLocation);
+                    }
+
                     if (data.confirm_pickup.toLowerCase() === "true") {
                         setPickupLocation(data.pickup_location);
                         setDropoffLocation(data.dropoff_location);

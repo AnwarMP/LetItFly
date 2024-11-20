@@ -57,7 +57,7 @@ export const Map = ({
                     'line-width': 2,
                     'line-color': [
                         'case',
-                        ['==', ['get', 'congestion'], 'low'], '#00ff00',
+                        ['==', ['get', 'congestion'], 'low'], '#3d3d3d',
                         ['==', ['get', 'congestion'], 'moderate'], '#ffcc00',
                         ['==', ['get', 'congestion'], 'heavy'], '#ff0000',
                         '#000000',
