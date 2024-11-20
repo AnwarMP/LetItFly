@@ -4,12 +4,14 @@ import './App.css';
 import './Rider.css';
 import Map from '../Components/map';
 import { useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
 // Note: Corrected the import statement for jwtDecode
 import { jwtDecode } from 'jwt-decode';
 
 const defaultLocation = [-121.92857174599622, 37.36353799938156]; // Default location (SJC)
 
 export const RiderMain = () => {
+    const { user, role } = useSelector(state => state.auth);
     const [location, setLocation] = useState(defaultLocation);
     const [pickupLocation, setPickupLocation] = useState('');
     const [dropoffLocation, setDropoffLocation] = useState('');
@@ -129,15 +131,19 @@ export const RiderMain = () => {
             console.log("dropoff_location: " + dropoffLocation);
             console.log("num_passengers: " + numPassengers);
             console.log("allow_ridershare: " + allowRideshare);
+            const fare = await calculateFare(routeInfo.distance);
             const response = await fetch('http://localhost:3000/store-rider-info', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     rider_id: riderId, 
+                    rider_name: user?.first_name,
                     pickup_location: pickupLocation, 
                     dropoff_location: dropoffLocation,
                     num_passengers: numPassengers,
-                    allow_rideshare: allowRideshare
+                    allow_rideshare: allowRideshare,
+                    est_time: routeInfo.duration,
+                    fare: fare
                 }),
               }
             );

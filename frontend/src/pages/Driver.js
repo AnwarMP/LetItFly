@@ -1,6 +1,7 @@
 import React from 'react';
 import './Driver.css';
 import Map from '../Components/map';
+import { Card, CardHeader, CardTitle, CardContent } from '../Components/Card';
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import 'mapbox-gl/dist/mapbox-gl.css';
@@ -31,12 +32,15 @@ export const Driver = () => {
       });
     let driver_id;
     let pendingRides = [];
+    let cachedRides = [];
     var currentPos = [];
     let intervalID;
     // For grabbing rider chosen details
+    let rider_name;
     let rider_pickup_location;
     let rider_dropoff_location;
     let rider_start;
+    let rider_fare;
 
     const getLocation = () => {
         if (navigator.geolocation) {
@@ -123,7 +127,7 @@ export const Driver = () => {
     }
 
     const loopFetch = async () => {
-        intervalID = setInterval(async () => {fetchRiders();}, 1000);
+        intervalID = setInterval(async () => {fetchRiders();}, 2000);
     }
 
     // Fetches riders currently waiting
@@ -137,36 +141,57 @@ export const Driver = () => {
             if (response.ok) {
                 pendingRides = data;
                 console.log('Pending riders fetch good!');
-                document.getElementById('riders').innerHTML = '';
+                // document.getElementById('riders').innerHTML = '';
+                console.log('length is ' + pendingRides.length);
                 // Goes through list, grabs rider IDs, and displays them in list of buttons
                 for (let i = 0; i < pendingRides.length; i++) {
                     var num = pendingRides[i].replace(/\D/g, '');
-                    document.getElementById('riders').innerHTML +=
-                    `<li id="${pendingRides.length - 1}">
-                        <button class="btn btn-dark btn-circle animate-ping" id="rider_${i}">Rider ID: ${num}</button>
-                    <li>`;
+                    if (!cachedRides.includes(num)) {
+                        const wait = await grabRiderDetails(num);
+                        document.getElementById('riders').innerHTML +=
+                        `<li id="${pendingRides.length - 1}">
+                            <button class="btn-search bottom-border" id="rider_${num}">
+                                <strong>Rider:</strong> ${rider_name}
+                                <br/>
+                                <strong>Pickup Location:</strong> ${rider_pickup_location}
+                                <br/>
+                                <strong>Dropoff Location:</strong> ${rider_dropoff_location}
+                                <br/>
+                                <strong>Estimated Fare:</strong> $${rider_fare}
+                            </button>
+                        <li>`;
+                    }
+                    console.log("cached rides " + cachedRides);
                 }
                 // Implements button functionality
                 for (let i = 0; i < pendingRides.length; i++) {
                     let num = pendingRides[i].replace(/\D/g, '');
-                    document.getElementById(`rider_${i}`).addEventListener("click",
-                        function () {
-                            clearInterval(intervalID);
-                            setDestinationTo(num);
-                            storeDriverLocation();
-                            sendDriverResponse(num);
-                            acceptRide(num);
-                            deleteRiderEntry(num);
-                        });
+                    if (!cachedRides.includes(num)) {
+                        document.getElementById(`rider_${num}`).addEventListener("click",
+                            function () {
+                                clearInterval(intervalID);
+                                setDestinationTo(num);
+                                storeDriverLocation();
+                                sendDriverResponse(num);
+                                acceptRide(num);
+                                deleteRiderEntry(num);
+                                cachedRides = [];
+                            }
+                        );
+                        cachedRides.push(num);
+                    }
                 }
             } else {
                 console.log(data.message);
             }
     } catch (error) {
             console.error('Fetch riders failed', error);
-            alert('Fetching riders failed. Please try again.');
+            // alert('Fetching riders failed. Please try again.');
         }
     }
+
+
+
 
     const deleteRiderEntry = async (rider_id) => {
         try {
@@ -199,7 +224,7 @@ export const Driver = () => {
 
         } catch (error) {
             console.error('Fetch riders failed', error);
-            alert('Fetching riders failed. Please try again.');
+            // alert('Fetching riders failed. Please try again.');
         }
     }
 
@@ -256,8 +281,8 @@ export const Driver = () => {
             confirm_pickup: 'false',
             confirm_dropoff: 'false',
             start_time: rider_start,
-            end_time: 0,                    // 0 for now, need to implement time and fare
-            fare: 0                         // 0 for now, need to implement time and fare
+            end_time: 0,
+            fare: rider_fare,
         }
         
         try {
@@ -287,17 +312,19 @@ export const Driver = () => {
 
             const data = await response.json();
             if (response.ok) {
-                pendingRides = data;
-                rider_dropoff_location = pendingRides.dropoff_location;
-                rider_pickup_location = pendingRides.pickup_location;
-                rider_start = pendingRides.start_time;
+                // pendingRides = data;
+                rider_name = data.rider_name;
+                rider_dropoff_location = data.dropoff_location;
+                rider_pickup_location = data.pickup_location;
+                rider_start = data.start_time;
+                rider_fare = data.fare;
             } else {
-                alert(data.message);
+                console.log(data.message);
             }
 
         } catch (error) {
             console.error('Fetch riders failed', error);
-            alert('Fetching riders failed. Please try again.');
+            console.log('Fetching riders failed for get-rider-location. Please try again.');
         }
     }
 
@@ -341,6 +368,7 @@ export const Driver = () => {
                         driver_id: driver_id,
                         rider_id: riderData.rider_id,
                         confirm_dropoff: 'true',
+                        end_time: Date.now(),
                     }),
                 }
             );
@@ -366,40 +394,48 @@ export const Driver = () => {
             <div className='box-container'>
                 <div className='left-column'>
                     {sessionStart ? (
-                        <div className="rider-info">
+                        <div className="rider-info drive-margin">
                             <h3>Rider for Pickup</h3>
-                            <p><strong>Rider's ID:</strong> {riderData.rider_id}</p>
+                            <p><strong>Rider's Name:</strong> {riderData.rider_name}</p>
                             <p><strong>Pickup Location:</strong> {riderData.pickup_location}</p>
                             <p><strong>Dropoff Location:</strong> {riderData.dropoff_location}</p>
                             <p><strong>Session Status:</strong> Awaiting Pickup</p>
-                            <button className='btn btn-primary btn-circle btn-dark' onClick={confirmPickup}>Click to confirm pickup</button>
+                            <p><strong>Fare:</strong> ${riderData.fare} </p>
+                            <button className='btn btn-circle btn-outline-dark drive-margin' onClick={confirmPickup}>Click to confirm pickup</button>
                         </div>
                     ):
 
                     sessionPickupStage ? (
-                        <div className="rider-info">
+                        <div className="rider-info drive-margin">
                             <h3>Rider for Pickup</h3>
-                            <p><strong>Rider's ID:</strong> {riderData.rider_id}</p>
+                            <p><strong>Rider's Name:</strong> {riderData.rider_name}</p>
                             <p><strong>Pickup Location:</strong> {riderData.pickup_location}</p>
                             <p><strong>Dropoff Location:</strong> {riderData.dropoff_location}</p>
                             <p><strong>Session Status:</strong> Driving to Dropoff</p>
-                            <button className='btn btn-primary btn-circle btn-dark' onClick={confirmDropoff}>Click to confirm dropoff</button>
+                            <p><strong>Fare:</strong> ${riderData.fare} </p>
+                            <button className='btn btn-circle btn-outline-dark drive-margin' onClick={confirmDropoff}>Click to confirm dropoff</button>
 
                             <p id='completeDisplay'><strong></strong></p>
                         </div>
                     ):
 
                     (
-                        <div className='default-container text-center'>
+                        <div className='default-container text-center remove-indent'>
                             <br/><br/><br/><br/><br/>
                             <img src='/default-profile.png' alt='profile-picture'></img><br/>
                             <span id='name-text'>{user?.first_name} {user?.last_name}</span><br/><br/>
-                            <button className='btn btn-primary btn-circle btn-lg' onClick={grabPosAndRiders}>Start Work</button>
-                            <div className='disclaimer-text'>Note: This will use your location</div><br/>
+                            <button className='btn btn-circle btn-lg btn-outline-dark' onClick={grabPosAndRiders}>Start Work</button>
+                            <div className='disclaimer-text'><strong>Note:</strong> This will use your location</div><br/>
         
                             <h6>License Plate: {driverData.car_license_plate}</h6>
-        
-                            <ul id='riders'></ul>
+                            <Card className='drive-margin'>
+                                <CardHeader className="card-header">
+                                    <CardTitle className="card-title">Rider Queue:</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <ul id='riders' className='remove-indent'></ul>
+                                </CardContent>
+                            </Card>
                         </div>
                     )}
 

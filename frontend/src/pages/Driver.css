@@ -120,17 +120,72 @@ body {
   .rider-info {
     display: flex;
     flex-direction: column;
+    padding: 15px;
   }
 
   .rider-info p {
     margin: 10px 0;
     font-size: 18px;
+    color: #555;
+  }
+
+  .rider-info p strong {
+    color: #333;
   }
 
   .rider-info h3 {
     margin-top: 20px;
+    margin-bottom: 20px;
+    font-size: 24px;
+    color: #333;
+    border-bottom: 2px solid #e5e7eb;
+    padding-bottom: 10px;
 }
 
+  .drive-margin {
+    margin: 0 10px 0 10px;
+  }
+
+  /* Taken from Settings.css */
+  .card-header {
+    border-bottom: 1px solid #e5e7eb;
+    padding-bottom: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .card-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #111827;
+  }
+
+  .bottom-border {
+    border-bottom: 2px solid #e5e7eb;
+
+  }
+
+  .remove-indent ul {
+    padding-left: 0;
+    margin-left: 0;
+  }
+
+  .btn-search {
+    background-color: white;
+    border-top: 2px solid #e5e7eb;
+    border-left: solid white;
+    border-right: solid white;
+    color: black;
+    padding: 10px 24px;
+    cursor: pointer;
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .btn-search:hover {
+    background-color: #f0f0f0;
+  }
   /*--------------------Forms---------------------------*/
   .form-group {
     margin-bottom: 1rem;
