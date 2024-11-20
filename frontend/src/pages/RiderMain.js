@@ -95,29 +95,29 @@ export const RiderMain = () => {
         }
     }, [pickupLocation, dropoffLocation, differentLocations]);
 
-    useEffect(() => {
-        const getLocation = () => {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        const newLocation = [
-                            position.coords.longitude,
-                            position.coords.latitude
-                        ];
-                        console.log("Location updated to:", newLocation); 
-                        setLocation(newLocation);
-                    },
-                    (error) => {
-                        console.log(`Error in fetching location: ${error.message}`);
-                        alert(`Error in fetching location: ${error.message}`);
-                    }
-                );
-            } else {
-                console.log("Geolocation is not supported by this browser.");
-                alert("Geolocation is not supported by this browser.");
-            }
-        };
+    const getLocation = () => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const newLocation = [
+                        position.coords.longitude,
+                        position.coords.latitude
+                    ];
+                    console.log("Location updated to:", newLocation); 
+                    setLocation(newLocation);
+                },
+                (error) => {
+                    console.log(`Error in fetching location: ${error.message}`);
+                    alert(`Error in fetching location: ${error.message}`);
+                }
+            );
+        } else {
+            console.log("Geolocation is not supported by this browser.");
+            alert("Geolocation is not supported by this browser.");
+        }
+    };
 
+    useEffect(() => {
         getLocation();
     }, []); // Empty dependency array to run only on mount
     
@@ -236,12 +236,13 @@ export const RiderMain = () => {
                         setDropoffLocation('');
                         setNumPassengers('');
                         setAllowRideshare(false);
-                        setLocation(location);
-
-                        //Delete related redis keys
-                        deleteRideKeys(riderId, driverData.driver_id);
+                        getLocation(); // Update the user's current location
 
                         //Maybe here can update SQL database to record the session information for rider/driver transaction history.
+
+                        //Do this only after transaction recored
+                        //Delete related redis keys
+                        deleteRideKeys(riderId, driverData.driver_id);
 
                     }
 
