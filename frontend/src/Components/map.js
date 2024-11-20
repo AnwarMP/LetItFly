@@ -24,7 +24,7 @@ export const Map = ({
             container: mapContainerRef.current,
             style: 'mapbox://styles/mapbox/dark-v11',
             center: location,
-            zoom: 14,
+            zoom: 13,
         });
 
         // Add navigation controls

@@ -7,8 +7,6 @@ import { useState, useEffect } from 'react';
 // Note: Corrected the import statement for jwtDecode
 import { jwtDecode } from 'jwt-decode';
 
-//const MAPS_API_KEY = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
-
 const defaultLocation = [-121.92857174599622, 37.36353799938156]; // Default location (SJC)
 
 export const RiderMain = () => {
@@ -28,7 +26,7 @@ export const RiderMain = () => {
     //Define the list of airports**
     const airports = [
         "San Francisco International Airport",
-        "San José International Airport",
+        "(SJC) San José Mineta InternationalAirport",
         "Oakland International Airport"
     ];
 
@@ -60,12 +58,15 @@ export const RiderMain = () => {
         const perMileRate = 1.75; // Set dollar rate per mile
         const freeMiles = 2; // First 2 miles are free
         const minimumFare = 15; // Minimum fare
+        let rideshareDiscount = 0;
 
         // Calculate chargeable distance
         const chargeableDistance = Math.max(0, distance - freeMiles);
 
+        if(allowRideshare) rideshareDiscount = 10;
+
         // Calculate total fare
-        const fare = Math.max(minimumFare, chargeableDistance * perMileRate);
+        const fare = Math.max(minimumFare, (chargeableDistance * perMileRate) - rideshareDiscount);
 
         return fare.toFixed(2); // Return fare as a string with 2 decimal places
     };
@@ -246,10 +247,12 @@ export const RiderMain = () => {
                             />
                             <datalist id="pickup-locations">
                                 <option value="San Francisco International Airport" />
-                                <option value="San José International Airport" />
+                                {/* This is the closet I can get to the San Jose Airport without Mapbox confusion */}
+                                <option value="(SJC) San José Mineta InternationalAirport" />
                                 <option value="Oakland International Airport" />
                             </datalist>
                         </div>
+
                         <div className="to-textbox">
                             <input
                                 list="dropoff-locations"
@@ -263,7 +266,7 @@ export const RiderMain = () => {
                             />
                             <datalist id="dropoff-locations">
                                 <option value="San Francisco International Airport" />
-                                <option value="San José International Airport" />
+                                <option value="(SJC) San José Mineta InternationalAirport" />
                                 <option value="Oakland International Airport" />
                             </datalist>
                         </div>
@@ -301,7 +304,7 @@ export const RiderMain = () => {
                         {/* Display error message if validation fails */}
                         {!canFindDriver && (
                             <div className="error-message">
-                                Please ensure you have filled all required fields and are going to or from one of the 3 given Bay Area airports.
+                                Please ensure you have selected number of passengers and are going to or from one of the 3 given Bay Area airports.
                             </div>
                         )}
                     </div>
