@@ -3,10 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../store/authSlice';
 import { Card, CardHeader, CardTitle, CardContent } from '../Components/Card';
+import PaymentMethods from '../Components/payment/PaymentMethods';
+import Wallet from '../Components/wallet/Wallet';
 import './Settings.css';
 
 const Settings = () => {
   const { user, role } = useSelector((state) => state.auth);
+  const [activeTab, setActiveTab] = useState('profile');
   const [formData, setFormData] = useState({
     first_name: '',
     last_name: '',
@@ -86,14 +89,14 @@ const Settings = () => {
     navigate('/');
   };
 
-  return (
-    <div className="min-h-screen settings-container fade-in">
-      <Card className="card">
-        <CardHeader className="card-header">
-          <CardTitle className="card-title">Account Settings</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="grid-form">
+  const renderProfileForm = () => (
+    <Card>
+      <CardHeader>
+        <CardTitle>Profile Settings</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
             <div className="form-group">
               <label>First Name</label>
               <input
@@ -140,7 +143,7 @@ const Settings = () => {
             </div>
 
             {role === 'rider' && (
-              <div className="form-group full-width">
+              <div className="form-group col-span-2">
                 <label>Home Address</label>
                 <input
                   type="text"
@@ -176,56 +179,96 @@ const Settings = () => {
                 </div>
               </>
             )}
+          </div>
 
-            {error && (
-              <div className="error-message full-width">{error}</div>
-            )}
-            
-            {successMessage && (
-              <div className="success-message full-width">{successMessage}</div>
-            )}
+          {error && (
+            <div className="text-red-600">{error}</div>
+          )}
+          
+          {successMessage && (
+            <div className="text-green-600">{successMessage}</div>
+          )}
 
-            <div className="button-group full-width">
-              {!isEditing ? (
-                <button
-                  type="button"
-                  onClick={() => setIsEditing(true)}
-                  className="btn btn-edit"
-                >
-                  Edit Profile
-                </button>
-              ) : (
-                <div>
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="btn btn-save"
-                  >
-                    {loading ? 'Saving...' : 'Save Changes'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsEditing(false);
-                      fetchUserProfile();
-                    }}
-                    className="btn btn-cancel"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              )}
+          <div className="flex justify-end space-x-4">
+            {!isEditing ? (
               <button
                 type="button"
-                onClick={handleLogout}
-                className="btn btn-logout"
+                onClick={() => setIsEditing(true)}
+                className="btn btn-edit"
               >
-                Logout
+                Edit Profile
               </button>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsEditing(false);
+                    fetchUserProfile();
+                  }}
+                  className="btn btn-cancel"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="btn btn-save"
+                >
+                  {loading ? 'Saving...' : 'Save Changes'}
+                </button>
+              </>
+            )}
+          </div>
+        </form>
+      </CardContent>
+    </Card>
+  );
+
+  return (
+    <div className="settings-container">
+      <div className="settings-content">
+        <div className="settings-layout">
+          {/* Sidebar Navigation */}
+          <div className="settings-sidebar">
+            <div className="sidebar-nav">
+              <nav className="nav-buttons">
+                <button
+                  onClick={() => setActiveTab('profile')}
+                  className={`nav-button ${activeTab === 'profile' ? 'active' : ''}`}
+                >
+                  Profile Settings
+                </button>
+                <button
+                  onClick={() => setActiveTab('payment')}
+                  className={`nav-button ${activeTab === 'payment' ? 'active' : ''}`}
+                >
+                  Payment Methods
+                </button>
+                <button
+                  onClick={() => setActiveTab('wallet')}
+                  className={`nav-button ${activeTab === 'wallet' ? 'active' : ''}`}
+                >
+                  Wallet
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className="nav-button logout"
+                >
+                  Logout
+                </button>
+              </nav>
             </div>
-          </form>
-        </CardContent>
-      </Card>
+          </div>
+
+          {/* Main Content */}
+          <div className="settings-main">
+            {activeTab === 'profile' && renderProfileForm()}
+            {activeTab === 'payment' && <PaymentMethods />}
+            {activeTab === 'wallet' && <Wallet />}
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

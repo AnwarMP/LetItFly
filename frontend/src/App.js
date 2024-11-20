@@ -11,6 +11,8 @@ import { Driver } from "./pages/Driver";
 import { RiderMain } from "./pages/RiderMain";
 import Settings from './pages/Settings'; 
 import PaymentMethods from './Components/payment/PaymentMethods';
+import { Wallet } from './Components/wallet/Wallet';
+
 
 function App() {
     return (
@@ -49,14 +51,6 @@ function App() {
                                 <Settings />
                                 </PrivateRoute>
                             }
-                        />
-                        <Route
-                        path="/payment-methods"
-                        element={
-                            <PrivateRoute roles={['rider', 'driver']}>
-                                <PaymentMethods />
-                            </PrivateRoute>
-                        }
                         />
                     </Routes>
                 </Router>
