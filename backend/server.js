@@ -244,6 +244,24 @@ app.get('/get-driver', async (req, res) => {
   }
 });
 
+//Delete keys once session is over
+app.post('/delete-ride-keys', async (req, res) => {
+  const { keys } = req.body;
+
+  try {
+      if (!keys || !Array.isArray(keys)) {
+          return res.status(400).send('Invalid request body');
+      }
+
+      const deletePromises = keys.map(key => redisClient.del(key)); // Use redisClient instead of client
+      await Promise.all(deletePromises);
+
+      res.status(200).send('Keys deleted successfully');
+  } catch (error) {
+      console.error('Error deleting keys:', error);
+      res.status(500).send('Error deleting keys');
+  }
+});
 
 // Start the server
 app.listen(port, () => {

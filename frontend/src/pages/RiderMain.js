@@ -228,6 +228,23 @@ export const RiderMain = () => {
                         setDropoffLocation(data.dropoff_location);
                     }
 
+                    if (data.confirm_dropoff.toLowerCase() === "true") {
+                        console.log("Confirmed dropped off");
+                        //reset rider ui
+                        setDriverData(null);
+                        setPickupLocation('');
+                        setDropoffLocation('');
+                        setNumPassengers('');
+                        setAllowRideshare(false);
+                        setLocation(location);
+
+                        //Delete related redis keys
+                        deleteRideKeys(riderId, driverData.driver_id);
+
+                        //Maybe here can update SQL database to record the session information for rider/driver transaction history.
+
+                    }
+
                 } else {
                     console.error('Failed to fetch session data');
                 }
@@ -249,6 +266,32 @@ export const RiderMain = () => {
             return () => clearInterval(intervalID);
         }
     }, [driverData]);
+
+    const deleteRideKeys = async (riderId, driverId) => {
+        try {
+            const response = await fetch('http://localhost:3000/delete-ride-keys', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    keys: [
+                        `rider:${riderId}`,
+                        `session:rider:${riderId}:driver:${driverId}`,
+                        `driver:${driverId}`
+                    ]
+                })
+            });
+    
+            if (response.ok) {
+                console.log('Ride keys deleted successfully');
+            } else {
+                console.error('Failed to delete ride keys');
+            }
+        } catch (error) {
+            console.error('Error deleting ride keys:', error);
+        }
+    };
 
     return (
     <div>    
