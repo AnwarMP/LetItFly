@@ -9,6 +9,7 @@ export const Login = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [showSignUpOptions, setShowSignUpOptions] = useState(false);
+    const [selectedRole, setSelectedRole] = useState('rider'); // Default to rider
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
@@ -47,25 +48,27 @@ export const Login = () => {
                 },
                 body: JSON.stringify({ 
                     email: inputs.email, 
-                    password: inputs.pass 
+                    password: inputs.pass,
+                    role: selectedRole
                 }),
             });
 
             const data = await response.json();
             
             if (response.ok) {
+                if (data.user.role !== selectedRole) {
+                    setError(`Invalid login. This account is registered as a ${data.user.role}`);
+                    dispatch(loginFailure('Invalid role'));
+                    return;
+                }
+
                 dispatch(loginSuccess({
                     user: data.user,
                     token: data.token,
                     role: data.user.role
                 }));
 
-                // Redirect based on role
-                if (data.user.role === 'driver') {
-                    navigate('/driver');
-                } else {
-                    navigate('/rider');
-                }
+                navigate(data.user.role === 'driver' ? '/driver' : '/rider');
             } else {
                 dispatch(loginFailure(data.message));
                 setError(data.message);
@@ -85,6 +88,23 @@ export const Login = () => {
                 <div className="login-container">
                     <h2 className="login-header">Login</h2>
                     
+                    <div className="tab-container">
+                        <div 
+                            className={`tab ${selectedRole === 'rider' ? 'active' : ''}`}
+                            onClick={() => setSelectedRole('rider')}
+                        >
+                            <span className="tab-icon">🚗</span>
+                            Rider
+                        </div>
+                        <div 
+                            className={`tab ${selectedRole === 'driver' ? 'active' : ''}`}
+                            onClick={() => setSelectedRole('driver')}
+                        >
+                            <span className="tab-icon">🚘</span>
+                            Driver
+                        </div>
+                    </div>
+
                     <form onSubmit={handleSubmit}>
                         <div className="form-group">
                             <label>Email Address:</label>
@@ -115,7 +135,7 @@ export const Login = () => {
                             className="login-button"
                             disabled={loading}
                         >
-                            {loading ? 'Logging in...' : 'Login'}
+                            {loading ? 'Logging in...' : `Login as ${selectedRole}`}
                         </button>
 
                         {error && (

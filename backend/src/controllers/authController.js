@@ -75,9 +75,18 @@ const register = async (req, res) => {
 };
 
 const login = async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, role } = req.body;
 
   try {
+    
+    if (!role) {
+      return res.status(400).json({ message: 'Role must be specified (rider or driver)' });
+    }
+
+    if (!['rider', 'driver'].includes(role)) {
+      return res.status(400).json({ message: 'Invalid role specified' });
+    }
+
     const result = await pool.query(
       'SELECT id, email, password, role, first_name, last_name FROM users WHERE email = $1',
       [email]
@@ -92,6 +101,12 @@ const login = async (req, res) => {
 
     if (!isMatch) {
       return res.status(401).json({ message: 'Invalid credentials' });
+    }
+
+    if (user.role !== role) {
+      return res.status(401).json({ 
+        message: `Invalid login. You selected ${role} but this account is registered as a ${user.role}`
+      });
     }
 
     const token = jwt.sign(

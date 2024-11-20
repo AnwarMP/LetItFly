@@ -22,6 +22,47 @@
     color: #060606; 
 }
 
+/* New Tab Styles */
+.tab-container {
+    display: flex;
+    margin-bottom: 24px;
+    border-radius: 60px;
+    overflow: hidden;
+    border: 2px solid #000;
+}
+
+.tab {
+    flex: 1;
+    padding: 16px;
+    text-align: center;
+    cursor: pointer;
+    background: transparent;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-weight: bold;
+    color: #000;
+}
+
+.tab:first-child {
+    border-right: 2px solid #000;
+}
+
+.tab.active {
+    background: #000;
+    color: white;
+}
+
+.tab:hover:not(.active) {
+    background: #f0f0f0;
+}
+
+.tab-icon {
+    font-size: 1.2em;
+}
+
 .form-group {
     margin-bottom: 15px;
     text-align: left;
@@ -81,7 +122,6 @@
     color: #666;
 }
 
-/* Updated signup link styles */
 .signup-link {
     background: none;
     border: none;
@@ -98,7 +138,6 @@
     color: #0056b3;
 }
 
-/* Signup options slide styles */
 .signup-options-slide {
     position: fixed;
     top: 0;
