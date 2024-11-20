@@ -222,6 +222,12 @@ export const RiderMain = () => {
                     const data = await response.json();
                     setSessionData(data); // Update session data state
                     console.log("Fetched session data!: ", { ...data});
+
+                    if (data.confirm_pickup.toLowerCase() === "true") {
+                        setPickupLocation(pickupLocation);
+                        setDropoffLocation(dropoffLocation);
+                    }
+
                 } else {
                     console.error('Failed to fetch session data');
                 }
