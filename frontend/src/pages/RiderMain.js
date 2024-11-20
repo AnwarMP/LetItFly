@@ -224,8 +224,8 @@ export const RiderMain = () => {
                     console.log("Fetched session data!: ", { ...data});
 
                     if (data.confirm_pickup.toLowerCase() === "true") {
-                        setPickupLocation(pickupLocation);
-                        setDropoffLocation(dropoffLocation);
+                        setPickupLocation(data.pickup_location);
+                        setDropoffLocation(data.dropoff_location);
                     }
 
                 } else {
@@ -264,32 +264,40 @@ export const RiderMain = () => {
                 ) 
                 :driverData ? (
                     // Display driver information if driverData is not null
-                    <div className="driver-info">
-                        <h3>Your Driver</h3>
-                        <p><strong>Name:</strong> {driverData.name}</p>
-                        <p><strong>Car:</strong> {driverData.car}</p>
-                        <p><strong>License Plate:</strong> {driverData.license_plate}</p>
+                <div className="driver-info">
+                <h3>Your Driver</h3>
+                <div className="driver-details">
+                    <p><strong>Name:</strong> {driverData.name}</p>
+                    <p><strong>Car:</strong> {driverData.car}</p>
+                    <p><strong>License Plate:</strong> {driverData.license_plate}</p>
+                </div>
 
-                        {/* Display session data */}
-                        {sessionData && (
-                            <div className="session-info">
-                                <h3>Ride Status</h3>
-                                <p><strong>Pickup Location:</strong> {sessionData.pickup_location}</p>
-                                <p><strong>Dropoff Location:</strong> {sessionData.dropoff_location}</p>
-                                <p><strong>Fare:</strong> {sessionData.fare}</p>
-                                {/* Add more fields as needed */}
-                            </div>
-                        )}
-
-                        {sessionData && (
-                        sessionData.confirm_pickup.toLowerCase() === "false" ? (
-                            <h5>{driverData.name} is <span className="bold">{routeInfo.duration} minutes</span> away!</h5>
-                        ) : (
-                            <h5>Time till arrival:  <span className="bold">{routeInfo.duration} minutes</span></h5>
-                        )
-                        )}
-
+                {/* Display session data */}
+                {sessionData && (
+                    <div className="session-info">
+                    <h3>Your Ride</h3>
+                    <p><strong>Pickup Location:</strong> {sessionData.pickup_location}</p>
+                    <p><strong>Dropoff Location:</strong> {sessionData.dropoff_location}</p>
+                    <p><strong>Fare (USD):</strong> {sessionData.fare}</p>
+                    {/* Add more fields as needed */}
                     </div>
+                )}
+
+                {sessionData && (
+                    <div className="eta-info">
+                    {sessionData.confirm_pickup.toLowerCase() === "false" ? (
+                        <h5>
+                        {driverData.name} is <span className="bold">{routeInfo.duration} minutes</span> away!
+                        </h5>
+                    ) : (
+                        <h5>
+                        ETA: <span className="bold">{routeInfo.duration} minutes</span>
+                        </h5>
+                    )}
+                    </div>
+                )}
+                </div>
+
                 ) 
                 : (
                     // Default UI if no driverData is available

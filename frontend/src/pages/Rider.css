@@ -1,179 +1,200 @@
-/*-------------Rider Nav Side Bar-------------*/
-
+/*------------- Rider UI Container -------------*/
 .rider-ui {
     display: flex;
     justify-content: space-between;
     height: calc(100vh - 70px);
-}
-
-/* Rider Navigation Sidebar */
-.rider-nav-sidebar {
+  }
+  
+  /*------------- Rider Navigation Sidebar -------------*/
+  .rider-nav-sidebar {
     display: flex;
     flex-direction: column;
-    justify-content: space-between; /* Space elements between top and bottom */
+    justify-content: space-between;
     align-items: center;
-    height: 100%; /* Ensure it takes full available height */
+    height: 100%;
     margin: 10px;
     width: 30vw;
-}
-
-/* Top Section (inputs and Show Directions button) */
-.top-section {
+  }
+  
+  /*------------- Driver Info Section -------------*/
+  .driver-info {
+    background-color: #fff;
+    padding: 25px;
+    width: 100%;
+  }
+  
+  .driver-info h3 {
+    margin-bottom: 20px;
+    font-size: 24px;
+    color: #333;
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 10px;
+  }
+  
+  .driver-details,
+  .session-info {
+    margin-bottom: 10vh;
+  }
+  
+  .driver-details p,
+  .session-info p {
+    margin: 10px 0;
+    font-size: 18px;
+    color: #555;
+  }
+  
+  .driver-details p strong,
+  .session-info p strong {
+    color: #333;
+  }
+  
+  .eta-info h5 {
+    font-size: 20px;
+    color: #333;
+    margin-top: 20px;
+    text-align: center;
+  }
+  
+  .bold {
+    font-weight: bold;
+    color: #000;
+  }
+  
+  /*------------- Top Section (Inputs and Buttons) -------------*/
+  .top-section {
     display: flex;
     flex-direction: column;
     align-items: center;
-}
-
-.from-textbox,
-.to-textbox,
-.num-passengers,
-.allow-rideshare {
+  }
+  
+  .from-textbox,
+  .to-textbox,
+  .num-passengers,
+  .allow-rideshare {
     margin: 10px 0;
     width: 100%;
-}
-
-.from-input,
-.to-input,
-.input-field {
-    width: 25vw; /* Full width */
-    height: 50px; /* Adjust height */
-    padding: 10px; /* Inner spacing */
-    font-size: 16px; /* Font size */
-    border: 1px solid #ccc; /* Border color */
-    border-radius: 5px; /* Rounded corners */
-    box-sizing: border-box; /* Include padding in width */
-}
-
-/* Placeholder text color */
-.from-input::placeholder,
-.to-input::placeholder,
-.input-field option[value=""][disabled] {
+  }
+  
+  .from-input,
+  .to-input,
+  .input-field {
+    width: 25vw;
+    height: 50px;
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+  }
+  
+  .from-input::placeholder,
+  .to-input::placeholder,
+  .input-field option[value=""][disabled] {
     color: #999;
-}
-
-/* Styles for the select dropdown */
-.input-field {
+  }
+  
+  /*------------- Select Dropdown Styles -------------*/
+  .input-field {
     appearance: none;
     background-color: #fff;
-    background-image: url("data:image/svg+xml;charset=US-ASCII,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'><path fill='%23999' d='M2 0L0 2h4z'/></svg>");
+    background-image: url("data:image/svg+xml,%3Csvg fill='none' stroke='%23999' stroke-width='2' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 10px center;
-    background-size: 8px 10px;
+    background-size: 20px 20px;
     cursor: pointer;
-}
-
-/* Style for the select element when the placeholder is selected */
-.input-field {
-    color: #999;
-}
-
-/* Style for the select element when a valid option is selected */
-.input-field:valid {
+    color: #555;
+  }
+  
+  .input-field:valid {
     color: #000;
-}
-
-/* Hide the placeholder option in the dropdown */
-.input-field option[value=""][disabled][hidden] {
+  }
+  
+  .input-field option[value=""][disabled][hidden] {
     display: none;
-}
-
-.input-field::-ms-expand {
+  }
+  
+  .input-field::-ms-expand {
     display: none;
-}
-
-/* Styles for the checkbox */
-.allow-rideshare .checkbox-label {
+  }
+  
+  /*------------- Checkbox Styles -------------*/
+  .allow-rideshare .checkbox-label {
     display: flex;
     align-items: center;
     font-size: 16px;
-}
-
-.allow-rideshare input[type="checkbox"] {
+  }
+  
+  .allow-rideshare input[type="checkbox"] {
     margin-left: 10px;
     width: 20px;
     height: 20px;
     cursor: pointer;
-}
-
-.driver-button {
+  }
+  
+  /*------------- Buttons -------------*/
+  .driver-button {
     display: flex;
     flex-direction: column;
     align-items: center;
     margin: 10px;
     width: 100%;
-}
-
-.driver-button button {
-    width: 200px; /* Full width */
-    height: 50px; /* Button height */
-    font-size: 18px; /* Font size */
-    color: #fff; /* Text color */
-    background-color: black; /* Button color */
-    border: none; /* Remove border */
-    border-radius: 5px; /* Rounded corners */
-    cursor: pointer; /* Pointer cursor on hover */
-    transition: background-color 0.3s; /* Smooth transition */
-    align-self: bottom;
-}
-
-/* New styles for the disabled state of the button */
-.driver-button button:disabled {
-    background-color: darkgrey; /* Change background to dark grey */
-    cursor: not-allowed; /* Change cursor to indicate it's not clickable */
-}
-
-.find-driver-button {
+  }
+  
+  .driver-button button {
+    width: 200px;
+    height: 50px;
+    font-size: 18px;
+    color: #fff;
+    background-color: #000;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .driver-button button:hover {
+    background-color: #333;
+  }
+  
+  .driver-button button:disabled {
+    background-color: darkgrey;
+    cursor: not-allowed;
+  }
+  
+  .find-driver-button {
     margin-bottom: 40px;
-}
-
-/*Loading for the nav side bar*/
-.loading-container {
+  }
+  
+  /*------------- Loading Animation -------------*/
+  .loading-container {
     display: flex;
     height: 100%;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-}
-
-.spinner {
+  }
+  
+  .spinner {
     border: 8px solid rgba(0, 0, 0, 0.1);
     width: 72px;
     height: 72px;
     border-radius: 50%;
     border-left-color: black;
-    animation: spin 1s ease infinite;
+    animation: spin 1s linear infinite;
     margin-bottom: 24px;
-}
-
-@keyframes spin {
+  }
+  
+  @keyframes spin {
     to {
-        transform: rotate(360deg);
+      transform: rotate(360deg);
     }
-}
-
-/* Driver info side-bar */
-.driver-info {
-    display: flex;
-    flex-direction: column;
-}
-
-.driver-info p {
-    margin: 10px 0;
-    font-size: 18px;
-}
-
-.driver-info h5 {
-    margin-top: 20px;
-}
-
-/* Error message styling */
-.error-message {
+  }
+  
+  /*------------- Error Message Styling -------------*/
+  .error-message {
     max-width: 20vw;
     color: red;
     font-size: 14px;
     margin: 10px 0;
-}
-
-.bold {
-    font-weight: bold;
-}
+  }
+  
