@@ -153,7 +153,7 @@ app.get('/get-session', (req, res) => {
   const rider_id = req.query.rider_id;
   const driver_id = req.query.driver_id;
   // Retrieving session data from Redis
-  redisClient.hGetAll(`session:${rider_id}:${driver_id}`, (err, session) => {
+  redisClient.hGetAll(`session:rider:${rider_id}:driver:${driver_id}`, (err, session) => {
     if (err) return res.status(500).send('Error fetching session');
     res.send(session);
   });
