@@ -108,7 +108,7 @@ export const Driver = () => {
         loopFetch();
     }
     
-    const getCurrentPos = async () => {
+    const getCurrentPos = () => {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 updatePos
@@ -356,7 +356,8 @@ export const Driver = () => {
             console.error("Bad update on session dropoff", error)
         }
 
-        getLocation() //Updated map to just user location once confirmed dropoff is true
+        getLocation(); //Updated map to just user location once confirmed dropoff is true
+        getCurrentPos();
     }
 
     return (
