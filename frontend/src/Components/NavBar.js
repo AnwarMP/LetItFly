@@ -76,6 +76,9 @@ export const Navbar = () => {
                                 <Link to="/settings" className="nav-button">Settings</Link>
                             </li>
                             <li>
+                                <Link to="/payment-methods" className="nav-button">Payment Methods</Link>
+                            </li>
+                            <li>
                                 <button onClick={handleLogout} className="nav-button logout-button">
                                     Logout
                                 </button>
