@@ -96,29 +96,10 @@ const transactionController = {
         if (req.user.role !== 'driver') {
             return res.status(403).json({ error: 'Only drivers can access earnings summary' });
         }
-
+    
         const driver_id = req.user.userId;
-        const { period } = req.query; // 'day', 'week', 'month', 'year'
-
+    
         try {
-            let timeFilter;
-            switch (period) {
-                case 'day':
-                    timeFilter = "DATE_TRUNC('day', created_at) = CURRENT_DATE";
-                    break;
-                case 'week':
-                    timeFilter = "DATE_TRUNC('week', created_at) = DATE_TRUNC('week', CURRENT_DATE)";
-                    break;
-                case 'month':
-                    timeFilter = "DATE_TRUNC('month', created_at) = DATE_TRUNC('month', CURRENT_DATE)";
-                    break;
-                case 'year':
-                    timeFilter = "DATE_TRUNC('year', created_at) = DATE_TRUNC('year', CURRENT_DATE)";
-                    break;
-                default:
-                    timeFilter = "TRUE";
-            }
-
             const result = await pool.query(`
                 SELECT 
                     COUNT(*) as total_rides,
@@ -127,11 +108,10 @@ const transactionController = {
                     MIN(amount) as min_ride,
                     MAX(amount) as max_ride
                 FROM transactions
-                WHERE driver_id = $1
-                AND ${timeFilter}`,
+                WHERE driver_id = $1`,
                 [driver_id]
             );
-
+    
             res.json({
                 summary: result.rows[0]
             });
