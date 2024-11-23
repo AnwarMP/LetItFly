@@ -7,7 +7,7 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const { initializeDatabase } = require('./src/db/init');
 const authRoutes = require('./src/routes/auth');
-
+const paymentRoutes = require('./src/routes/payment'); 
 dotenv.config();
 
 const app = express();
@@ -38,6 +38,7 @@ initializeDatabase().catch(console.error);
 
 // Routes
 app.use('/auth', authRoutes);
+app.use('/api/payments', paymentRoutes);
 
 
 app.post('/store-rider-info', (req, res) => {
