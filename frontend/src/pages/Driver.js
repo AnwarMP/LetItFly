@@ -27,6 +27,9 @@ export const Driver = () => {
     const [ridesharePollingInterval, setRidesharePollingInterval] = useState(null);
     const [isSecondRider, setIsSecondRider] = useState(false);
     const [secondRiderData, setSecondRiderData] = useState(null);
+    const [secondRiderPickupConfirmed, setSecondRiderPickupConfirmed] = useState(false);
+    const [secondRiderLocation, setSecondRiderLocation] = useState('');
+    const [finalDropoffLocation, setFinalDropoffLocation] = useState('');
 
 
     const [driverData, setDriverData] = useState({
@@ -344,6 +347,7 @@ export const Driver = () => {
                 fare: rider_fare,
             };
 
+            setFinalDropoffLocation(rider_dropoff_location);
             console.log("Session details: ", sessionDetails);
             
             // Store session in Redis
@@ -501,6 +505,39 @@ export const Driver = () => {
         }
     }
 
+    const confirmSecondRiderPickup = async () => {
+        try {
+            // Similar to confirmPickup but for second rider
+
+            console.log("Confirming second rider pickup:", secondRiderData.rider_id, "Driver id" , driver_id);
+            const decoded = jwtDecode(token);
+            const response = await fetch(`http://localhost:3000/update-session-pickup`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    driver_id: decoded.userId,
+                    rider_id: secondRiderData.rider_id,
+                    confirm_pickup: 'true'
+                }),
+            });
+            
+
+            // Update the map to go from the pickup to the dropoff of the second rider
+            setPickupLocation(secondRiderLocation);
+            setDropoffLocation(finalDropoffLocation);
+
+            handleShowDirections();   
+    
+            if (response.ok) {
+                console.log("Confirm session for second rider pickup good");
+                setSecondRiderPickupConfirmed(true);
+            }
+        } catch (error) {
+            console.error('Failed to confirm second rider pickup:', error);
+            alert('Failed to confirm second rider pickup. Please try again.');
+        }
+    };
+
     const confirmDropoff = async () => {
         try {
             if (!postgresRideId) {
@@ -571,6 +608,9 @@ export const Driver = () => {
             setPickupConfirm(false);
             setSecondRiderData(null);
             setIsSecondRider(false);
+            setSecondRiderPickupConfirmed(false);
+            setRideShareEnabled(false);
+            setRideshareMatches([]);
             getLocation();
             getCurrentPos();    
     
@@ -615,11 +655,31 @@ export const Driver = () => {
             if (!sessionResponse.ok) {
                 throw new Error('Failed to store second session');
             }
-    
+            console.log("Second session stored successfully");
+            // Wake the second rider
+            sendDriverResponse(secondRiderId);
+
+            /**
+             *              clearInterval(intervalID);
+                            setDestinationTo(riderId);
+                            storeDriverLocation();
+                            sendDriverResponse(riderId);
+                            acceptRide(riderId);
+                            deleteRiderEntry(riderId);
+             */
+
             // Set second rider data and stop polling
             setSecondRiderData(match.rideData);
+            setSecondRiderLocation(match.rideData.pickup_location);
             setIsSecondRider(true);
+
+            // Set pickup and location to second rider
+
             
+            setPickupLocation(pickupLocation);
+            setDropoffLocation(match.rideData.pickup_location);
+
+            handleShowDirections();            
             // Stop polling for more riders
             if (ridesharePollingInterval) {
                 clearInterval(ridesharePollingInterval);
@@ -655,54 +715,86 @@ export const Driver = () => {
 
                     sessionPickupStage ? (
                         <div className="rider-info drive-margin">
-                            <h3>Rider for Pickup</h3>
-                            <p><strong>Rider's Name:</strong> {riderData.rider_name}</p>
-                            <p><strong>Pickup Location:</strong> {riderData.pickup_location}</p>
-                            <p><strong>Dropoff Location:</strong> {riderData.dropoff_location}</p>
-                            <p><strong>Session Status:</strong> Driving to Dropoff</p>
-                            <p><strong>Fare:</strong> ${riderData.fare} </p>
-                            <button className='btn btn-circle btn-outline-dark drive-margin' onClick={confirmDropoff}>Click to confirm dropoff</button>
-                            {rideShareEnabled ? (
-                                    <>
-                                        <p><strong>Ride Share Enabled</strong></p>
-                                        {rideshareMatches.length > 0 ? (
-                                            <Card className='drive-margin'>
-                                                <CardHeader className="card-header">
-                                                    <CardTitle className="card-title">Available Rideshare Matches:</CardTitle>
-                                                </CardHeader>
-                                                <CardContent>
-                                                    <ul className='remove-indent'>
-                                                        {rideshareMatches.map((match, index) => (
-                                                            <li key={`${match.rideKey}-${index}`}>
-                                                                <button 
-                                                                    className="btn-search bottom-border"
-                                                                    style={{ width: '100%', margin: '5px 0' }}
-                                                                    onClick={() => acceptSecondRider(match)}
-                                                                    disabled={isSecondRider} // Disable once we have a second rider
-                                                                >
-                                                                    <strong>Rider:</strong> {match.rideData.rider_name}
-                                                                    <br/>
-                                                                    <strong>Pickup Location:</strong> {match.rideData.pickup_location}
-                                                                    <br/>
-                                                                    <strong>Fare:</strong> ${match.rideData.fare}
-                                                                    <br/>
-                                                                    <strong>Passengers:</strong> {match.rideData.num_passengers}
-                                                                </button>
-                                                            </li>
-                                                        ))}
-                                                    </ul>
-                                                </CardContent>
-                                            </Card>
-                                        ) : (
-                                            <p><em>No rideshare matches available</em></p>
-                                        )}
-                                    </>
-                                ) : (
-                                    <p><strong>Ride Share Disabled</strong></p>
-                                )}
+                            <h3>Active Ride</h3>
+                            {/* First Rider Info */}
+                            <div className="rider-card">
+                                <p><strong>Rider's Name:</strong> {riderData.rider_name}</p>
+                                <p><strong>Pickup Location:</strong> {riderData.pickup_location}</p>
+                                <p><strong>Dropoff Location:</strong> {riderData.dropoff_location}</p>
+                                <p><strong>Status:</strong> Pickup Confirmed</p>
+                                <p><strong>Fare:</strong> ${riderData.fare}</p>
+                            </div>
+                    
+                            {/* Second Rider Info (if exists) */}
+                            {isSecondRider && (
+                                <div className="rider-card">
+                                    <p><strong>Rider:</strong> {secondRiderData.rider_name}</p>
+                                    <p><strong>Pickup Location:</strong> {secondRiderData.pickup_location}</p>
+                                    <p><strong>Dropoff Location:</strong> {secondRiderData.dropoff_location}</p>
+                                    <p><strong>Status:</strong> {secondRiderPickupConfirmed ? 'Pickup Confirmed' : 'Awaiting Pickup'}</p>
+                                    <p><strong>Fare:</strong> ${secondRiderData.fare}</p>
+                                    {!secondRiderPickupConfirmed && (
+                                        <button 
+                                            className='btn btn-circle btn-outline-dark drive-margin'
+                                            onClick={confirmSecondRiderPickup}
+                                        >
+                                            Confirm Second Rider Pickup
+                                        </button>
+                                    )}
+                                </div>
+                            )}
+                    
+                            {/* Only show dropoff button if second rider is picked up or there is no second rider */}
+                            {(!isSecondRider || secondRiderPickupConfirmed) && (
+                                <button 
+                                    className='btn btn-circle btn-outline-dark drive-margin' 
+                                    onClick={confirmDropoff}
+                                >
+                                    Click to confirm dropoff
+                                </button>
+                            )}
+                    
+                            {/* Rideshare matching section (only show if no second rider yet) */}
+                            {rideShareEnabled && !isSecondRider && (
+                                <>
+                                    <p><strong>Ride Share Enabled</strong></p>
+                                    {rideshareMatches.length > 0 ? (
+                                        <Card className='drive-margin'>
+                                            <CardHeader className="card-header">
+                                                <CardTitle className="card-title">Available Rideshare Matches:</CardTitle>
+                                            </CardHeader>
+                                            <CardContent>
+                                                <ul className='remove-indent'>
+                                                    {rideshareMatches.map((match, index) => (
+                                                        <li key={`${match.rideKey}-${index}`}>
+                                                            <button 
+                                                                className="btn-search bottom-border"
+                                                                style={{ width: '100%', margin: '5px 0' }}
+                                                                onClick={() => acceptSecondRider(match)}
+                                                                disabled={isSecondRider}
+                                                            >
+                                                                <strong>Rider:</strong> {match.rideData.rider_name}
+                                                                <br/>
+                                                                <strong>Pickup Location:</strong> {match.rideData.pickup_location}
+                                                                <br/>
+                                                                <strong>Fare:</strong> ${match.rideData.fare}
+                                                                <br/>
+                                                                <strong>Passengers:</strong> {match.rideData.num_passengers}
+                                                            </button>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </CardContent>
+                                        </Card>
+                                    ) : (
+                                        <p><em>No rideshare matches available</em></p>
+                                    )}
+                                </>
+                            )}
+                            
                             <p id='completeDisplay'><strong></strong></p>
                         </div>
-                    ):
+                    ) :
 
                     (
                         <div className='default-container text-center remove-indent'>

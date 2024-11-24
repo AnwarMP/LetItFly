@@ -531,7 +531,7 @@ app.post('/update-session-pickup', (req, res) => {
     "riderID", rider_id,
     "confirm_pickup", confirm_pickup,
   (err, response) => {
-    if (err) return res.status(500).send('Error storing session');
+    if (err) return res.status(500).send('Error storing session', err);
     res.send('Session stored in cache');
   });
 });

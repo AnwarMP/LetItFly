@@ -152,16 +152,20 @@ export const RiderMain = () => {
         } catch (error) {
             console.error('Store rider location information failed', error);
         }
+        console.log("Waiting for driver");
         intervalID = setInterval(async () => {awaitDriver();}, 1000);
     };
 
     const awaitDriver = async () => {
         try {
+            console.log("Awaiting driver, riderId: " + riderId);
             const response = await fetch(`http://localhost:3000/await-driver?rider_id=${riderId}`);
             const data = await response.json();
+            console.log("Data, " + data);
             if (response.ok) {
                 // For checking if the response was empty
                 if (!(Object.keys(data).length === 0)) {
+                    console.log("Driver found");
                     clearInterval(intervalID);
                     fetchDriver(data.driver_id);
                     const wait = await showDriverDetails(data.driver_id);
