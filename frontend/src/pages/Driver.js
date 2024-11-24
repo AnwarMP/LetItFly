@@ -120,7 +120,7 @@ export const Driver = () => {
         try {
           const response = await fetch('http://localhost:3000/auth/profile', {
             headers: {
-              'Authorization': `Bearer ${localStorage.getItem('token')}`
+              'Authorization': `Bearer ${sessionStorage.getItem('token')}`
             }
           });
           const data = await response.json();

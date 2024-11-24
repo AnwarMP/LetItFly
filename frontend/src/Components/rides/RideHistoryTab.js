@@ -18,7 +18,7 @@ const RideHistoryTab = () => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/payments/rides/history`, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
+          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
         },
       });
 
@@ -37,7 +37,7 @@ const RideHistoryTab = () => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/payments/rides/${rideId}`, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
+          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
         },
       });
 

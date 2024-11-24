@@ -20,7 +20,7 @@ const PaymentMethodsTab = () => {
       const response = await fetch(`${API_BASE_URL}/api/payments/methods`, {
         method: 'GET',
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
+          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
         },
       });
       if (!response.ok) throw new Error('Failed to fetch payment methods');
@@ -39,7 +39,7 @@ const PaymentMethodsTab = () => {
       const response = await fetch(`${API_BASE_URL}/api/payments/methods/${methodId}/default`, {
         method: 'PUT',
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
+          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
         },
       });
       if (!response.ok) throw new Error('Failed to update default payment method');
