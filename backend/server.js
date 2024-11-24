@@ -124,10 +124,10 @@ function formatCoordinates(location) {
 }
 
 async function getCoordinates(location) {
-  if (location.includes(',')) {
-      // Already in coordinate format
-      return location;
-  }
+  // if (location.includes(',')) {
+  //     // Already in coordinate format
+  //     return location;
+  // }
 
   try {
       const encodedLocation = encodeURIComponent(location);

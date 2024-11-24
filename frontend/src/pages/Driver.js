@@ -144,6 +144,9 @@ export const Driver = () => {
                 pendingRides = data; // This is now an array of ride objects
                 console.log('Pending riders fetch successful!');
                 console.log('Found', pendingRides.length, 'potential rides');
+
+                // Reset cachedRides at the start of the function
+                cachedRides = [];
     
                 // Clear existing rides display
                 document.getElementById('riders').innerHTML = '';
@@ -152,7 +155,6 @@ export const Driver = () => {
                 for (const ride of pendingRides) {
                     const rideData = ride.rideData;
                     const duration = ride.duration;
-                    const distance = (ride.distance / 1000).toFixed(1); // Convert to km
     
                     // Extract rider ID from rideKey (e.g., "rider:123" -> "123")
                     const riderId = ride.rideKey.split(':')[1];
@@ -167,9 +169,7 @@ export const Driver = () => {
                                     <br/>
                                     <strong>Dropoff Location:</strong> ${rideData.dropoff_location}
                                     <br/>
-                                    <strong>Duration:</strong> ${duration} minutes
-                                    <br/>
-                                    <strong>Distance:</strong> ${distance} km
+                                    <strong>Pickup Time:</strong> ${duration} minutes
                                     <br/>
                                     <strong>Estimated Fare:</strong> $${rideData.fare}
                                 </button>
@@ -506,11 +506,10 @@ export const Driver = () => {
             document.getElementById('completeDisplay').innerHTML = 
                 `Ride completed! Payment of $${riderData.fare} processed.`;
             
-            setTimeout(() => {
-                setPickupConfirm(false);
-                getLocation();
-                getCurrentPos();
-            }, 5000);
+            setPickupConfirm(false);
+            getLocation();
+            getCurrentPos();
+   
     
         } catch (error) {
             console.error('Error in confirmDropoff:', error);
