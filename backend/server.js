@@ -474,6 +474,43 @@ app.post('/store-session', (req, res) => {
   });
 });
 
+app.post('/store-second-session', (req, res) => {
+      const { 
+          rider_id, driver_id, pickup_location, dropoff_location,
+          confirm_pickup, confirm_dropoff, start_time, end_time, fare,
+          first_rider_id
+      } = req.body;
+
+      // Store individual session for second rider with callback style
+      redisClient.hSet(`session:rider:${rider_id}:driver:${driver_id}`,
+          "driverID", driver_id,
+          "riderID", rider_id,
+          "pickup_location", pickup_location,
+          "dropoff_location", dropoff_location,
+          "confirm_pickup", confirm_pickup,
+          "confirm_dropoff", confirm_dropoff,
+          "start_time", start_time,
+          "session_start_time", Date.now(),
+          "end_time", end_time,
+          "fare", fare,
+          "is_second_rider", "true",
+          "first_rider_id", first_rider_id,
+      (err, response) => {
+          if (err) return res.status(500).send('Error storing session', err);
+          
+          // Store combined session reference
+          redisClient.hSet(`combined_session:${driver_id}`,
+              "first_rider", first_rider_id,
+              "second_rider", rider_id,
+          (err2, response2) => {
+              if (err2) return res.status(500).send('Error storing combined session');
+              res.send('Sessions stored in cache');
+          });
+      });
+});
+
+
+
 // Redis route to retrieve session data
 app.get('/get-session', (req, res) => {
   const rider_id = req.query.rider_id;
@@ -499,35 +536,50 @@ app.post('/update-session-pickup', (req, res) => {
   });
 });
 
-app.post('/update-session-dropoff', async (req, res) => {
-  const { driver_id, rider_id, confirm_dropoff, end_time } = req.body;
+app.post('/update-session-dropoff', (req, res) => {
+  const { driver_id, rider_id, second_rider_id, confirm_dropoff, end_time } = req.body;
   
-  console.log('Redis Update Request:', {
-      driver_id,
-      rider_id,
-      confirm_dropoff,
-      end_time,
-      sessionKey: `session:rider:${rider_id}:driver:${driver_id}`
+  // Update first rider's session
+  redisClient.hSet(`session:rider:${rider_id}:driver:${driver_id}`,
+      "confirm_dropoff", confirm_dropoff,
+      "end_time", end_time.toString(),
+  (err1, response1) => {
+      if (err1) {
+          console.error('Error updating first rider session:', err1);
+          return res.status(500).json({
+              error: 'Failed to update first rider session',
+              details: err1.message
+          });
+      }
+
+      // If there's a second rider, update their session too
+      if (second_rider_id) {
+          redisClient.hSet(`session:rider:${second_rider_id}:driver:${driver_id}`,
+              "confirm_dropoff", confirm_dropoff,
+              "end_time", end_time.toString(),
+          (err2, response2) => {
+              if (err2) {
+                  console.error('Error updating second rider session:', err2);
+                  return res.status(500).json({
+                      error: 'Failed to update second rider session',
+                      details: err2.message
+                  });
+              }
+
+              // Delete combined session reference
+              redisClient.del(`combined_session:${driver_id}`, (err3, response3) => {
+                  if (err3) {
+                      console.error('Error deleting combined session:', err3);
+                  }
+                  res.json({ message: 'All sessions updated successfully' });
+              });
+          });
+      } else {
+          res.json({ message: 'Session updated successfully' });
+      }
   });
-
-  try {
-      // Update Redis session
-      await redisClient.hSet(
-          `session:rider:${rider_id}:driver:${driver_id}`,
-          "confirm_dropoff", confirm_dropoff,
-          "end_time", end_time.toString()  // Convert to string if it's a number
-      );
-
-      console.log('Redis session updated successfully');
-      res.json({ message: 'Session updated successfully' });
-  } catch (error) {
-      console.error('Redis update error:', error);
-      res.status(500).json({ 
-          error: 'Failed to update Redis session',
-          details: error.message 
-      });
-  }
 });
+
 
 app.get('/wake-rider', (req, res) => {
   const rider_id = req.query.rider_id;

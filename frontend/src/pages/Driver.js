@@ -25,6 +25,8 @@ export const Driver = () => {
     const [rideShareEnabled, setRideShareEnabled] = useState(false);
     const [rideshareMatches, setRideshareMatches] = useState([]);
     const [ridesharePollingInterval, setRidesharePollingInterval] = useState(null);
+    const [isSecondRider, setIsSecondRider] = useState(false);
+    const [secondRiderData, setSecondRiderData] = useState(null);
 
 
     const [driverData, setDriverData] = useState({
@@ -544,12 +546,14 @@ export const Driver = () => {
                 riderId: riderData.rider_id
             });
     
+            // Update Redis for both riders if there's a second rider
             const redisResponse = await fetch('http://localhost:3000/update-session-dropoff', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    driver_id:  user.id,
+                    driver_id: user.id,
                     rider_id: riderData.rider_id,
+                    second_rider_id: secondRiderData ? secondRiderData.rider_id : null,
                     confirm_dropoff: 'true',
                     end_time: Date.now(),
                 }),
@@ -558,9 +562,6 @@ export const Driver = () => {
             if (!redisResponse.ok) {
                 const redisError = await redisResponse.text();
                 console.error('Redis update failed:', redisError);
-                // Don't throw here, continue with cleanup
-            } else {
-                console.log('Redis session updated successfully');
             }
     
             // Update UI and clean up
@@ -568,13 +569,69 @@ export const Driver = () => {
                 `Ride completed! Payment of $${riderData.fare} processed.`;
             
             setPickupConfirm(false);
+            setSecondRiderData(null);
+            setIsSecondRider(false);
             getLocation();
-            getCurrentPos();
-   
+            getCurrentPos();    
     
         } catch (error) {
             console.error('Error in confirmDropoff:', error);
             alert(`Failed to complete ride: ${error.message}`);
+        }
+    };
+
+    const acceptSecondRider = async (match) => {
+        try {
+            const wait = await getTokenID(); // Get driver_id
+            
+            // Extract rider_id from match.rideKey (e.g., "rider:123" -> "123")
+            const secondRiderId = match.rideKey.split(':')[1];
+
+            console.log('Accepting second rider:', secondRiderId);
+            
+            // Store session for second rider
+            const sessionDetails = {
+                rider_id: secondRiderId,
+                driver_id: driver_id,
+                pickup_location: match.rideData.pickup_location, 
+                dropoff_location: match.rideData.dropoff_location, 
+                confirm_pickup: 'false',
+                confirm_dropoff: 'false',
+                start_time: match.rideData.start_time,
+                end_time: 0,
+                fare: match.rideData.fare,
+                first_rider_id: riderData.rider_id  // Link to first rider
+            };
+    
+            console.log("Second session details: ", sessionDetails);
+            
+            // Store second session in Redis
+            const sessionResponse = await fetch('http://localhost:3000/store-second-session', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(sessionDetails),
+            });
+    
+            if (!sessionResponse.ok) {
+                throw new Error('Failed to store second session');
+            }
+    
+            // Set second rider data and stop polling
+            setSecondRiderData(match.rideData);
+            setIsSecondRider(true);
+            
+            // Stop polling for more riders
+            if (ridesharePollingInterval) {
+                clearInterval(ridesharePollingInterval);
+                setRidesharePollingInterval(null);
+            }
+    
+            // Remove second rider from pending rides
+            await deleteRiderEntry(secondRiderId);
+            
+        } catch (error) {
+            console.error('Accepting second rider failed:', error);
+            alert(`Failed to accept second rider: ${error.message}`);
         }
     };
 
@@ -620,6 +677,8 @@ export const Driver = () => {
                                                                 <button 
                                                                     className="btn-search bottom-border"
                                                                     style={{ width: '100%', margin: '5px 0' }}
+                                                                    onClick={() => acceptSecondRider(match)}
+                                                                    disabled={isSecondRider} // Disable once we have a second rider
                                                                 >
                                                                     <strong>Rider:</strong> {match.rideData.rider_name}
                                                                     <br/>
