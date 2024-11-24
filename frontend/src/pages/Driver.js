@@ -21,6 +21,7 @@ export const Driver = () => {
     const [riderData, setRiderData] = useState(null);
     const [sessionStart, setSessionStart] = useState(null);
     const [sessionPickupStage, setPickupConfirm] = useState(null);
+    const [postgresRideId, setPostgresRideId] = useState(null);
     const [driverData, setDriverData] = useState({
         first_name: '',
         last_name: '',
@@ -270,41 +271,91 @@ export const Driver = () => {
     }
 
     const acceptRide = async (rider_id) => {
-        // Waits for GET to fetch locations and time before creating session
-        const riderResponse = await grabRiderDetails(rider_id);
-
-        const sessionDetails = {
-            rider_id: rider_id,
-            driver_id: driver_id,
-            pickup_location: rider_pickup_location, 
-            dropoff_location: rider_dropoff_location, 
-            confirm_pickup: 'false',
-            confirm_dropoff: 'false',
-            start_time: rider_start,
-            end_time: 0,
-            fare: rider_fare,
-        }
-        
         try {
-            const response = await fetch(`http://localhost:3000/store-session`, {
+            // First fetch rider details and store in Redis session
+            const riderResponse = await grabRiderDetails(rider_id);
+    
+            const sessionDetails = {
+                rider_id: rider_id,
+                driver_id: driver_id,
+                pickup_location: rider_pickup_location, 
+                dropoff_location: rider_dropoff_location, 
+                confirm_pickup: 'false',
+                confirm_dropoff: 'false',
+                start_time: rider_start,
+                end_time: 0,
+                fare: rider_fare,
+            };
+            
+            // Store session in Redis
+            const sessionResponse = await fetch('http://localhost:3000/store-session', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(sessionDetails),
-              }
-            );
-
-            // const data = await response.json();
-            if (response.ok) {
-                console.log("Create and store session success");
-                setSessionStart(true);
-            } else {
-            //   alert(data.message);
+            });
+    
+            if (!sessionResponse.ok) {
+                throw new Error('Failed to store session');
             }
-
+    
+            // Create a new ride in PostgreSQL
+            const createResponse = await fetch('http://localhost:3000/api/payments/rides', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    rider_id_given: rider_id,
+                    pickup_location: rider_pickup_location,
+                    dropoff_location: rider_dropoff_location,
+                    estimated_fare: rider_fare,
+                    num_passengers: 1,
+                }),
+            });
+    
+            if (!createResponse.ok) {
+                const createError = await createResponse.text();
+                console.error('Create ride error:', createError);
+                throw new Error(`Failed to create ride: ${createError}`);
+            }
+    
+            const createData = await createResponse.json();
+            const rideId = createData.ride.id;
+            setPostgresRideId(rideId);
+    
+            // Accept the ride as the driver
+            console.log('Attempting to accept ride with ID:', rideId);
+            console.log('Using token:', token);
+            
+            const acceptResponse = await fetch(
+                `http://localhost:3000/api/payments/rides/${rideId}/accept`,
+                {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                    },
+                }
+            );
+    
+            if (!acceptResponse.ok) {
+                const acceptError = await acceptResponse.text();
+                console.error('Accept ride error:', acceptError);
+                throw new Error(`Failed to accept ride: ${acceptError}`);
+            }
+    
+            const acceptData = await acceptResponse.json();
+            console.log('Accept ride response:', acceptData);
+    
+            setSessionStart(true);
+            console.log("Ride created and accepted successfully");
+    
         } catch (error) {
-            console.error('Accepting ride failed', error);
+            console.error('Accepting ride failed:', error);
+            alert(`Failed to accept ride: ${error.message}`);
         }
-    }
+    };
 
     const grabRiderDetails = async (rider_id) => {
         try {
@@ -332,6 +383,27 @@ export const Driver = () => {
         const wait = await getTokenID();
         
         try {
+
+            if (!postgresRideId) {
+                throw new Error('No ride ID found');
+            }
+    
+            // Start the ride in PostgreSQL
+            const paymentResponse = await fetch(
+                `http://localhost:3000/api/payments/rides/${postgresRideId}/start`,
+                {
+                    method: 'PUT',
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+    
+            if (!paymentResponse.ok) {
+                throw new Error('Failed to start ride');
+            }
+
+            // Update session in Redis
             const response = await fetch(`http://localhost:3000/update-session-pickup`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -358,35 +430,78 @@ export const Driver = () => {
     }
 
     const confirmDropoff = async () => {
-        const wait = await getTokenID();
-
         try {
-            const response = await fetch('http://localhost:3000/update-session-dropoff', {
-                method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+            if (!postgresRideId) {
+                throw new Error('No ride ID found');
+            }
+    
+            // First complete PostgreSQL transaction
+            console.log('Completing ride in PostgreSQL:', {
+                rideId: postgresRideId,
+                fare: riderData.fare,
+                riderId: riderData.rider_id
+            });
+    
+            const response = await fetch(
+                `http://localhost:3000/api/payments/rides/${postgresRideId}/complete`,
+                {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                    },
                     body: JSON.stringify({
-                        driver_id: driver_id,
-                        rider_id: riderData.rider_id,
-                        confirm_dropoff: 'true',
-                        end_time: Date.now(),
+                        final_fare: parseFloat(riderData.fare),
+                        rider_id: riderData.rider_id
                     }),
                 }
             );
-            
-            if (response.ok) {
-                // Set up a display for how much driver makes from fares, then returns back to old screen
-                document.getElementById('completeDisplay').innerHTML += `Thank you for your service!`
-                setTimeout(function() {setPickupConfirm(false);}, 5000);
+    
+            if (!response.ok) {
+                const errorData = await response.text();
+                throw new Error(`Failed to complete ride: ${errorData}`);
             }
-
-
+    
+            // Then update Redis
+            console.log('Updating Redis session:', {
+                driverId: user.id,
+                riderId: riderData.rider_id
+            });
+    
+            const redisResponse = await fetch('http://localhost:3000/update-session-dropoff', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    driver_id:  user.id,
+                    rider_id: riderData.rider_id,
+                    confirm_dropoff: 'true',
+                    end_time: Date.now(),
+                }),
+            });
+    
+            if (!redisResponse.ok) {
+                const redisError = await redisResponse.text();
+                console.error('Redis update failed:', redisError);
+                // Don't throw here, continue with cleanup
+            } else {
+                console.log('Redis session updated successfully');
+            }
+    
+            // Update UI and clean up
+            document.getElementById('completeDisplay').innerHTML = 
+                `Ride completed! Payment of $${riderData.fare} processed.`;
+            
+            setTimeout(() => {
+                setPickupConfirm(false);
+                getLocation();
+                getCurrentPos();
+            }, 5000);
+    
         } catch (error) {
-            console.error("Bad update on session dropoff", error)
+            console.error('Error in confirmDropoff:', error);
+            alert(`Failed to complete ride: ${error.message}`);
         }
-
-        getLocation(); //Updated map to just user location once confirmed dropoff is true
-        getCurrentPos();
-    }
+    };
 
     return (
         <body>

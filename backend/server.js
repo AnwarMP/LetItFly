@@ -7,7 +7,7 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const { initializeDatabase } = require('./src/db/init');
 const authRoutes = require('./src/routes/auth');
-
+const paymentRoutes = require('./src/routes/payment'); 
 dotenv.config();
 
 const app = express();
@@ -38,6 +38,7 @@ initializeDatabase().catch(console.error);
 
 // Routes
 app.use('/auth', authRoutes);
+app.use('/api/payments', paymentRoutes);
 
 
 app.post('/store-rider-info', (req, res) => {
@@ -176,19 +177,34 @@ app.post('/update-session-pickup', (req, res) => {
   });
 });
 
-app.post('/update-session-dropoff', (req, res) => {
-  const { rider_id, driver_id, confirm_dropoff, end_time} = req.body;
-
-// Storing session data in Redis
-  redisClient.hSet(`session:rider:${rider_id}:driver:${driver_id}`,
-    "driverID", driver_id,
-    "riderID", rider_id,
-    "confirm_dropoff", confirm_dropoff,
-    "end_time", end_time,
-  (err, response) => {
-    if (err) return res.status(500).send('Error storing session');
-    res.send('Session stored in cache');
+app.post('/update-session-dropoff', async (req, res) => {
+  const { driver_id, rider_id, confirm_dropoff, end_time } = req.body;
+  
+  console.log('Redis Update Request:', {
+      driver_id,
+      rider_id,
+      confirm_dropoff,
+      end_time,
+      sessionKey: `session:rider:${rider_id}:driver:${driver_id}`
   });
+
+  try {
+      // Update Redis session
+      await redisClient.hSet(
+          `session:rider:${rider_id}:driver:${driver_id}`,
+          "confirm_dropoff", confirm_dropoff,
+          "end_time", end_time.toString()  // Convert to string if it's a number
+      );
+
+      console.log('Redis session updated successfully');
+      res.json({ message: 'Session updated successfully' });
+  } catch (error) {
+      console.error('Redis update error:', error);
+      res.status(500).json({ 
+          error: 'Failed to update Redis session',
+          details: error.message 
+      });
+  }
 });
 
 app.get('/wake-rider', (req, res) => {
