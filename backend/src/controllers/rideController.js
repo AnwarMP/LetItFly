@@ -283,7 +283,13 @@ const rideController = {
         const user_id = req.user.userId;
         const role = req.user.role;
         const { ride_status } = req.query;
-
+    
+        console.log('Getting ride history for:', {
+            user_id,
+            role,
+            ride_status
+        });
+    
         try {
             let query = `
                 SELECT r.*, 
@@ -298,23 +304,41 @@ const rideController = {
                 LEFT JOIN transactions t ON r.id = t.ride_id
                 WHERE r.${role === 'rider' ? 'rider_id' : 'driver_id'} = $1
             `;
-
+    
             const queryParams = [user_id];
-
+    
             if (ride_status) {
                 query += ` AND r.ride_status = $2`;
                 queryParams.push(ride_status);
             }
-
+    
             query += ` ORDER BY r.created_at DESC`;
-
+    
+            console.log('Executing query:', {
+                query,
+                params: queryParams
+            });
+    
             const result = await pool.query(query, queryParams);
-
+    
+            console.log('Query result:', {
+                rowCount: result.rows.length,
+                rows: result.rows
+            });
+    
+            // Also check if there are any rides at all for this user
+            const totalRidesQuery = await pool.query(
+                'SELECT COUNT(*) FROM rides WHERE rider_id = $1',
+                [user_id]
+            );
+            
+            console.log('Total rides for user:', totalRidesQuery.rows[0].count);
+    
             res.json({
                 rides: result.rows
             });
         } catch (error) {
-            console.error('Error fetching ride history:', error);
+            console.error('Error in getRideHistory:', error);
             res.status(500).json({ error: 'Failed to fetch ride history' });
         }
     },
