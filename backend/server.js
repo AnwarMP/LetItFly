@@ -9,6 +9,8 @@ const { initializeDatabase } = require('./src/db/init');
 const authRoutes = require('./src/routes/auth');
 const paymentRoutes = require('./src/routes/payment'); 
 const axios = require('axios');
+const { seedDatabase } = require('./src/seed/seed'); // Import the seed function
+
 dotenv.config();
 
 const app = express();
@@ -34,8 +36,20 @@ app.use(express.json());
 
 
 // Call the function to initialize the database on server startup
-// Initialize database
-initializeDatabase().catch(console.error);
+(async () => {
+  try {
+    console.log('🌱 Initializing database...');
+    await initializeDatabase();
+    console.log('✅ Database initialized.');
+
+    console.log('🌱 Seeding database...');
+    await seedDatabase();
+    console.log('✅ Seeding completed.');
+  } catch (error) {
+    console.error('❌ Error during initialization or seeding:', error.message);
+    process.exit(1);
+  }
+})();
 
 // Routes
 app.use('/auth', authRoutes);
