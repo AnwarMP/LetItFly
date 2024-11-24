@@ -7,6 +7,8 @@ import PaymentMethodsTab from '../Components/payments/PaymentMethodsTab';
 import BankAccountsTab from '../Components/bank/BankAccountsTab';
 import RiderTransactionTab from '../Components/transactions/RiderTransactionTab';
 import DriverTransactionTab from '../Components/transactions/DriverTransactionTab';
+import RideHistoryTab from '../Components/rides/RideHistoryTab';
+
 import './Settings.css';
 
 const Settings = () => {
@@ -128,6 +130,12 @@ const Settings = () => {
                 Bank Accounts
               </button>
             )}
+            <button
+              className={`tab ${activeTab === 'rides' ? 'active' : ''}`}
+              onClick={() => setActiveTab('rides')}
+            >
+              Rides
+            </button>
             <button
               className={`tab ${activeTab === 'transactions' ? 'active' : ''}`}
               onClick={() => setActiveTab('transactions')}
@@ -266,6 +274,7 @@ const Settings = () => {
           {activeTab === 'bank' && role === 'driver' && (
             <BankAccountsTab />
           )}
+          {activeTab === 'rides' &&  <RideHistoryTab />}
           {activeTab === 'transactions' &&
             (role === 'rider' ? (
               <RiderTransactionTab />

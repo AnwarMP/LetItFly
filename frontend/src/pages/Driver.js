@@ -306,6 +306,7 @@ export const Driver = () => {
                     'Authorization': `Bearer ${token}`,
                 },
                 body: JSON.stringify({
+                    rider_id_given: rider_id,
                     pickup_location: rider_pickup_location,
                     dropoff_location: rider_dropoff_location,
                     estimated_fare: rider_fare,
