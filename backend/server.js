@@ -87,6 +87,56 @@ app.post('/store-rider-info', (req, res) => {
   
 });
 
+// getting ride-share-matches
+app.get('/get-rideshare-matches', (req, res) => {
+  const dropoff_location = req.query.dropoff_location;
+  console.log('\n=== Processing Rideshare Match Request ===');
+  console.log('Target dropoff location:', dropoff_location);
+
+  // First get all pending rides from the set
+  redisClient.sMembers('pendingDrive', (err, pendingRideKeys) => {
+    if (err) {
+      console.error('Redis error fetching pending rides:', err);
+      return res.status(500).json({ error: 'Failed to fetch pending rides' });
+    }
+
+    console.log('Found pending rides:', pendingRideKeys);
+
+    if (!pendingRideKeys || pendingRideKeys.length === 0) {
+      return res.json([]);
+    }
+
+    let matches = [];
+    let completedQueries = 0;
+
+    // Process each pending ride
+    pendingRideKeys.forEach((rideKey) => {
+      redisClient.hGetAll(rideKey, (err, rideData) => {
+        completedQueries++;
+
+        if (err) {
+          console.error(`Error fetching data for ${rideKey}:`, err);
+        } else if (rideData) {
+          // Check if ride has rideshare enabled and matching dropoff location
+          if (rideData.allow_rideshare === 'true' && 
+              rideData.dropoff_location === dropoff_location) {
+            matches.push({
+              rideKey,
+              rideData
+            });
+          }
+        }
+
+        // If this is the last query, send the response
+        if (completedQueries === pendingRideKeys.length) {
+          console.log('Found rideshare matches:', matches);
+          res.json(matches);
+        }
+      });
+    });
+  });
+});
+
 // Redis route to retrieve rider location
 app.get('/get-rider-location', (req, res) => {
   const rider_id = req.query.rider_id;

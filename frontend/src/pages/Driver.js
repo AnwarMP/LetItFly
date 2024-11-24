@@ -23,6 +23,9 @@ export const Driver = () => {
     const [sessionPickupStage, setPickupConfirm] = useState(null);
     const [postgresRideId, setPostgresRideId] = useState(null);
     const [rideShareEnabled, setRideShareEnabled] = useState(false);
+    const [rideshareMatches, setRideshareMatches] = useState([]);
+    const [ridesharePollingInterval, setRidesharePollingInterval] = useState(null);
+
 
     const [driverData, setDriverData] = useState({
         first_name: '',
@@ -68,9 +71,44 @@ export const Driver = () => {
         }
     };
 
+    const startRidesharePolling = () => {
+        // Clear any existing interval
+        if (ridesharePollingInterval) {
+          clearInterval(ridesharePollingInterval);
+        }
+      
+        // Start new polling interval
+        const intervalId = setInterval(async () => {
+          try {
+            const response = await fetch(
+              `http://localhost:3000/get-rideshare-matches?dropoff_location=${encodeURIComponent(riderData.dropoff_location)}`
+            );
+      
+            if (response.ok) {
+              const matches = await response.json();
+              console.log('Rideshare matches found:', matches);
+              setRideshareMatches(matches);
+            } else {
+              console.error('Failed to fetch rideshare matches');
+            }
+          } catch (error) {
+            console.error('Error fetching rideshare matches:', error);
+          }
+        }, 3000); // Poll every 3 seconds
+      
+        setRidesharePollingInterval(intervalId);
+      };
+
     useEffect(() => {
         getLocation();
         fetchUserProfile();
+
+        // Cleanup function
+        return () => {
+            if (ridesharePollingInterval) {
+            clearInterval(ridesharePollingInterval);
+            }
+        };
     }, []); // Empty dependency array to run only on mount
 
     const fetchUserProfile = async () => {
@@ -448,6 +486,12 @@ export const Driver = () => {
                 setPickupLocation(riderData.pickup_location);
                 setDropoffLocation(riderData.dropoff_location);
                 setShowDirections(true);
+
+                // Start rideshare polling if rideshare is enabled
+                if (rideShareEnabled) {
+                    console.log('Starting rideshare polling...');
+                    startRidesharePolling();
+                }
             }
         } catch (error) {
             console.error('Fetch riders failed', error);
@@ -459,6 +503,12 @@ export const Driver = () => {
         try {
             if (!postgresRideId) {
                 throw new Error('No ride ID found');
+            }
+
+            // End the polling
+            if (ridesharePollingInterval) {
+                clearInterval(ridesharePollingInterval);
+                setRidesharePollingInterval(null);
             }
     
             // First complete PostgreSQL transaction
