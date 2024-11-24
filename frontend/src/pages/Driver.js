@@ -17,7 +17,7 @@ export const Driver = () => {
     const [pickupLocation, setPickupLocation] = useState('');
     const [dropoffLocation, setDropoffLocation] = useState('');
     const [showDirections, setShowDirections] = useState(false);
-    const token = localStorage.getItem('token');
+    const token = sessionStorage.getItem('token');
     const [riderData, setRiderData] = useState(null);
     const [sessionStart, setSessionStart] = useState(null);
     const [sessionPickupStage, setPickupConfirm] = useState(null);

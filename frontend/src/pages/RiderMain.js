@@ -20,7 +20,7 @@ export const RiderMain = () => {
     const [driverData, setDriverData] = useState(null);
     const [numPassengers, setNumPassengers] = useState(''); // Changed to empty string
     const [allowRideshare, setAllowRideshare] = useState(false);
-    const token = localStorage.getItem('token');
+    const token = sessionStorage.getItem('token');
     const [sessionData, setSessionData] = useState(null); // State to hold session data
     const [routeInfo, setRouteInfo] = useState({ duration: 0, distance: 0 }); // Added routeInfo state
     const [riderId, setRiderId] = useState('');
