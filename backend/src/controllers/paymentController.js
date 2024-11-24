@@ -6,12 +6,20 @@ const paymentController = {
         const user_id = req.user.userId;
 
         try {
+            // Check if this is the user's first payment method
+            const existingMethods = await pool.query(
+                'SELECT COUNT(*) FROM payment_methods WHERE user_id = $1',
+                [user_id]
+            );
+
+            const isFirst = existingMethods.rows[0].count === '0';
+
             const result = await pool.query(`
                 INSERT INTO payment_methods 
-                (user_id, card_type, last_four, expiry_month, expiry_year)
-                VALUES ($1, $2, $3, $4, $5)
+                (user_id, card_type, last_four, expiry_month, expiry_year, is_default)
+                VALUES ($1, $2, $3, $4, $5, $6)
                 RETURNING id, card_type, last_four, expiry_month, expiry_year, is_default`,
-                [user_id, card_type, last_four, expiry_month, expiry_year]
+                [user_id, card_type, last_four, expiry_month, expiry_year, isFirst]
             );
 
             res.status(201).json({
@@ -116,12 +124,20 @@ const paymentController = {
         const user_id = req.user.userId;
 
         try {
+            // Check if this is the user's first bank account
+            const existingAccounts = await pool.query(
+                'SELECT COUNT(*) FROM bank_accounts WHERE user_id = $1',
+                [user_id]
+            );
+
+            const isFirst = existingAccounts.rows[0].count === '0';
+
             const result = await pool.query(`
                 INSERT INTO bank_accounts 
-                (user_id, account_holder_name, last_four, routing_number)
-                VALUES ($1, $2, $3, $4)
+                (user_id, account_holder_name, last_four, routing_number, is_default)
+                VALUES ($1, $2, $3, $4, $5)
                 RETURNING id, account_holder_name, last_four, routing_number, is_default`,
-                [user_id, account_holder_name, last_four, routing_number]
+                [user_id, account_holder_name, last_four, routing_number, isFirst]
             );
 
             res.status(201).json({
