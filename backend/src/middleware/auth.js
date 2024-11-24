@@ -17,19 +17,29 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
-const checkRole = (roles) => {
-  return (req, res, next) => {
-    if (!req.user) {
-      return res.status(401).json({ message: 'Unauthorized' });
-    }
+// In auth.js middleware
+  const checkRole = (roles) => {
+    return (req, res, next) => {
+        console.log('Checking role:', {
+            userRole: req.user?.role,
+            requiredRoles: roles
+        });
+        
+        if (!req.user) {
+            return res.status(401).json({ message: 'Unauthorized' });
+        }
 
-    if (!roles.includes(req.user.role)) {
-      return res.status(403).json({ message: 'Forbidden - Insufficient role' });
-    }
+        if (!roles.includes(req.user.role)) {
+            return res.status(403).json({ 
+                message: 'Forbidden - Insufficient role',
+                userRole: req.user.role,
+                requiredRoles: roles
+            });
+        }
 
-    next();
+        next();
+    };
   };
-};
 
 module.exports = {
   authenticateToken,

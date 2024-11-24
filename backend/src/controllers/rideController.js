@@ -2,27 +2,33 @@ const { pool } = require('../db/init');
 
 const rideController = {
     async createRide(req, res) {
-        const { 
+        const {  
+            rider_id_given,
             pickup_location, 
             dropoff_location, 
             estimated_fare,
             num_passengers 
         } = req.body;
-        const rider_id = req.user.userId;
+        const rider_id = rider_id_given ?? req.user.userId;
+
+
+        console.log('Request Body:', req.body);
+        console.log('User ID:', req.user.userId);
 
         try {
             // Check if rider has a default payment method
-            const paymentMethod = await pool.query(`
-                SELECT id FROM payment_methods 
-                WHERE user_id = $1 AND is_default = true`,
-                [rider_id]
-            );
+            //@TODO: Uncomment this code after finishing basic functinaltiy 
+            // const paymentMethod = await pool.query(`
+            //     SELECT id FROM payment_methods 
+            //     WHERE user_id = $1 AND is_default = true`,
+            //     [rider_id]
+            // );
 
-            if (paymentMethod.rows.length === 0) {
-                return res.status(400).json({ 
-                    error: 'No default payment method found. Please add a payment method.' 
-                });
-            }
+            // if (paymentMethod.rows.length === 0) {
+            //     return res.status(400).json({ 
+            //         error: 'No default payment method found. Please add a payment method.' 
+            //     });
+            // }
 
             const result = await pool.query(`
                 INSERT INTO rides 
@@ -49,17 +55,17 @@ const rideController = {
 
         try {
             // Check if driver has a default bank account
-            const bankAccount = await pool.query(`
-                SELECT id FROM bank_accounts 
-                WHERE user_id = $1 AND is_default = true`,
-                [driver_id]
-            );
+            // const bankAccount = await pool.query(`
+            //     SELECT id FROM bank_accounts 
+            //     WHERE user_id = $1 AND is_default = true`,
+            //     [driver_id]
+            // );
 
-            if (bankAccount.rows.length === 0) {
-                return res.status(400).json({ 
-                    error: 'No default bank account found. Please add a bank account.' 
-                });
-            }
+            // if (bankAccount.rows.length === 0) {
+            //     return res.status(400).json({ 
+            //         error: 'No default bank account found. Please add a bank account.' 
+            //     });
+            // }
 
             const result = await pool.query(`
                 UPDATE rides 
@@ -83,7 +89,10 @@ const rideController = {
             });
         } catch (error) {
             console.error('Error accepting ride:', error);
-            res.status(500).json({ error: 'Failed to accept ride' });
+            res.status(500).json({ 
+                error: 'Failed to accept ride',
+                details: error.message
+            });
         }
     },
 
@@ -121,12 +130,23 @@ const rideController = {
 
     async completeRide(req, res) {
         const { rideId } = req.params;
-        const { final_fare } = req.body;
+        const { final_fare, rider_id} = req.body;
         const driver_id = req.user.userId;
 
+    
+        console.log('Complete Ride Request:', {
+            rideId,
+            final_fare,
+            driver_id,
+            rider_id,
+            body: req.body
+        });
+    
         try {
             await pool.query('BEGIN');
-
+    
+            console.log('Starting transaction');
+    
             // Update ride status
             const rideResult = await pool.query(`
                 UPDATE rides 
@@ -139,55 +159,78 @@ const rideController = {
                 RETURNING *`,
                 [final_fare, rideId, driver_id]
             );
-
+    
+            console.log('Ride update result:', rideResult.rows);
+    
             if (rideResult.rows.length === 0) {
+                console.log('No ride found or not in progress');
                 await pool.query('ROLLBACK');
                 return res.status(404).json({ 
                     error: 'Ride not found or not in progress' 
                 });
             }
-
+    
             const ride = rideResult.rows[0];
-
+            console.log('Found ride:', ride);
+    
+            const valid_rider_id = rider_id ??  ride.rider_id;
             // Get payment method and bank account
-            const paymentMethod = await pool.query(`
+            const paymentMethodResult = await pool.query(`
                 SELECT id FROM payment_methods 
-                WHERE user_id = $1 AND is_default = true`,
-                [ride.rider_id]
+                WHERE user_id = $1`,
+                [valid_rider_id]
             );
-
-            const bankAccount = await pool.query(`
+            console.log('Payment method query result:', paymentMethodResult.rows);
+    
+            const bankAccountResult = await pool.query(`
                 SELECT id FROM bank_accounts 
-                WHERE user_id = $1 AND is_default = true`,
+                    WHERE user_id = $1`,
                 [driver_id]
             );
-
+            console.log('Bank account query result:', bankAccountResult.rows);
+    
             // Create transaction record
-            await pool.query(`
+            const transactionValues = [
+                rideId,
+                valid_rider_id,
+                driver_id,
+                final_fare,
+                paymentMethodResult.rows[0]?.id,
+                bankAccountResult.rows[0]?.id
+            ];
+            console.log('Transaction values:', transactionValues);
+    
+            const transactionResult = await pool.query(`
                 INSERT INTO transactions 
                 (ride_id, rider_id, driver_id, amount, transaction_status, 
                 payment_method_id, bank_account_id)
-                VALUES ($1, $2, $3, $4, 'completed', $5, $6)`,
-                [
-                    rideId,
-                    ride.rider_id,
-                    driver_id,
-                    final_fare,
-                    paymentMethod.rows[0]?.id,
-                    bankAccount.rows[0]?.id
-                ]
+                VALUES ($1, $2, $3, $4, 'completed', $5, $6)
+                RETURNING *`,
+                transactionValues
             );
-
+    
+            console.log('Transaction created:', transactionResult.rows[0]);
+    
             await pool.query('COMMIT');
-
+            console.log('Transaction committed');
+    
             res.json({
                 message: 'Ride completed and payment processed successfully',
-                ride: ride
+                ride: ride,
+                transaction: transactionResult.rows[0]
             });
         } catch (error) {
+            console.error('Complete ride error details:', {
+                error: error.message,
+                stack: error.stack,
+                detail: error.detail,
+                where: error.where
+            });
             await pool.query('ROLLBACK');
-            console.error('Error completing ride:', error);
-            res.status(500).json({ error: 'Failed to complete ride' });
+            res.status(500).json({ 
+                error: 'Failed to complete ride',
+                details: error.message
+            });
         }
     },
 
