@@ -603,9 +603,44 @@ export const Driver = () => {
                             <p><strong>Pickup Location:</strong> {riderData.pickup_location}</p>
                             <p><strong>Dropoff Location:</strong> {riderData.dropoff_location}</p>
                             <p><strong>Session Status:</strong> Driving to Dropoff</p>
-                            {rideShareEnabled ? ( <p><strong>Ride Share Enabled</strong></p> ) : ( <p><strong>Ride Share Disabled</strong></p> )}
                             <p><strong>Fare:</strong> ${riderData.fare} </p>
                             <button className='btn btn-circle btn-outline-dark drive-margin' onClick={confirmDropoff}>Click to confirm dropoff</button>
+                            {rideShareEnabled ? (
+                                    <>
+                                        <p><strong>Ride Share Enabled</strong></p>
+                                        {rideshareMatches.length > 0 ? (
+                                            <Card className='drive-margin'>
+                                                <CardHeader className="card-header">
+                                                    <CardTitle className="card-title">Available Rideshare Matches:</CardTitle>
+                                                </CardHeader>
+                                                <CardContent>
+                                                    <ul className='remove-indent'>
+                                                        {rideshareMatches.map((match, index) => (
+                                                            <li key={`${match.rideKey}-${index}`}>
+                                                                <button 
+                                                                    className="btn-search bottom-border"
+                                                                    style={{ width: '100%', margin: '5px 0' }}
+                                                                >
+                                                                    <strong>Rider:</strong> {match.rideData.rider_name}
+                                                                    <br/>
+                                                                    <strong>Pickup Location:</strong> {match.rideData.pickup_location}
+                                                                    <br/>
+                                                                    <strong>Fare:</strong> ${match.rideData.fare}
+                                                                    <br/>
+                                                                    <strong>Passengers:</strong> {match.rideData.num_passengers}
+                                                                </button>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </CardContent>
+                                            </Card>
+                                        ) : (
+                                            <p><em>No rideshare matches available</em></p>
+                                        )}
+                                    </>
+                                ) : (
+                                    <p><strong>Ride Share Disabled</strong></p>
+                                )}
                             <p id='completeDisplay'><strong></strong></p>
                         </div>
                     ):
