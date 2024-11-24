@@ -98,6 +98,17 @@ app.get('/get-rider-location', (req, res) => {
   });
 });
 
+app.get('/get-rider-info', (req, res) => { 
+  const rider_id = req.query.rider_id;
+
+  // Retrieving all rider information from redis
+  redisClient.hGetAll(`rider:${rider_id}`, (err, rider) => {
+    if (err) return res.status(500).send('Error fetching rider info');
+    res.send(rider);
+  });
+});
+
+
 function formatCoordinates(location) {
   // Handle array input
   if (Array.isArray(location)) {
@@ -407,7 +418,8 @@ app.post('/store-session', (req, res) => {
     "end_time", end_time,
     "fare", fare,
   (err, response) => {
-    if (err) return res.status(500).send('Error storing session');
+    console.log(err);
+    if (err) return res.status(500).send('Error storing session', err);
     res.send('Session stored in cache');
   });
 });

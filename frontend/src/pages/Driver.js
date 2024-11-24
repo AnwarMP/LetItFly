@@ -22,6 +22,8 @@ export const Driver = () => {
     const [sessionStart, setSessionStart] = useState(null);
     const [sessionPickupStage, setPickupConfirm] = useState(null);
     const [postgresRideId, setPostgresRideId] = useState(null);
+    const [rideShareEnabled, setRideShareEnabled] = useState(false);
+
     const [driverData, setDriverData] = useState({
         first_name: '',
         last_name: '',
@@ -289,7 +291,7 @@ export const Driver = () => {
         try {
             // First fetch rider details and store in Redis session
             const riderResponse = await grabRiderDetails(rider_id);
-    
+            
             const sessionDetails = {
                 rider_id: rider_id,
                 driver_id: driver_id,
@@ -301,6 +303,8 @@ export const Driver = () => {
                 end_time: 0,
                 fare: rider_fare,
             };
+
+            console.log("Session details: ", sessionDetails);
             
             // Store session in Redis
             const sessionResponse = await fetch('http://localhost:3000/store-session', {
@@ -308,6 +312,8 @@ export const Driver = () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(sessionDetails),
             });
+
+            console.log("Session response: ", sessionResponse);
     
             if (!sessionResponse.ok) {
                 throw new Error('Failed to store session');
@@ -374,9 +380,11 @@ export const Driver = () => {
 
     const grabRiderDetails = async (rider_id) => {
         try {
-            const response = await fetch(`http://localhost:3000/get-rider-location?rider_id=${rider_id}`);
+            const response = await fetch(`http://localhost:3000/get-rider-info?rider_id=${rider_id}`);
 
             const data = await response.json();
+            console.log("Recieved rider data: ", data);
+
             if (response.ok) {
                 // pendingRides = data;
                 rider_name = data.rider_name;
@@ -384,13 +392,16 @@ export const Driver = () => {
                 rider_pickup_location = data.pickup_location;
                 rider_start = data.start_time;
                 rider_fare = data.fare;
+                setRideShareEnabled(data.allow_rideshare); // setting rideshare as enabled or not
             } else {
                 console.log(data.message);
             }
 
+            return data;
+
         } catch (error) {
             console.error('Fetch riders failed', error);
-            console.log('Fetching riders failed for get-rider-location. Please try again.');
+            console.log('Fetching riders failed for /get-rider-info. Please try again.');
         }
     }
 
@@ -529,6 +540,7 @@ export const Driver = () => {
                             <p><strong>Pickup Location:</strong> {riderData.pickup_location}</p>
                             <p><strong>Dropoff Location:</strong> {riderData.dropoff_location}</p>
                             <p><strong>Session Status:</strong> Awaiting Pickup</p>
+                            {rideShareEnabled ? ( <p><strong>Ride Share Enabled</strong></p> ) : ( <p><strong>Ride Share Disabled</strong></p> )}
                             <p><strong>Fare:</strong> ${riderData.fare} </p>
                             <button className='btn btn-circle btn-outline-dark drive-margin' onClick={confirmPickup}>Click to confirm pickup</button>
                         </div>
@@ -541,9 +553,9 @@ export const Driver = () => {
                             <p><strong>Pickup Location:</strong> {riderData.pickup_location}</p>
                             <p><strong>Dropoff Location:</strong> {riderData.dropoff_location}</p>
                             <p><strong>Session Status:</strong> Driving to Dropoff</p>
+                            {rideShareEnabled ? ( <p><strong>Ride Share Enabled</strong></p> ) : ( <p><strong>Ride Share Disabled</strong></p> )}
                             <p><strong>Fare:</strong> ${riderData.fare} </p>
                             <button className='btn btn-circle btn-outline-dark drive-margin' onClick={confirmDropoff}>Click to confirm dropoff</button>
-
                             <p id='completeDisplay'><strong></strong></p>
                         </div>
                     ):
