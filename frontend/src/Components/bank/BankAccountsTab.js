@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import AddBankAccountForm from './AddBankAccountForm';
 import { Card, CardHeader, CardContent } from '../Card';
+import '../methods.css';
+import '../Drawer.css'; // Add drawer-specific styles
 
 const BankAccountsTab = () => {
   const [bankAccounts, setBankAccounts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [showAddForm, setShowAddForm] = useState(false);
+  const [showDrawer, setShowDrawer] = useState(false); // For drawer state
 
-  const API_BASE_URL = "http://localhost:3000"; // Base URL for API requests
+  const API_BASE_URL = 'http://localhost:3000';
 
   const fetchBankAccounts = async () => {
     setLoading(true);
@@ -41,7 +43,7 @@ const BankAccountsTab = () => {
         },
       });
       if (!response.ok) throw new Error('Failed to update default bank account');
-      fetchBankAccounts(); // Refresh the list
+      fetchBankAccounts();
     } catch (err) {
       console.error(err);
       setError('Failed to update the default account.');
@@ -57,10 +59,7 @@ const BankAccountsTab = () => {
       <Card>
         <CardHeader>
           <h2>Your Bank Accounts</h2>
-          <button
-            className="btn btn-primary"
-            onClick={() => setShowAddForm(true)} // Show the form when clicked
-          >
+          <button className="btn btn-primary" onClick={() => setShowDrawer(true)}>
             Add New Account
           </button>
         </CardHeader>
@@ -79,10 +78,7 @@ const BankAccountsTab = () => {
                   <p>****{account.last_four}</p>
                   <p>Routing Number: ****{account.routing_number.slice(-4)}</p>
                   {!account.is_default && (
-                    <button
-                      className="btn btn-secondary"
-                      onClick={() => setDefaultAccount(account.id)}
-                    >
+                    <button className="btn btn-secondary" onClick={() => setDefaultAccount(account.id)}>
                       Set as Default
                     </button>
                   )}
@@ -93,13 +89,21 @@ const BankAccountsTab = () => {
         </CardContent>
       </Card>
 
-      {/* Display AddBankAccountForm as a modal */}
-      {showAddForm && (
-        <div className="modal">
-          <AddBankAccountForm
-            onClose={() => setShowAddForm(false)} // Hide the form on close
-            onSuccess={fetchBankAccounts} // Refresh the list on success
-          />
+      {/* Slide-in drawer */}
+      {showDrawer && (
+        <div className={`drawer ${showDrawer ? 'open' : ''}`}>
+          <div className="drawer-content">
+            <button className="close-button" onClick={() => setShowDrawer(false)}>
+              Close
+            </button>
+            <AddBankAccountForm
+              onClose={() => setShowDrawer(false)}
+              onSuccess={() => {
+                fetchBankAccounts();
+                setShowDrawer(false);
+              }}
+            />
+          </div>
         </div>
       )}
     </div>

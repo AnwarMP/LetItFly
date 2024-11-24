@@ -145,7 +145,8 @@
   .text-muted {
     color: #6b7280;
   }
-  
+
+
   /* Animations */
   @keyframes fadeIn {
     from {

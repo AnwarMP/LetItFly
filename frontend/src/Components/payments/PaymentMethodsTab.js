@@ -1,15 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import AddPaymentMethodForm from './AddPaymentMethodsForm';
 import { Card, CardHeader, CardContent } from '../Card';
-import './methods.css'
+import '../methods.css';
+import '../Drawer.css'; // Add drawer-specific styles
 
 const PaymentMethodsTab = () => {
   const [paymentMethods, setPaymentMethods] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [showAddForm, setShowAddForm] = useState(false); // Track form visibility
+  const [showDrawer, setShowDrawer] = useState(false); // For drawer state
 
-  const API_BASE_URL = "http://localhost:3000"; // Base URL for API requests
+  const API_BASE_URL = 'http://localhost:3000';
 
   const fetchPaymentMethods = async () => {
     setLoading(true);
@@ -42,7 +43,7 @@ const PaymentMethodsTab = () => {
         },
       });
       if (!response.ok) throw new Error('Failed to update default payment method');
-      fetchPaymentMethods(); // Refresh the list
+      fetchPaymentMethods();
     } catch (err) {
       console.error(err);
       setError('Failed to update the default method.');
@@ -58,10 +59,7 @@ const PaymentMethodsTab = () => {
       <Card>
         <CardHeader>
           <h2>Your Payment Methods</h2>
-          <button
-            className="btn btn-primary"
-            onClick={() => setShowAddForm(true)} // Show the form when clicked
-          >
+          <button className="btn btn-primary" onClick={() => setShowDrawer(true)}>
             Add New Method
           </button>
         </CardHeader>
@@ -79,10 +77,7 @@ const PaymentMethodsTab = () => {
                   <p>{method.card_type.toUpperCase()} ****{method.last_four}</p>
                   <p>Expires {method.expiry_month}/{method.expiry_year}</p>
                   {!method.is_default && (
-                    <button
-                      className="btn btn-secondary"
-                      onClick={() => setDefaultMethod(method.id)}
-                    >
+                    <button className="btn btn-secondary" onClick={() => setDefaultMethod(method.id)}>
                       Set as Default
                     </button>
                   )}
@@ -93,13 +88,21 @@ const PaymentMethodsTab = () => {
         </CardContent>
       </Card>
 
-      {/* Display AddPaymentMethodForm as a modal */}
-      {showAddForm && (
-        <div className="modal">
-          <AddPaymentMethodForm
-            onClose={() => setShowAddForm(false)} // Hide the form on close
-            onSuccess={fetchPaymentMethods} // Refresh the list on success
-          />
+      {/* Slide-in drawer */}
+      {showDrawer && (
+        <div className={`drawer ${showDrawer ? 'open' : ''}`}>
+          <div className="drawer-content">
+            <button className="close-button" onClick={() => setShowDrawer(false)}>
+              Close
+            </button>
+            <AddPaymentMethodForm
+              onClose={() => setShowDrawer(false)}
+              onSuccess={() => {
+                fetchPaymentMethods();
+                setShowDrawer(false);
+              }}
+            />
+          </div>
         </div>
       )}
     </div>

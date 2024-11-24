@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import '../methods.css'
 
 const AddPaymentMethodForm = ({ onClose, onSuccess }) => {
   const [cardType, setCardType] = useState('');
@@ -49,15 +50,34 @@ const AddPaymentMethodForm = ({ onClose, onSuccess }) => {
         }),
       });
 
-      if (!response.ok) throw new Error('Failed to add payment method.');
+      const data = await response.text();
+      console.log('Response:', {
+        status: response.status,
+        data: data
+      });
+
+      if (!response.ok) {
+        throw new Error(data || 'Failed to add payment method.');
+      }
+
       onSuccess(); // Refresh payment methods list
       onClose(); // Close the form
     } catch (err) {
-      console.error(err);
-      setError('Failed to add payment method. Please try again.');
+      console.error('Error adding payment method:', err);
+      setError(err.message || 'Failed to add payment method. Please try again.');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleClose = () => {
+    // Reset form state
+    setCardType('');
+    setLastFour('');
+    setExpiryMonth('');
+    setExpiryYear('');
+    setError(null);
+    onClose();
   };
 
   return (
@@ -95,6 +115,8 @@ const AddPaymentMethodForm = ({ onClose, onSuccess }) => {
           <input
             id="expiryMonth"
             type="number"
+            min="1"
+            max="12"
             value={expiryMonth}
             onChange={(e) => setExpiryMonth(e.target.value)}
             required
@@ -105,6 +127,7 @@ const AddPaymentMethodForm = ({ onClose, onSuccess }) => {
           <input
             id="expiryYear"
             type="number"
+            min={new Date().getFullYear()}
             value={expiryYear}
             onChange={(e) => setExpiryYear(e.target.value)}
             required
@@ -113,7 +136,7 @@ const AddPaymentMethodForm = ({ onClose, onSuccess }) => {
         <button type="submit" className="btn btn-primary" disabled={loading}>
           {loading ? 'Adding...' : 'Add Payment Method'}
         </button>
-        <button type="button" className="btn btn-secondary" onClick={onClose}>
+        <button type="button" className="btn btn-secondary" onClick={handleClose}>
           Cancel
         </button>
       </form>
