@@ -27,6 +27,8 @@ const initializeDatabase = async () => {
     `);
     console.log('Existing tables dropped successfully');
 
+
+
     // Create updated_at function
     console.log('Creating trigger function...');
     await pool.query(`

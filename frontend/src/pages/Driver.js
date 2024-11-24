@@ -134,62 +134,77 @@ export const Driver = () => {
     // Fetches riders currently waiting
     const fetchRiders = async () => {
         try {
-            // Keep trying to fetch available riders every second until the driver confirms a rider they want
-            console.log("try to fetch riders");
-            const response = await fetch('http://localhost:3000/driver-pending-rides');
-
+            console.log("Fetching available riders...");
+            const response = await fetch(
+                `http://localhost:3000/driver-pending-rides?driver_location=${currentPos.join(',')}`
+            );
+    
             const data = await response.json();
             if (response.ok) {
-                pendingRides = data;
-                console.log('Pending riders fetch good!');
-                // document.getElementById('riders').innerHTML = '';
-                console.log('length is ' + pendingRides.length);
-                // Goes through list, grabs rider IDs, and displays them in list of buttons
-                for (let i = 0; i < pendingRides.length; i++) {
-                    var num = pendingRides[i].replace(/\D/g, '');
-                    if (!cachedRides.includes(num)) {
-                        const wait = await grabRiderDetails(num);
-                        document.getElementById('riders').innerHTML +=
-                        `<li id="${pendingRides.length - 1}">
-                            <button class="btn-search bottom-border" id="rider_${num}">
-                                <strong>Rider:</strong> ${rider_name}
-                                <br/>
-                                <strong>Pickup Location:</strong> ${rider_pickup_location}
-                                <br/>
-                                <strong>Dropoff Location:</strong> ${rider_dropoff_location}
-                                <br/>
-                                <strong>Estimated Fare:</strong> $${rider_fare}
-                            </button>
-                        <li>`;
-                    }
-                    console.log("cached rides " + cachedRides);
-                }
-                // Implements button functionality
-                for (let i = 0; i < pendingRides.length; i++) {
-                    let num = pendingRides[i].replace(/\D/g, '');
-                    if (!cachedRides.includes(num)) {
-                        document.getElementById(`rider_${num}`).addEventListener("click",
-                            function () {
-                                clearInterval(intervalID);
-                                setDestinationTo(num);
-                                storeDriverLocation();
-                                sendDriverResponse(num);
-                                acceptRide(num);
-                                deleteRiderEntry(num);
-                                cachedRides = [];
-                            }
-                        );
-                        cachedRides.push(num);
+                pendingRides = data; // This is now an array of ride objects
+                console.log('Pending riders fetch successful!');
+                console.log('Found', pendingRides.length, 'potential rides');
+
+                // Reset cachedRides at the start of the function
+                cachedRides = [];
+    
+                // Clear existing rides display
+                document.getElementById('riders').innerHTML = '';
+    
+                // Display each ride
+                for (const ride of pendingRides) {
+                    const rideData = ride.rideData;
+                    const duration = ride.duration;
+    
+                    // Extract rider ID from rideKey (e.g., "rider:123" -> "123")
+                    const riderId = ride.rideKey.split(':')[1];
+    
+                    if (!cachedRides.includes(riderId)) {
+                        document.getElementById('riders').innerHTML += `
+                            <li id="${pendingRides.length - 1}">
+                                <button class="btn-search bottom-border" id="rider_${riderId}">
+                                    <strong>Rider:</strong> ${rideData.rider_name}
+                                    <br/>
+                                    <strong>Pickup Location:</strong> ${rideData.pickup_location}
+                                    <br/>
+                                    <strong>Dropoff Location:</strong> ${rideData.dropoff_location}
+                                    <br/>
+                                    <strong>Pickup Time:</strong> ${duration} minutes
+                                    <br/>
+                                    <strong>Estimated Fare:</strong> $${rideData.fare}
+                                </button>
+                            </li>`;
+    
+                        cachedRides.push(riderId);
                     }
                 }
+    
+                // Add click handlers
+                pendingRides.forEach(ride => {
+                    const riderId = ride.rideKey.split(':')[1];
+                    const button = document.getElementById(`rider_${riderId}`);
+                    
+                    if (button) {
+                        button.addEventListener("click", function () {
+                            clearInterval(intervalID);
+                            setDestinationTo(riderId);
+                            storeDriverLocation();
+                            sendDriverResponse(riderId);
+                            acceptRide(riderId);
+                            deleteRiderEntry(riderId);
+                            cachedRides = [];
+                        });
+                    }
+                });
+    
             } else {
-                console.log(data.message);
+                console.log('Error fetching rides:', data.message);
             }
-    } catch (error) {
-            console.error('Fetch riders failed', error);
-            // alert('Fetching riders failed. Please try again.');
+        } catch (error) {
+            console.error('Fetch riders failed:', error);
+            console.log('Error details:', error.message);
         }
-    }
+    };
 
 
 
@@ -491,11 +506,10 @@ export const Driver = () => {
             document.getElementById('completeDisplay').innerHTML = 
                 `Ride completed! Payment of $${riderData.fare} processed.`;
             
-            setTimeout(() => {
-                setPickupConfirm(false);
-                getLocation();
-                getCurrentPos();
-            }, 5000);
+            setPickupConfirm(false);
+            getLocation();
+            getCurrentPos();
+   
     
         } catch (error) {
             console.error('Error in confirmDropoff:', error);
