@@ -10,7 +10,10 @@ function DriverSignUp() {
     car_model: '',
     car_license_plate: '',
     password: '',
-    confirm_password: ''
+    confirm_password: '',
+    account_holder_name: '',
+    routing_number: '',
+    account_number: '', // We'll only store last 4
   });
 
   const handleChange = (e) => {
@@ -44,6 +47,23 @@ function DriverSignUp() {
       });
       const data = await response.json();
       if (response.ok) {
+        // After successful registration, add bank account
+        const bankResponse = await fetch('http://localhost:3000/api/payments/bank-accounts', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${data.token}`,
+          },
+          body: JSON.stringify({
+            account_holder_name: formData.account_holder_name,
+            routing_number: formData.routing_number,
+            last_four: formData.account_number.slice(-4),
+          }),
+        });
+
+        if (!bankResponse.ok) {
+          throw new Error('Failed to add bank account');
+        }
         alert('Registration successful!');
         window.location.replace('/');
       } else {
@@ -93,6 +113,36 @@ function DriverSignUp() {
           <div className="form-group">
             <label>Confirm Password:</label>
             <input type="password" name="confirm_password" value={formData.confirm_password} onChange={handleChange} required />
+          </div>
+          <div className="form-group">
+            <label>Account Holder Name:</label>
+            <input
+              type="text"
+              name="account_holder_name"
+              value={formData.account_holder_name}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label>Routing Number:</label>
+            <input
+              type="text"
+              name="routing_number"
+              value={formData.routing_number}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label>Account Number - Last Four Digits:</label>
+            <input
+              type="text"
+              name="account_number"
+              value={formData.account_number}
+              onChange={handleChange}
+              required
+            />
           </div>
 
           <button type="submit" className="submit-button">Sign Up</button>

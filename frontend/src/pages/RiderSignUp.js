@@ -9,7 +9,11 @@ function RiderSignUp() {
     email: '',
     home_address: '',
     password: '',
-    confirm_password: ''
+    confirm_password: '',
+    card_type: '',
+    card_number: '', // We'll only store last 4
+    expiry_month: '',
+    expiry_year: ''
   });
 
   const handleChange = (e) => {
@@ -42,6 +46,26 @@ function RiderSignUp() {
       });
       const data = await response.json();
       if (response.ok) {
+         // After successful registration, add payment method
+         const paymentResponse = await fetch('http://localhost:3000/api/payments/methods', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${data.token}`,
+          },
+          body: JSON.stringify({
+            card_type: formData.card_type.toLowerCase(),
+            last_four: formData.card_number.slice(-4),
+            expiry_month: parseInt(formData.expiry_month),
+            expiry_year: parseInt(formData.expiry_year),
+          }),
+        });
+
+        if (!paymentResponse.ok) {
+          throw new Error('Failed to add payment method');
+        }
+
+        // Payment method will be automatically set as default since it's the first one
         alert('Registration successful!');
         window.location.replace('/');
       } else {
@@ -88,7 +112,54 @@ function RiderSignUp() {
             <label>Confirm Password:</label>
             <input type="password" name="confirm_password" value={formData.confirm_password} onChange={handleChange} required />
           </div>
-
+          <div className="form-group">
+            <label>Card Type:</label>
+            <select
+              name="card_type"
+              value={formData.card_type}
+              onChange={handleChange}
+              required
+            >
+              <option value="">Select Card Type</option>
+              <option value="visa">Visa</option>
+              <option value="mastercard">MasterCard</option>
+              <option value="amex">American Express</option>
+            </select>
+          </div>
+          <div className="form-group">
+            <label>Card Number:</label>
+            <input
+              type="text"
+              name="card_number"
+              value={formData.card_number}
+              onChange={handleChange}
+              maxLength="16"
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label>Expiry Month:</label>
+            <input
+              type="number"
+              name="expiry_month"
+              value={formData.expiry_month}
+              onChange={handleChange}
+              min="1"
+              max="12"
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label>Expiry Year:</label>
+            <input
+              type="number"
+              name="expiry_year"
+              value={formData.expiry_year}
+              onChange={handleChange}
+              min={new Date().getFullYear()}
+              required
+            />
+          </div>
           <button type="submit" className="submit-button">Sign Up</button>
         </form>
       </div>
