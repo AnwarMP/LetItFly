@@ -14,10 +14,21 @@ const pool = new Pool({
 const initializeDatabase = async () => {
   try {
     // Drop all tables in the correct order (to handle foreign key constraints)
+    // console.log('Dropping existing tables...');
+    // await pool.query(`
+    //   DROP TABLE IF EXISTS transactions CASCADE;
+    //   DROP TABLE IF EXISTS rides CASCADE;
+    //   DROP TABLE IF EXISTS payment_methods CASCADE;
+    //   DROP TABLE IF EXISTS bank_accounts CASCADE;
+    //   DROP TABLE IF EXISTS users CASCADE;
+      
+    //   -- Also drop the trigger function if it exists
+    //   DROP FUNCTION IF EXISTS update_updated_at_column CASCADE;
+    // `);
+    // console.log('Existing tables dropped successfully');
+
     console.log('Dropping existing tables...');
     await pool.query(`
-      DROP TABLE IF EXISTS transactions CASCADE;
-      DROP TABLE IF EXISTS rides CASCADE;
       DROP TABLE IF EXISTS payment_methods CASCADE;
       DROP TABLE IF EXISTS bank_accounts CASCADE;
       DROP TABLE IF EXISTS users CASCADE;
