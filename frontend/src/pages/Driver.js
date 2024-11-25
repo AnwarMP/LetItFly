@@ -87,8 +87,10 @@ export const Driver = () => {
         const intervalId = setInterval(async () => {
           try {
             const response = await fetch(
-              `http://localhost:3000/get-rideshare-matches?dropoff_location=${encodeURIComponent(riderData.dropoff_location)}`
-            );
+                `http://localhost:3000/get-rideshare-matches-filtered?` + 
+                `dropoff_location=${encodeURIComponent(riderData.dropoff_location)}&` +
+                `rider1_pickup=${encodeURIComponent(pickupLocation)}`
+              );
       
             if (response.ok) {
               const matches = await response.json();
