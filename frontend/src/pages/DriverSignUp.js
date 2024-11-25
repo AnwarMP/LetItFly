@@ -40,12 +40,12 @@ function DriverSignUp() {
     // Test must be have no length regex check for non-numbers in phone number
     let phone_number_test = formData.phone_number.replace(/[0-9]+/, '');
     if (phone_number_test.length > 0) {
-      alert('Invalid characters for phone number. Please try again.');
+      alert('Invalid characters for phone number found. Please only input numbers.');
       return;
     }
     // Phone number entry must have 10 characters 
     if (formData.phone_number.length !== 10) {
-      alert('Please input a valid phone number (e.g. 1234567890).');
+      alert('Please input a valid phone number that is 10 digits long (e.g. 1234567890).');
       return;
     }
     
