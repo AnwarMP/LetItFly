@@ -99,11 +99,10 @@ function RiderSignUp() {
         body: JSON.stringify({address: address_test}),
       });
 
-      if (response.ok) {
-        if (response.length === 0) {
-          alert('Invalid address. Please try again.');
-          return;
-        }
+      console.log(response);
+      if (!response.ok) {
+        alert('Invalid address. Please try again.');
+        return;
       }
 
     } catch (error) {
