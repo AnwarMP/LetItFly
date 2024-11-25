@@ -445,7 +445,7 @@ export const Driver = () => {
                 rider_pickup_location = data.pickup_location;
                 rider_start = data.start_time;
                 rider_fare = data.fare;
-                setRideShareEnabled(data.allow_rideshare); // setting rideshare as enabled or not
+                setRideShareEnabled(Boolean(data.allow_rideshare === 'true'));
             } else {
                 console.log(data.message);
             }
