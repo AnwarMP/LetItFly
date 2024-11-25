@@ -31,6 +31,12 @@ export const Driver = () => {
     const [secondRiderPickupConfirmed, setSecondRiderPickupConfirmed] = useState(false);
     const [secondRiderLocation, setSecondRiderLocation] = useState('');
     const [finalDropoffLocation, setFinalDropoffLocation] = useState('');
+    const [isWorking, setIsWorking] = useState(false);
+
+    const handleStartWork = () => {
+        setIsWorking(true);
+        grabPosAndRiders();
+    };
 
 
     const [driverData, setDriverData] = useState({
@@ -660,6 +666,7 @@ export const Driver = () => {
             setIsSecondRider(false);
             setSecondRiderPickupConfirmed(false);
             setRideShareEnabled(false);
+            setIsWorking(false);
             setRideshareMatches([]);
             getLocation();
             getCurrentPos();    
@@ -907,7 +914,13 @@ export const Driver = () => {
                             <br/><br/><br/><br/><br/>
                             <img src='/default-profile.png' alt='profile-picture'></img><br/>
                             <span id='name-text'>{user?.first_name} {user?.last_name}</span><br/><br/>
-                            <button className='btn btn-circle btn-lg btn-outline-dark' onClick={grabPosAndRiders}>Start Work</button>
+                            <button 
+                                className={`btn btn-circle btn-lg btn-outline-dark ${isWorking ? 'working' : ''}`} 
+                                onClick={handleStartWork}
+                                disabled={isWorking}
+                            >
+                                {isWorking ? 'Working...' : 'Start Work'}
+                            </button>
                             <div className='disclaimer-text'><strong>Note:</strong> This will use your location</div><br/>
         
                             <h6>License Plate: {driverData.car_license_plate}</h6>
