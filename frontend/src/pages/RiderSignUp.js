@@ -92,7 +92,6 @@ function RiderSignUp() {
     // This is for testing if inputted address is valid through a backend call to MapBox GeoCoding service
     // Done at end of form validation to reduce amount of API calls
     let address_test = formData.home_address;
-    console.log(address_test);
     try {
       const response = await fetch('http://localhost:3000/check-valid-address', {
         method: 'POST',

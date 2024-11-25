@@ -94,7 +94,6 @@ function DriverSignUp() {
     }
 
     let account_test = formData.routing_number.replace(/[0-9]+/, '');
-    console.log(account_test);
     if (account_test.length > 0) {
       alert('Routing number must only contain numbers, please try again.');
       return;
