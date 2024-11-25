@@ -102,7 +102,7 @@ const Settings = () => {
 
     if (role === 'driver') {
       let car_model_test = formData.car_model.replace(/[0-9a-zA-Z- ]+/, '');
-      if (car_model_test.length > 1) {
+      if (car_model_test.length > 0) {
         alert('Invalid character found in car model, please try again.');
         setLoading(false);
         return;
