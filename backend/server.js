@@ -87,7 +87,293 @@ app.post('/store-rider-info', (req, res) => {
   
 });
 
+// getting ride-share-matches
+app.get('/get-rideshare-matches', (req, res) => {
+  const dropoff_location = req.query.dropoff_location;
+  console.log('\n=== Processing Rideshare Match Request ===');
+  console.log('Target dropoff location:', dropoff_location);
+
+  // First get all pending rides from the set
+  redisClient.sMembers('pendingDrive', (err, pendingRideKeys) => {
+    if (err) {
+      console.error('Redis error fetching pending rides:', err);
+      return res.status(500).json({ error: 'Failed to fetch pending rides' });
+    }
+
+    console.log('Found pending rides:', pendingRideKeys);
+
+    if (!pendingRideKeys || pendingRideKeys.length === 0) {
+      return res.json([]);
+    }
+
+    let matches = [];
+    let completedQueries = 0;
+
+    // Process each pending ride
+    pendingRideKeys.forEach((rideKey) => {
+      redisClient.hGetAll(rideKey, (err, rideData) => {
+        completedQueries++;
+
+        if (err) {
+          console.error(`Error fetching data for ${rideKey}:`, err);
+        } else if (rideData) {
+          // Check if ride has rideshare enabled and matching dropoff location
+          if (rideData.allow_rideshare === 'true' && 
+              rideData.dropoff_location === dropoff_location) {
+            matches.push({
+              rideKey,
+              rideData
+            });
+          }
+        }
+
+        // If this is the last query, send the response
+        if (completedQueries === pendingRideKeys.length) {
+          console.log('Found rideshare matches:', matches);
+          res.json(matches);
+        }
+      });
+    });
+  });
+});
+
+
+
+app.get('/get-rideshare-matches-filtered', (req, res) => {
+  const { dropoff_location, rider1_pickup } = req.query;
+  console.log('\n=== Processing Rideshare Match Request ===');
+  console.log('Target dropoff location:', dropoff_location);
+  console.log('Rider 1 pickup location:', rider1_pickup);
+
+  // Function to calculate distance using Haversine formula
+  function getDistance(lat1, lon1, lat2, lon2) {
+    const R = 3959; // Earth's radius in miles
+    const φ1 = lat1 * Math.PI/180;
+    const φ2 = lat2 * Math.PI/180;
+    const Δφ = (lat2-lat1) * Math.PI/180;
+    const Δλ = (lon2-lon1) * Math.PI/180;
+
+    const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+              Math.cos(φ1) * Math.cos(φ2) *
+              Math.sin(Δλ/2) * Math.sin(Δλ/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+    return R * c;
+  }
+
+  // Get coordinates for rider 1's pickup location
+  axios.get(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(rider1_pickup)}.json?access_token=${process.env.MAPBOX_ACCESS_TOKEN}&limit=1`)
+    .then(response => {
+      if (!response.data.features || response.data.features.length === 0) {
+        throw new Error('Could not geocode rider 1 location');
+      }
+      const rider1Coords = response.data.features[0].center;
+      console.log('Rider 1 coordinates:', rider1Coords);
+
+      // First get all pending rides from the set
+      redisClient.sMembers('pendingDrive', (err, pendingRideKeys) => {
+        if (err) {
+          console.error('Redis error fetching pending rides:', err);
+          return res.status(500).json({ error: 'Failed to fetch pending rides' });
+        }
+
+        console.log('Found pending rides:', pendingRideKeys);
+
+        if (!pendingRideKeys || pendingRideKeys.length === 0) {
+          return res.json([]);
+        }
+
+        let matches = [];
+        let completedQueries = 0;
+
+        // Process each pending ride
+        pendingRideKeys.forEach((rideKey) => {
+          redisClient.hGetAll(rideKey, (err, rideData) => {
+            completedQueries++;
+
+            if (err) {
+              console.error(`Error fetching data for ${rideKey}:`, err);
+            } else if (rideData && rideData.pickup_location) {
+              // Check if ride has rideshare enabled and matching dropoff location
+              if (rideData.allow_rideshare === 'true' && 
+                  rideData.dropoff_location === dropoff_location) {
+                
+                // Get coordinates for this ride's pickup location
+                axios.get(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(rideData.pickup_location)}.json?access_token=${process.env.MAPBOX_ACCESS_TOKEN}&limit=1`)
+                  .then(pickupResponse => {
+                    if (pickupResponse.data.features && pickupResponse.data.features.length > 0) {
+                      const pickupCoords = pickupResponse.data.features[0].center;
+                      console.log('Pending drive pickup coord:', pickupCoords);
+
+                      // Calculate distance using Haversine formula
+                      let distance = getDistance(
+                        rider1Coords[1], rider1Coords[0],  // lat, lon for rider1
+                        pickupCoords[1], pickupCoords[0]   // lat, lon for pickup
+                      );
+
+                      distance = distance * .060934; // convert to miles
+
+                      console.log(`Distance between pickups: ${distance.toFixed(2)} miles`);
+                    
+                      // Only include if pickups are within 2 miles
+                      if (distance <= 2) {
+                        matches.push({
+                          rideKey,
+                          rideData,
+                          distance: Number(distance.toFixed(2))
+                        });
+                      }
+
+                      // If this is the last query, send the response
+                      if (completedQueries === pendingRideKeys.length) {
+                        matches.sort((a, b) => a.distance - b.distance);
+                        console.log('Found rideshare matches:', matches);
+                        res.json(matches);
+                      }
+                    }
+                  })
+                  .catch(error => {
+                    console.error('Error geocoding pickup location:', error);
+                    if (completedQueries === pendingRideKeys.length) {
+                      matches.sort((a, b) => a.distance - b.distance);
+                      res.json(matches);
+                    }
+                  });
+              }
+            }
+
+            // If this is the last query and no geocoding was needed
+            if (completedQueries === pendingRideKeys.length && 
+                (!rideData || !rideData.pickup_location || 
+                 rideData.allow_rideshare !== 'true' || 
+                 rideData.dropoff_location !== dropoff_location)) {
+              matches.sort((a, b) => a.distance - b.distance);
+              res.json(matches);
+            }
+          });
+        });
+      });
+    })
+    .catch(error => {
+      console.error('Error geocoding rider 1 location:', error);
+      res.status(500).json({
+        error: 'Failed to geocode location',
+        details: error.message
+      });
+    });
+});
+
 // Redis route to retrieve rider location
+
+// function calculateDistance(lat1, lon1, lat2, lon2) {
+//   const R = 3959; // Earth's radius in miles
+//   const dLat = (lat2 - lat1) * Math.PI / 180;
+//   const dLon = (lon2 - lon1) * Math.PI / 180;
+//   const a = 
+//       Math.sin(dLat/2) * Math.sin(dLat/2) +
+//       Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+//       Math.sin(dLon/2) * Math.sin(dLon/2);
+//   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+//   return R * c; // Distance in miles
+// }
+
+
+// app.get('/get-rideshare-matches-filtered', async (req, res) => {
+//   const { dropoff_location, rider1_pickup } = req.query;
+//   console.log('\n=== Processing Rideshare Match Request ===');
+//   console.log('Target dropoff location:', dropoff_location);
+//   console.log('Rider 1 pickup location:', rider1_pickup);
+
+//   try {
+//     // Parse rider1_pickup coordinates
+//     const coordinates = await getCoordinates(rider1_pickup);
+//     console.log('Coordinates from getCoordinates:', coordinates);
+
+//     // Ensure the result is a string and split it
+//     if (typeof coordinates !== 'string') {
+//       throw new Error('Invalid format from getCoordinates');
+//     }
+//     const [rider1Lng, rider1Lat] = coordinates.split(',').map(Number);
+//     console.log('Rider 1 parsed coordinates:', { lng: rider1Lng, lat: rider1Lat });
+
+//     // Rest of the code...
+//     redisClient.sMembers('pendingDrive', (err, pendingRideKeys) => {
+//       if (err) {
+//         console.error('Redis error fetching pending rides:', err);
+//         return res.status(500).json({ error: 'Failed to fetch pending rides' });
+//       }
+
+//       console.log('Found pending rides:', pendingRideKeys);
+
+//       if (!pendingRideKeys || pendingRideKeys.length === 0) {
+//         return res.json([]);
+//       }
+
+//       let matches = [];
+//       let completedQueries = 0;
+
+//       // Process each pending ride
+//       pendingRideKeys.forEach((rideKey) => {
+//         redisClient.hGetAll(rideKey, async (err, rideData) => {
+//           completedQueries++;
+
+//           if (err) {
+//             console.error(`Error fetching data for ${rideKey}:`, err);
+//           } else if (rideData) {
+//             console.log(`Processing ride ${rideKey}:`, rideData);
+//             console.log('Pickup location from Redis:', rideData.pickup_location);
+
+//             if (rideData.allow_rideshare === 'true' && rideData.dropoff_location === dropoff_location) {
+//               try {
+//                 // Get coordinates for the second rider
+//                 const rideCoords = await getCoordinates(rideData.pickup_location);
+//                 if (typeof rideCoords !== 'string') {
+//                   throw new Error('Invalid format from getCoordinates');
+//                 }
+//                 const [pickupLng, pickupLat] = rideCoords.split(',').map(Number);
+//                 console.log('Parsed pickup coordinates:', { lng: pickupLng, lat: pickupLat });
+
+//                 // Haversine formula for distance calculation
+//                 const R = 3959; // Earth's radius in miles
+//                 const dLat = (pickupLat - rider1Lat) * Math.PI / 180;
+//                 const dLon = (pickupLng - rider1Lng) * Math.PI / 180;
+
+//                 const a = Math.sin(dLat / 2) ** 2 +
+//                           Math.cos(rider1Lat * Math.PI / 180) * Math.cos(pickupLat * Math.PI / 180) *
+//                           Math.sin(dLon / 2) ** 2;
+//                 const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+//                 const distance = R * c;
+
+//                 console.log(`Calculated distance: ${distance} miles`);
+//                 if (distance <= 2) {
+//                   matches.push({
+//                     rideKey,
+//                     rideData,
+//                     distance: Number(distance.toFixed(2)),
+//                   });
+//                 }
+//               } catch (error) {
+//                 console.error('Error processing ride data:', error.message);
+//               }
+//             }
+//           }
+
+//           // Respond once all queries are completed
+//           if (completedQueries === pendingRideKeys.length) {
+//             matches.sort((a, b) => a.distance - b.distance);
+//             console.log('Found rideshare matches:', matches);
+//             res.json(matches);
+//           }
+//         });
+//       });
+//     });
+//   } catch (error) {
+//     console.error('Error in /get-rideshare-matches-filtered:', error.message);
+//     res.status(500).json({ error: error.message });
+//   }
+// });
+
+
 app.get('/get-rider-location', (req, res) => {
   const rider_id = req.query.rider_id;
   
@@ -97,6 +383,17 @@ app.get('/get-rider-location', (req, res) => {
     res.send(location);
   });
 });
+
+app.get('/get-rider-info', (req, res) => { 
+  const rider_id = req.query.rider_id;
+
+  // Retrieving all rider information from redis
+  redisClient.hGetAll(`rider:${rider_id}`, (err, rider) => {
+    if (err) return res.status(500).send('Error fetching rider info');
+    res.send(rider);
+  });
+});
+
 
 function formatCoordinates(location) {
   // Handle array input
@@ -407,10 +704,59 @@ app.post('/store-session', (req, res) => {
     "end_time", end_time,
     "fare", fare,
   (err, response) => {
-    if (err) return res.status(500).send('Error storing session');
+    console.log(err);
+    if (err) return res.status(500).send('Error storing session', err);
     res.send('Session stored in cache');
   });
 });
+
+app.post('/store-second-session', (req, res) => {
+      const { 
+          rider_id, driver_id, pickup_location, dropoff_location,
+          confirm_pickup, confirm_dropoff, start_time, end_time, fare,
+          first_rider_id, first_rider_pickup_location,
+      } = req.body;
+
+      // Store individual session for second rider with callback style
+      redisClient.hSet(`session:rider:${rider_id}:driver:${driver_id}`,
+          "driverID", driver_id,
+          "riderID", rider_id,
+          "pickup_location", pickup_location,
+          "dropoff_location", dropoff_location,
+          "confirm_pickup", confirm_pickup,
+          "confirm_dropoff", confirm_dropoff,
+          "start_time", start_time,
+          "session_start_time", Date.now(),
+          "end_time", end_time,
+          "fare", fare,
+          "is_second_rider", "true",
+          "first_rider_id", first_rider_id,
+          "first_rider_pickup_location", first_rider_pickup_location,
+      (err, response) => {
+          if (err) return res.status(500).send('Error storing session', err);
+          
+          // Store combined session reference
+          redisClient.hSet(`combined_session:${driver_id}`,
+              "first_rider", first_rider_id,
+              "second_rider", rider_id,
+          (err2, response2) => {
+              if (err2) return res.status(500).send('Error storing combined session');
+              res.send('Sessions stored in cache');
+          });
+      });
+
+
+      //update first rider session
+      redisClient.hSet(`session:rider:${first_rider_id}:driver:${driver_id}`,
+        "has_second_rider", "true",
+        "second_rider_confirm_pickup", "false",
+        "second_rider_pickup_location",  pickup_location,
+      (err, response) => {
+          if (err) return res.status(500).send('Error storing session', err);
+      });
+});
+
+
 
 // Redis route to retrieve session data
 app.get('/get-session', (req, res) => {
@@ -424,7 +770,7 @@ app.get('/get-session', (req, res) => {
 });
 
 app.post('/update-session-pickup', (req, res) => {
-  const { rider_id, driver_id, confirm_pickup} = req.body;
+  const { first_rider_id, rider_id, driver_id, confirm_pickup} = req.body;
 
 // Storing session data in Redis
   redisClient.hSet(`session:rider:${rider_id}:driver:${driver_id}`,
@@ -432,40 +778,65 @@ app.post('/update-session-pickup', (req, res) => {
     "riderID", rider_id,
     "confirm_pickup", confirm_pickup,
   (err, response) => {
-    if (err) return res.status(500).send('Error storing session');
-    res.send('Session stored in cache');
-  });
-});
+    if (err) return res.status(500).send('Error storing session', err);
+    if(!first_rider_id) res.send('Session stored in cache');
+  }); 
 
-app.post('/update-session-dropoff', async (req, res) => {
-  const { driver_id, rider_id, confirm_dropoff, end_time } = req.body;
-  
-  console.log('Redis Update Request:', {
-      driver_id,
-      rider_id,
-      confirm_dropoff,
-      end_time,
-      sessionKey: `session:rider:${rider_id}:driver:${driver_id}`
-  });
-
-  try {
-      // Update Redis session
-      await redisClient.hSet(
-          `session:rider:${rider_id}:driver:${driver_id}`,
-          "confirm_dropoff", confirm_dropoff,
-          "end_time", end_time.toString()  // Convert to string if it's a number
-      );
-
-      console.log('Redis session updated successfully');
-      res.json({ message: 'Session updated successfully' });
-  } catch (error) {
-      console.error('Redis update error:', error);
-      res.status(500).json({ 
-          error: 'Failed to update Redis session',
-          details: error.message 
-      });
+  console.log("First Rider ID: ", first_rider_id);
+  if(first_rider_id){
+    redisClient.hSet(`session:rider:${first_rider_id}:driver:${driver_id}`,
+      "second_rider_confirm_pickup", "true",
+    (err, response) => {
+      if (err) return res.status(500).send('Error storing session', err);
+      res.send('Session stored in cache');
+    });
   }
 });
+
+app.post('/update-session-dropoff', (req, res) => {
+  const { driver_id, rider_id, second_rider_id, confirm_dropoff, end_time } = req.body;
+  
+  // Update first rider's session
+  redisClient.hSet(`session:rider:${rider_id}:driver:${driver_id}`,
+      "confirm_dropoff", confirm_dropoff,
+      "end_time", end_time.toString(),
+  (err1, response1) => {
+      if (err1) {
+          console.error('Error updating first rider session:', err1);
+          return res.status(500).json({
+              error: 'Failed to update first rider session',
+              details: err1.message
+          });
+      }
+
+      // If there's a second rider, update their session too
+      if (second_rider_id) {
+          redisClient.hSet(`session:rider:${second_rider_id}:driver:${driver_id}`,
+              "confirm_dropoff", confirm_dropoff,
+              "end_time", end_time.toString(),
+          (err2, response2) => {
+              if (err2) {
+                  console.error('Error updating second rider session:', err2);
+                  return res.status(500).json({
+                      error: 'Failed to update second rider session',
+                      details: err2.message
+                  });
+              }
+
+              // Delete combined session reference
+              redisClient.del(`combined_session:${driver_id}`, (err3, response3) => {
+                  if (err3) {
+                      console.error('Error deleting combined session:', err3);
+                  }
+                  res.json({ message: 'All sessions updated successfully' });
+              });
+          });
+      } else {
+          res.json({ message: 'Session updated successfully' });
+      }
+  });
+});
+
 
 app.get('/wake-rider', (req, res) => {
   const rider_id = req.query.rider_id;

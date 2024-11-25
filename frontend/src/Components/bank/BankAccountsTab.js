@@ -20,7 +20,7 @@ const BankAccountsTab = () => {
       const response = await fetch(`${API_BASE_URL}/api/payments/bank-accounts`, {
         method: 'GET',
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
+          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
         },
       });
       if (!response.ok) throw new Error('Failed to fetch bank accounts');
@@ -39,7 +39,7 @@ const BankAccountsTab = () => {
       const response = await fetch(`${API_BASE_URL}/api/payments/bank-accounts/${accountId}/default`, {
         method: 'PUT',
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
+          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
         },
       });
       if (!response.ok) throw new Error('Failed to update default bank account');
