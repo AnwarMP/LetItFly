@@ -17,7 +17,13 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 // Enable CORS to allow requests from your frontend (http://localhost:3001)
-const allowedOrigins = ['http://localhost:3000','http://localhost:3001', 'http://localhost:3002'];
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:3001', 
+  'http://localhost:3002',
+  'http://frontend:3000',  // Add Docker service name
+  'http://backend:3000'    // Add Docker service name
+];
 
 app.use(cors({
   origin: function (origin, callback) {

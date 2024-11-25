@@ -45,7 +45,7 @@ const Settings = () => {
 
   const fetchUserProfile = async () => {
     try {
-      const response = await fetch('http://localhost:3000/auth/profile', {
+      const response = await fetch('/auth/profile', {
         headers: {
           Authorization: `Bearer ${sessionStorage.getItem('token')}`,
         },
@@ -141,7 +141,7 @@ const Settings = () => {
 
 
     try {
-      const response = await fetch('http://localhost:3000/auth/profile', {
+      const response = await fetch('/auth/profile', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

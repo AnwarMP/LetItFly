@@ -1,5 +1,31 @@
 version: '3.8'
 services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: letitfly_backend
+    environment:
+      - PGUSER=admin
+      - PGPASSWORD=admin123
+      - PGDATABASE=letitfly_db
+      - PGHOST=postgres  # Using service name instead of localhost
+      - PGPORT=5432
+      - JWT_SECRET=supersecretkey
+      - PORT=3000
+      - NODE_ENV=production
+      - MAPBOX_ACCESS_TOKEN=${MAPBOX_ACCESS_TOKEN}
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - app-network
+
   postgres:
     image: postgres:latest
     container_name: letitfly_postgres
@@ -11,14 +37,18 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-
-  redis:
-    image: redis:latest
-    container_name: letitfly_redis
-    ports:
-      - "6379:6379"
     networks:
       - app-network
+
+
+  redis:
+      image: redis:latest
+      container_name: letitfly_redis
+      ports:
+        - "6379:6379"
+      command: redis-server --bind 0.0.0.0
+      networks:
+        - app-network
 
 networks:
   app-network:

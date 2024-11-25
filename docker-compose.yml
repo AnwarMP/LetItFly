@@ -1,0 +1,78 @@
+version: '3.8'
+services:
+  frontend:
+      build:
+        context: ./frontend
+        dockerfile: Dockerfile
+      container_name: letitfly_frontend
+      ports:
+        - "3001:3000"  # Changed from 3000:3000 to avoid conflict with backend
+      environment:
+        - NODE_ENV=development
+        - PORT=3000
+        - REACT_APP_MAPBOX_ACCESS_TOKEN=${REACT_APP_MAPBOX_ACCESS_TOKEN}
+        - WDS_SOCKET_PORT=0
+        - CHOKIDAR_USEPOLLING=true
+      volumes:
+        - ./frontend:/app
+        - /app/node_modules
+      networks:
+        - app-network
+      depends_on:
+        - backend
+
+  backend:
+      build:
+        context: ./backend
+        dockerfile: Dockerfile
+      container_name: letitfly_backend
+      environment:
+        - NODE_ENV=production  # Force production mode to use Redis service name
+        - PGUSER=admin
+        - PGPASSWORD=admin123
+        - PGDATABASE=letitfly_db
+        - PGHOST=postgres
+        - PGPORT=5432
+        - JWT_SECRET=supersecretkey
+        - PORT=3000
+        - MAPBOX_ACCESS_TOKEN=${MAPBOX_ACCESS_TOKEN}
+      ports:
+        - "3000:3000"
+      volumes:
+        - ./backend:/app
+        - /app/node_modules
+      depends_on:
+        - postgres
+        - redis
+      networks:
+        - app-network
+
+  postgres:
+    image: postgres:latest
+    container_name: letitfly_postgres
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_DB: letitfly_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+  redis:
+      image: redis:latest
+      container_name: letitfly_redis
+      ports:
+        - "6379:6379"
+      command: redis-server --bind 0.0.0.0
+      networks:
+        - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

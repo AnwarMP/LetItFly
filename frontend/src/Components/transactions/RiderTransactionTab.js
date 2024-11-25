@@ -12,7 +12,7 @@ const RiderTransactionTab = () => {
       setError(null);
 
       try {
-        const response = await fetch('http://localhost:3000/api/payments/transactions', {
+        const response = await fetch('/api/payments/transactions', {
           headers: {
             Authorization: `Bearer ${sessionStorage.getItem('token')}`,
           },

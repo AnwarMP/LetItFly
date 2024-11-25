@@ -10,7 +10,7 @@ const BankAccountsTab = () => {
   const [error, setError] = useState(null);
   const [showDrawer, setShowDrawer] = useState(false); // For drawer state
 
-  const API_BASE_URL = 'http://localhost:3000';
+  const API_BASE_URL = '';
 
   const fetchBankAccounts = async () => {
     setLoading(true);

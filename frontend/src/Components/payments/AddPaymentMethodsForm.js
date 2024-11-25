@@ -9,7 +9,7 @@ const AddPaymentMethodForm = ({ onClose, onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const API_BASE_URL = "http://localhost:3000"; // Backend API base URL
+  const API_BASE_URL = ""; // Backend API base URL
 
   const handleSubmit = async (e) => {
     e.preventDefault();

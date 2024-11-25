@@ -9,7 +9,7 @@ const AddBankAccountForm = ({ onClose, onSuccess }) => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
   
-    const API_BASE_URL = "http://localhost:3000";
+    const API_BASE_URL = "";
   
     const handleSubmit = async (e) => {
       e.preventDefault();

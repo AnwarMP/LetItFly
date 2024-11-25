@@ -11,7 +11,7 @@ const DriverTransactionTab = () => {
       setError(null);
 
       try {
-        const response = await fetch('http://localhost:3000/api/payments/transactions/earnings', {
+        const response = await fetch('/api/payments/transactions/earnings', {
           headers: {
             Authorization: `Bearer ${sessionStorage.getItem('token')}`,
           },
