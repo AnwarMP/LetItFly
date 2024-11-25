@@ -235,23 +235,27 @@ export const RiderMain = () => {
                     setSessionData(data); // Update session data state
                     console.log("Fetched session data!: ", { ...data});
 
-                    if (data.confirm_pickup.toLowerCase() === "false") {
+                    if (data.confirm_pickup.toLowerCase() === "false" && data.is_second_rider !== undefined ) {
                         setPickupLocation(driverData.location);
                         setDropoffLocation(data.pickupLocation);
+                    }
+
+                    //Handle if rider, themselves, has been added to ride (they are the second rider)
+                    if (data.is_second_rider !== undefined && data.is_second_rider === "true") {
+                        setIsSecondRider(true);
+                        console.log("Second rider: ", data.first_rider_pickup_location, data.pickup_location)
+                        if(data.confirm_pickup.toLowerCase() === "false"){
+                            setPickupLocation(data.first_rider_pickup_location);
+                            setDropoffLocation(data.pickup_location)
+                        }
                     }
 
                     if (data.confirm_pickup.toLowerCase() === "true") {
                         setPickupLocation(data.pickup_location);
                         setDropoffLocation(data.dropoff_location);
                     }
-
-                    //Handle if rider, themselves, has been added to ride (they are the second rider)
-                    if (data.is_second_rider !== undefined && data.is_second_rider === "true") {
-                        setIsSecondRider(true);
-                    }
                     
-
-                    //handle second rider if it exist
+                    //handle second rider if it exist (Handling the first rider ui)
                     if (data.second_rider_confirm_pickup === undefined) {
                         console.log("Second rider confirm pickup key is undefined.");
                     } else if (data.second_rider_confirm_pickup.toLowerCase() === "false") {

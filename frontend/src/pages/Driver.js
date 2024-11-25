@@ -690,7 +690,8 @@ export const Driver = () => {
                 start_time: match.rideData.start_time,
                 end_time: 0,
                 fare: match.rideData.fare,
-                first_rider_id: riderData.rider_id  // Link to first rider
+                first_rider_id: riderData.rider_id,  // Link to first rider
+                first_rider_pickup_location: riderData.pickup_location,
             };
     
             console.log("Second session details: ", sessionDetails);

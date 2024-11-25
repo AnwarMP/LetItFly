@@ -714,7 +714,7 @@ app.post('/store-second-session', (req, res) => {
       const { 
           rider_id, driver_id, pickup_location, dropoff_location,
           confirm_pickup, confirm_dropoff, start_time, end_time, fare,
-          first_rider_id
+          first_rider_id, first_rider_pickup_location,
       } = req.body;
 
       // Store individual session for second rider with callback style
@@ -731,6 +731,7 @@ app.post('/store-second-session', (req, res) => {
           "fare", fare,
           "is_second_rider", "true",
           "first_rider_id", first_rider_id,
+          "first_rider_pickup_location", first_rider_pickup_location,
       (err, response) => {
           if (err) return res.status(500).send('Error storing session', err);
           
