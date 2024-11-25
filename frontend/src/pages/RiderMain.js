@@ -134,7 +134,7 @@ export const RiderMain = () => {
             console.log("num_passengers: " + numPassengers);
             console.log("allow_ridershare: " + allowRideshare);
             const fare = await calculateFare(routeInfo.distance);
-            const response = await fetch('http://localhost:3000/store-rider-info', {
+            const response = await fetch('/store-rider-info', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -161,7 +161,7 @@ export const RiderMain = () => {
     const awaitDriver = async () => {
         try {
             console.log("Awaiting driver, riderId: " + riderId);
-            const response = await fetch(`http://localhost:3000/await-driver?rider_id=${riderId}`);
+            const response = await fetch(`/await-driver?rider_id=${riderId}`);
             const data = await response.json();
             console.log("Data, " + data);
             if (response.ok) {
@@ -184,7 +184,7 @@ export const RiderMain = () => {
 
     const fetchDriver = async (driver_id) => {
         try {
-            const response = await fetch(`http://localhost:3000/get-driver-location?driver_id=${driver_id}`);
+            const response = await fetch(`/get-driver-location?driver_id=${driver_id}`);
             const data = await response.json();
             if (response.ok) {
                 setPickupLocation(data);
@@ -198,7 +198,7 @@ export const RiderMain = () => {
 
     const showDriverDetails = async (driver_id) => {
         try {
-            const response = await fetch(`http://localhost:3000/get-driver?driverID=${driver_id}`); // Adjust the URL/port if necessary
+            const response = await fetch(`/get-driver?driverID=${driver_id}`); // Adjust the URL/port if necessary
             if (!response.ok) {
                 throw new Error('Failed to fetch driver data');
             }
@@ -213,7 +213,7 @@ export const RiderMain = () => {
 
     const deleteRidePair = async () => {
         try {
-            const response = await fetch(`http://localhost:3000/delete-ride-pair?rider_id=${riderId}`);
+            const response = await fetch(`/delete-ride-pair?rider_id=${riderId}`);
             const data = await response.json();
             if (response.ok) {
                 console.log(data);
@@ -229,7 +229,7 @@ export const RiderMain = () => {
         console.log("Fetching session data: " + riderId + " " + driverData.driver_id);
         if (driverData) {
             try {
-                const response = await fetch(`http://localhost:3000/get-session?rider_id=${riderId}&driver_id=${driverData.driver_id}`);
+                const response = await fetch(`/get-session?rider_id=${riderId}&driver_id=${driverData.driver_id}`);
                 if (response.ok) {
                     const data = await response.json();
                     setSessionData(data); // Update session data state
@@ -315,7 +315,7 @@ export const RiderMain = () => {
 
     const deleteRideKeys = async (riderId, driverId) => {
         try {
-            const response = await fetch('http://localhost:3000/delete-ride-keys', {
+            const response = await fetch('/delete-ride-keys', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

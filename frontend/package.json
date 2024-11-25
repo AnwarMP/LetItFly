@@ -2,6 +2,7 @@
   "name": "frontend",
   "version": "0.1.0",
   "private": true,
+  "proxy": "http://backend:3000",
   "dependencies": {
     "@mapbox/mapbox-gl-directions": "^4.3.1",
     "@mapbox/search-js-react": "^1.0.0-beta.22",
@@ -24,7 +25,7 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "PORT=3001 react-scripts start",
+    "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"

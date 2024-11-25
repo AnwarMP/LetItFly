@@ -87,7 +87,7 @@ export const Driver = () => {
         const intervalId = setInterval(async () => {
           try {
             const response = await fetch(
-                `http://localhost:3000/get-rideshare-matches-filtered?` + 
+                `/get-rideshare-matches-filtered?` + 
                 `dropoff_location=${encodeURIComponent(riderData.dropoff_location)}&` +
                 `rider1_pickup=${encodeURIComponent(pickupLocation)}`
               );
@@ -121,7 +121,7 @@ export const Driver = () => {
 
     const fetchUserProfile = async () => {
         try {
-          const response = await fetch('http://localhost:3000/auth/profile', {
+          const response = await fetch('/auth/profile', {
             headers: {
               'Authorization': `Bearer ${sessionStorage.getItem('token')}`
             }
@@ -184,7 +184,7 @@ export const Driver = () => {
         try {
             console.log("Fetching available riders...");
             const response = await fetch(
-                `http://localhost:3000/driver-pending-rides?driver_location=${currentPos.join(',')}`
+                `/driver-pending-rides?driver_location=${currentPos.join(',')}`
             );
     
             const data = await response.json();
@@ -259,7 +259,7 @@ export const Driver = () => {
 
     const deleteRiderEntry = async (rider_id) => {
         try {
-            const response = await fetch(`http://localhost:3000/delete-waiting-ride?rider_id=${rider_id}`);
+            const response = await fetch(`/delete-waiting-ride?rider_id=${rider_id}`);
             // const data = await response.json();
             if (response.ok) {
                 console.log("Delete pending rider entry success");
@@ -272,7 +272,7 @@ export const Driver = () => {
     // On button select, set destination on map
     const setDestinationTo = async (rider_id) => {
         try {
-            const response = await fetch(`http://localhost:3000/get-rider-location?rider_id=${rider_id}`);
+            const response = await fetch(`/get-rider-location?rider_id=${rider_id}`);
 
             const data = await response.json();
             if (response.ok) {
@@ -307,7 +307,7 @@ export const Driver = () => {
 
             console.log("car " + user?.car_model);
 
-            const response = await fetch('http://localhost:3000/store-driver-location', {
+            const response = await fetch('/store-driver-location', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(driver_data),
@@ -323,7 +323,7 @@ export const Driver = () => {
 
     const sendDriverResponse = async (rider_id) => {
         try {
-            const response = await fetch(`http://localhost:3000/wake-rider?rider_id=${rider_id}&driver_id=${driver_id}`);
+            const response = await fetch(`/wake-rider?rider_id=${rider_id}&driver_id=${driver_id}`);
             // const data = await response2.json();
             if (response.ok) {
                 console.log('Wake works');
@@ -354,7 +354,7 @@ export const Driver = () => {
             console.log("Session details: ", sessionDetails);
             
             // Store session in Redis
-            const sessionResponse = await fetch('http://localhost:3000/store-session', {
+            const sessionResponse = await fetch('/store-session', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(sessionDetails),
@@ -367,7 +367,7 @@ export const Driver = () => {
             }
     
             // Create a new ride in PostgreSQL
-            const createResponse = await fetch('http://localhost:3000/api/payments/rides', {
+            const createResponse = await fetch('/api/payments/rides', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -397,7 +397,7 @@ export const Driver = () => {
             console.log('Using token:', token);
             
             const acceptResponse = await fetch(
-                `http://localhost:3000/api/payments/rides/${rideId}/accept`,
+                `/api/payments/rides/${rideId}/accept`,
                 {
                     method: 'PUT',
                     headers: {
@@ -427,7 +427,7 @@ export const Driver = () => {
 
     const grabRiderDetails = async (rider_id) => {
         try {
-            const response = await fetch(`http://localhost:3000/get-rider-info?rider_id=${rider_id}`);
+            const response = await fetch(`/get-rider-info?rider_id=${rider_id}`);
 
             const data = await response.json();
             console.log("Recieved rider data: ", data);
@@ -439,7 +439,7 @@ export const Driver = () => {
                 rider_pickup_location = data.pickup_location;
                 rider_start = data.start_time;
                 rider_fare = data.fare;
-                setRideShareEnabled(data.allow_rideshare); // setting rideshare as enabled or not
+                setRideShareEnabled(Boolean(data.allow_rideshare === 'true')); // setting rideshare as enabled or not
             } else {
                 console.log(data.message);
             }
@@ -463,7 +463,7 @@ export const Driver = () => {
     
             // Start the ride in PostgreSQL
             const paymentResponse = await fetch(
-                `http://localhost:3000/api/payments/rides/${postgresRideId}/start`,
+                `/api/payments/rides/${postgresRideId}/start`,
                 {
                     method: 'PUT',
                     headers: {
@@ -477,7 +477,7 @@ export const Driver = () => {
             }
 
             // Update session in Redis
-            const response = await fetch(`http://localhost:3000/update-session-pickup`, {
+            const response = await fetch(`/update-session-pickup`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -522,7 +522,7 @@ export const Driver = () => {
     
             // Start the ride in PostgreSQL
             const paymentResponse = await fetch(
-                `http://localhost:3000/api/payments/rides/${postgresSecondRideId}/start`,
+                `/api/payments/rides/${postgresSecondRideId}/start`,
                 {
                     method: 'PUT',
                     headers: {
@@ -538,7 +538,7 @@ export const Driver = () => {
             // Redis routes for confirming picking up for second driver
             console.log("First Rider Data: ", riderData.rider_id);
             const decoded = jwtDecode(token);
-            const response = await fetch(`http://localhost:3000/update-session-pickup`, {
+            const response = await fetch(`/update-session-pickup`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -586,7 +586,7 @@ export const Driver = () => {
             });
     
             const response = await fetch(
-                `http://localhost:3000/api/payments/rides/${postgresRideId}/complete`,
+                `/api/payments/rides/${postgresRideId}/complete`,
                 {
                     method: 'PUT',
                     headers: {
@@ -602,7 +602,7 @@ export const Driver = () => {
 
             if(postgresSecondRideId) {
                 const secondResponse = await fetch(
-                    `http://localhost:3000/api/payments/rides/${postgresSecondRideId}/complete`,
+                    `/api/payments/rides/${postgresSecondRideId}/complete`,
                     {
                         method: 'PUT',
                         headers: {
@@ -634,7 +634,7 @@ export const Driver = () => {
             });
     
             // Update Redis for both riders if there's a second rider
-            const redisResponse = await fetch('http://localhost:3000/update-session-dropoff', {
+            const redisResponse = await fetch('/update-session-dropoff', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -697,7 +697,7 @@ export const Driver = () => {
             console.log("Second session details: ", sessionDetails);
             
             // Store second session in Redis
-            const sessionResponse = await fetch('http://localhost:3000/store-second-session', {
+            const sessionResponse = await fetch('/store-second-session', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(sessionDetails),
@@ -713,7 +713,7 @@ export const Driver = () => {
 
             console.log("Second rider data, updated to postgres: ", match.rideData);
 
-            const createResponse = await fetch('http://localhost:3000/api/payments/rides', {
+            const createResponse = await fetch('/api/payments/rides', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -743,7 +743,7 @@ export const Driver = () => {
             console.log('Using token:', token);
             
             const acceptResponse = await fetch(
-                `http://localhost:3000/api/payments/rides/${rideId}/accept`,
+                `/api/payments/rides/${rideId}/accept`,
                 {
                     method: 'PUT',
                     headers: {

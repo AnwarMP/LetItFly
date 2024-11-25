@@ -9,7 +9,7 @@ const RideHistoryTab = () => {
   const [selectedRide, setSelectedRide] = useState(null);
   const { role } = useSelector(state => state.auth);
 
-  const API_BASE_URL = "http://localhost:3000";
+  const API_BASE_URL = "";
 
   const fetchRides = async () => {
     setLoading(true);
