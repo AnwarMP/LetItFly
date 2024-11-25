@@ -1,4 +1,4 @@
-# LetItFly - Docker Setup Guide
+ LetItFly - Docker Setup Guide
 
 This guide explains how to run the LetItFly application using Docker. The application consists of a React frontend, Node.js backend, PostgreSQL database, and Redis cache.
 
@@ -12,6 +12,7 @@ This guide explains how to run the LetItFly application using Docker. The applic
 ```
 LETITFLY/
 ├── docker-compose.yml        # Main Docker configuration
+├── .env # Root env
 ├── frontend/
 │   ├── Dockerfile           # Frontend container config
 │   ├── .dockerignore        # Frontend ignore rules
@@ -25,7 +26,13 @@ LETITFLY/
 └── README.md
 ```
 
-## Environment Setup
+## Environment Setup (these should already be generated you just need to insert your token)
+
+**Getting a Mapbox Token**
+   - Sign up at https://www.mapbox.com/
+   - Navigate to your account's tokens page
+   - Create a new token with the necessary permissions
+   - Copy the token into your .env file
 
 1. **Frontend Environment (.env)**
    ```env
@@ -43,47 +50,18 @@ LETITFLY/
    PORT=3000
    MAPBOX_ACCESS_TOKEN=your_mapbox_token
    ```
+3. Root .env
+   ```env
+      REACT_APP_MAPBOX_ACCESS_TOKEN=your_mapbox_token
+   ```
+
+
 
 ## Running the Application
-### Environment Setup
 
-1. **Copy Environment Template**
-   ```bash
-   # From root directory (LETITFLY/)
-   cp .env.template .env
-   ```
-
-2. **Edit the .env file**
-   Open the `.env` file and insert your Mapbox API key:
-   ```env
-      REACT_APP_MAPBOX_ACCESS_TOKEN=""
-   ```
-
-3. **Verify Environment Files**
-   Make sure you have:
-   - `.env` in root directory (created from template)
-   - `.env.template` in root directory (for reference)
-   - Do NOT commit your `.env` file with your actual Mapbox key
-
-Note: The .env.template should look like this:
-```env
-      REACT_APP_MAPBOX_ACCESS_TOKEN=""
-```
-
-4. **Getting a Mapbox Token**
-   - Sign up at https://www.mapbox.com/
-   - Navigate to your account's tokens page
-   - Create a new token with the necessary permissions
-   - Copy the token into your .env file
-
-⚠️ Important Notes:
-- Never commit your actual Mapbox API key to the repository
-- The .env file is listed in .gitignore to prevent accidental commits
-- Keep your API keys secure and never share them publicly
-- If you accidentally commit an API key, revoke it immediately and generate a new one
-
-### Quick Start
+### Quick Start (First time setup see below)
 From the root directory:
+
 ```bash
 # Build and start all services
 docker-compose up --build
@@ -98,6 +76,8 @@ docker-compose up -d --build
    ```bash
    # Stop any running containers and remove volumes
    docker-compose down -v
+   docker system prune -f
+
 
    # Build all services
    docker-compose build
@@ -126,11 +106,13 @@ docker-compose up -d --build
 
 ### Accessing the Applications
 
-- Frontend: http://localhost:3001
+- Frontend (Main Website) : http://localhost:3001
 - Backend API: http://localhost:3000
 
 ### Test Users
 ```
+These users are already seeded, so you can login without any sign up flow. 
+
 Riders:
 - Email: alice@rider.com
 - Password: password123
