@@ -6,21 +6,24 @@
     width: 100%;
     height: 70px;
     background-color: #060606;
-    padding: 0 20px;
+    padding: 0;
 }
 
 .left-section {
     display: flex;
     align-items: center;
     margin: 0;
-    padding: 0 20px;
+    padding: 0;
 }
 
 .logo {
     color: white;
     font-size: 20px;
     font-weight: 900;
-    margin-right: 40px;
+    padding: 0 20px;
+    height: 70px;
+    display: flex;
+    align-items: center;
 }
 
 .nav-links {
@@ -28,13 +31,19 @@
     align-items: center;
     list-style: none;
     margin: 0;
-    padding: 0;
-    gap: 40px;
+    padding: 0 20px;
+    gap: 20px;
+}
+
+/* Right side navigation links */
+.custom-nav > .nav-links {
+    margin-right: 20px;
 }
 
 .custom-nav a {
     text-decoration: none;
     color: white;
+    padding: 10px 15px;
 }
 
 .nav-button {
@@ -57,6 +66,7 @@
     margin-right: 20px;
     font-weight: 500;
     opacity: 0.9;
+    white-space: nowrap;
 }
 
 .logout-button {
@@ -81,6 +91,7 @@
     padding: 10px;
     background: none;
     border: none;
+    margin-right: 10px;
 }
 
 .hamburger span {
@@ -214,5 +225,14 @@
 
     .welcome-text {
         display: none;
+    }
+
+    .logo {
+        padding-left: 15px;
+    }
+
+    .mobile-menu a,
+    .mobile-menu button {
+        padding: 12px 15px;
     }
 }
