@@ -22,11 +22,94 @@ function DriverSignUp() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+
+    // Name test checks for invalid characters in name field. 
+    // Lowercase characters, uppercase characters, and dashes are allowed.
+    let name_test = formData.first_name.replace((/[a-zA-Z-]+/), '');
+    if (name_test.length > 0) {
+      alert('Invalid characters found in first name, please try again');
+      return;
+    }
+    name_test = formData.last_name.replace((/[a-zA-Z-]+/), '');
+    if (name_test.length > 0) {
+      alert('Invalid characters found in last name, please try again');
+      return;
+    }
+
+    // Test must be have no length regex check for non-numbers in phone number
+    let phone_number_test = formData.phone_number.replace(/[0-9]+/, '');
+    if (phone_number_test.length > 0) {
+      alert('Invalid characters for phone number. Please try again.');
+      return;
+    }
+    // Phone number entry must have 10 characters 
+    if (formData.phone_number.length !== 10) {
+      alert('Please input a valid phone number (e.g. 1234567890).');
+      return;
+    }
+    
+    let car_model_test = formData.car_model.replace(/[0-9a-zA-Z- ]+/, '');
+    if (car_model_test.length > 1) {
+      alert('Invalid character found in car model, please try again.');
+      return;
+    }
+
+    // Car license plate must contain numbers or letters, flexible in characters for non-standard cars
+    let car_plate_test = formData.car_license_plate.replace(/[0-9a-zA-Z]+/, '');
+    if (car_plate_test.length > 0) {
+      alert('Invalid license plate, plase input a plate with numbers and letters only.');
+      return;
+    }
+
     if (formData.password !== formData.confirm_password) {
       alert('Passwords do not match!');
       return;
     }
+
+    // Basic form validation for password, password must be between 8 to 32 characters
+    if (formData.password.length < 8 || formData.password.length > 32) {
+      alert('Passwords must be between 8 to 32 characters, please try again.');
+      return;
+    }
+    
+    // Prevents password from excluding any numbers
+    let password_test = formData.password.replace(/[^0-9]+/g, '');
+    if (password_test === '') {
+      alert('Password has no numbers, please try again.');
+      return;
+    }
   
+    // Prevents password from having no lowercase or uppercase characters
+    password_test = formData.password.replace(/[^a-zA-Z]+/, '');
+    if (password_test === '') {
+      alert('Password has no lowercase or uppercase characters, please try again.');
+      return;
+    }
+
+    let account_name_test = formData.account_holder_name.replace(/[a-zA-Z-]+/, '');
+    if (account_name_test.length > 0) {
+      alert('Invalid account name, please input something valid.');
+      return;
+    }
+
+    let account_test = formData.routing_number.replace(/[0-9]+/, '');
+    console.log(account_test);
+    if (account_test.length > 0) {
+      alert('Routing number must only contain numbers, please try again.');
+      return;
+    }
+
+    account_test = formData.account_number.replace(/[0-9]+/, '');
+    if (account_test.length > 0) {
+      alert('Account number must only be numbers, please try again.');
+      return;
+    }
+
+    if (formData.account_number.length < 4) {
+      alert('You must have at least 4 digits for your account number. Please try again.');
+    }
+
     // Include all required fields for driver registration
     const signUpData = { 
       email: formData.email, 
@@ -109,6 +192,12 @@ function DriverSignUp() {
           <div className="form-group">
             <label>Password:</label>
             <input type="password" name="password" value={formData.password} onChange={handleChange} required />
+            <p>Requirements for Password:</p>
+            <ul>
+              <li>Password must be 8-32 characters long.</li>
+              <li>Password must at contain at least one number.</li>
+              <li>Password must at contain at least one lowercase or uppercase character.</li>
+            </ul>
           </div>
           <div className="form-group">
             <label>Confirm Password:</label>

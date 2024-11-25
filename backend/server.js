@@ -913,6 +913,27 @@ app.post('/delete-ride-keys', async (req, res) => {
   }
 });
 
+app.post('/check-valid-address', async (req, res) => {
+  const { address } = req.body;
+
+  axios.get(`https://api.mapbox.com/search/geocode/v6/forward?q=${address}&access_token=${process.env.MAPBOX_ACCESS_TOKEN}`)
+    .then(response => {
+      if (!response.data.features || response.data.features.length === 0) {
+        throw new Error('Failed to geocode location: Invalid address inputted');
+      }
+
+      res.send("Ok");
+    })
+    .catch(error => {
+      console.error('Invalid address inputted', error);
+      res.status(500).json({
+        error: 'Failed to geocode location',
+        details: error.message
+      });
+    })
+})
+
+
 // Start the server
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
