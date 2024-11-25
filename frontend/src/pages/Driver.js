@@ -22,6 +22,7 @@ export const Driver = () => {
     const [sessionStart, setSessionStart] = useState(null);
     const [sessionPickupStage, setPickupConfirm] = useState(null);
     const [postgresRideId, setPostgresRideId] = useState(null);
+    const [postgresSecondRideId, setPostgresSecondRideId] = useState(null);
     const [rideShareEnabled, setRideShareEnabled] = useState(false);
     const [rideshareMatches, setRideshareMatches] = useState([]);
     const [ridesharePollingInterval, setRidesharePollingInterval] = useState(null);
@@ -510,6 +511,29 @@ export const Driver = () => {
             // Similar to confirmPickup but for second rider
 
             console.log("Confirming second rider pickup:", secondRiderData.rider_id, "Driver id" , driver_id);
+
+
+            // Check if postgres ride id exists for second driver
+            if (!postgresSecondRideId) {
+                throw new Error('No ride ID found');
+            }
+    
+            // Start the ride in PostgreSQL
+            const paymentResponse = await fetch(
+                `http://localhost:3000/api/payments/rides/${postgresSecondRideId}/start`,
+                {
+                    method: 'PUT',
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+    
+            if (!paymentResponse.ok) {
+                throw new Error('Failed to start ride');
+            }
+
+            // Redis routes for confirming picking up for second driver
             console.log("First Rider Data: ", riderData.rider_id);
             const decoded = jwtDecode(token);
             const response = await fetch(`http://localhost:3000/update-session-pickup`, {
@@ -573,6 +597,28 @@ export const Driver = () => {
                     }),
                 }
             );
+
+            if(postgresSecondRideId) {
+                const secondResponse = await fetch(
+                    `http://localhost:3000/api/payments/rides/${postgresSecondRideId}/complete`,
+                    {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`,
+                        },
+                        body: JSON.stringify({
+                            final_fare: parseFloat(secondRiderData.fare),
+                            rider_id: secondRiderData.rider_id
+                        }),
+                    }
+                );
+
+                if(!secondResponse.ok) {
+                    const errorData = await secondResponse.text();
+                    throw new Error(`Failed to complete ride: ${errorData}`);
+                }
+            }
     
             if (!response.ok) {
                 const errorData = await response.text();
@@ -657,7 +703,62 @@ export const Driver = () => {
             if (!sessionResponse.ok) {
                 throw new Error('Failed to store second session');
             }
-            console.log("Second session stored successfully");
+            console.log("Second session in redis  stored successfully");
+
+                // Log the payment for the second rider
+            // Create a new ride in PostgreSQL
+
+            console.log("Second rider data, updated to postgres: ", match.rideData);
+
+            const createResponse = await fetch('http://localhost:3000/api/payments/rides', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    rider_id_given: secondRiderId,
+                    pickup_location: match.rideData.pickup_location,
+                    dropoff_location: match.rideData.dropoff_location,
+                    estimated_fare: match.rideData.fare,
+                    num_passengers: match.rideData.num_passengers,
+                }),
+            });
+    
+            if (!createResponse.ok) {
+                const createError = await createResponse.text();
+                console.error('Create ride error:', createError);
+                throw new Error(`Failed to create ride: ${createError}`);
+            }
+    
+            const createData = await createResponse.json();
+            const rideId = createData.ride.id;
+            setPostgresSecondRideId(rideId);
+    
+            // Accept the ride as the driver
+            console.log('Attempting to accept ride with ID:', rideId);
+            console.log('Using token:', token);
+            
+            const acceptResponse = await fetch(
+                `http://localhost:3000/api/payments/rides/${rideId}/accept`,
+                {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                    },
+                }
+            );
+    
+            if (!acceptResponse.ok) {
+                const acceptError = await acceptResponse.text();
+                console.error('Accept ride error:', acceptError);
+                throw new Error(`Failed to accept ride: ${acceptError}`);
+            }
+    
+            const acceptData = await acceptResponse.json();
+            console.log('Accept ride response:', acceptData);
+
             // Wake the second rider
             sendDriverResponse(secondRiderId);
 
