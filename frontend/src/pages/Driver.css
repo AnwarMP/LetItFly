@@ -206,3 +206,39 @@ body {
   li {
     margin: 10px;
   }
+
+  /* Button Styling */
+.btn-circle {
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  border: 2px solid black;
+  border-radius: 8px;
+  background-color: transparent;
+  color: black;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-circle:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.btn-circle.working {
+  background-color: black;
+  color: white;
+  cursor: not-allowed;
+}
+
+.btn-circle:disabled {
+  opacity: 1;
+}
+
+.btn-outline-dark {
+  border: 2px solid black;
+}
+
+.btn-lg {
+  padding: 16px 32px;
+  font-size: 18px;
+}

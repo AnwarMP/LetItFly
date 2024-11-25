@@ -1,0 +1,15 @@
+{
+    "short_name": "Let It Fly",
+    "name": "Let It Fly - Airport Shuttle Service",
+    "icons": [
+      {
+        "src": "LetItFly_Logo.png",
+        "type": "image/png",
+        "sizes": "192x192"
+      }
+    ],
+    "start_url": ".",
+    "display": "standalone",
+    "theme_color": "#000000",
+    "background_color": "#ffffff"
+  }
