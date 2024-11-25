@@ -510,11 +510,13 @@ export const Driver = () => {
             // Similar to confirmPickup but for second rider
 
             console.log("Confirming second rider pickup:", secondRiderData.rider_id, "Driver id" , driver_id);
+            console.log("First Rider Data: ", riderData.rider_id);
             const decoded = jwtDecode(token);
             const response = await fetch(`http://localhost:3000/update-session-pickup`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
+                    first_rider_id: riderData.rider_id,
                     driver_id: decoded.userId,
                     rider_id: secondRiderData.rider_id,
                     confirm_pickup: 'true'

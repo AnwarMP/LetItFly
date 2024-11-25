@@ -507,6 +507,16 @@ app.post('/store-second-session', (req, res) => {
               res.send('Sessions stored in cache');
           });
       });
+
+
+      //update first rider session
+      redisClient.hSet(`session:rider:${first_rider_id}:driver:${driver_id}`,
+        "has_second_rider", "true",
+        "second_rider_confirm_pickup", "false",
+        "second_rider_pickup_location",  pickup_location,
+      (err, response) => {
+          if (err) return res.status(500).send('Error storing session', err);
+      });
 });
 
 
@@ -523,7 +533,7 @@ app.get('/get-session', (req, res) => {
 });
 
 app.post('/update-session-pickup', (req, res) => {
-  const { rider_id, driver_id, confirm_pickup} = req.body;
+  const { first_rider_id, rider_id, driver_id, confirm_pickup} = req.body;
 
 // Storing session data in Redis
   redisClient.hSet(`session:rider:${rider_id}:driver:${driver_id}`,
@@ -532,8 +542,18 @@ app.post('/update-session-pickup', (req, res) => {
     "confirm_pickup", confirm_pickup,
   (err, response) => {
     if (err) return res.status(500).send('Error storing session', err);
-    res.send('Session stored in cache');
-  });
+    if(!first_rider_id) res.send('Session stored in cache');
+  }); 
+
+  console.log("First Rider ID: ", first_rider_id);
+  if(first_rider_id){
+    redisClient.hSet(`session:rider:${first_rider_id}:driver:${driver_id}`,
+      "second_rider_confirm_pickup", "true",
+    (err, response) => {
+      if (err) return res.status(500).send('Error storing session', err);
+      res.send('Session stored in cache');
+    });
+  }
 });
 
 app.post('/update-session-dropoff', (req, res) => {

@@ -24,6 +24,8 @@ export const RiderMain = () => {
     const [sessionData, setSessionData] = useState(null); // State to hold session data
     const [routeInfo, setRouteInfo] = useState({ duration: 0, distance: 0 }); // Added routeInfo state
     const [riderId, setRiderId] = useState('');
+    const [isSecondRider, setIsSecondRider] = useState(false);
+    const [hasSecondRider, setHasSecondRider] = useState(false);
     let intervalID;
 
     useEffect(() => {
@@ -243,6 +245,25 @@ export const RiderMain = () => {
                         setDropoffLocation(data.dropoff_location);
                     }
 
+                    //Handle if rider, themselves, has been added to ride (they are the second rider)
+                    if (data.is_second_rider !== undefined && data.is_second_rider === "true") {
+                        setIsSecondRider(true);
+                    }
+                    
+
+                    //handle second rider if it exist
+                    if (data.second_rider_confirm_pickup === undefined) {
+                        console.log("Second rider confirm pickup key is undefined.");
+                    } else if (data.second_rider_confirm_pickup.toLowerCase() === "false") {
+                        setHasSecondRider(true);
+                        setPickupLocation(data.pickupLocation);
+                        setDropoffLocation(data.second_rider_pickup_location);
+                    } else if (data.second_rider_confirm_pickup.toLowerCase() === "true") {
+                        setPickupLocation(data.second_rider_pickup_location);
+                        setDropoffLocation(data.dropoff_location);
+                    }
+
+                    //Handle dropoff
                     if (data.confirm_dropoff.toLowerCase() === "true") {
                         console.log("Confirmed dropped off");
                         //reset rider ui
@@ -251,6 +272,11 @@ export const RiderMain = () => {
                         setDropoffLocation('');
                         setNumPassengers('');
                         setAllowRideshare(false);
+
+                        setIsSecondRider(false);
+
+                        setHasSecondRider(false);
+
                         getLocation(); // Update the user's current location
 
                         //Maybe here can update SQL database to record the session information for rider/driver transaction history.
@@ -344,15 +370,31 @@ export const RiderMain = () => {
 
                 {sessionData && (
                     <div className="eta-info">
-                    {sessionData.confirm_pickup.toLowerCase() === "false" ? (
-                        <h5>
-                        {driverData.name} is <span className="bold">{routeInfo.duration} minutes</span> away!
-                        </h5>
-                    ) : (
-                        <h5>
-                        ETA: <span className="bold">{routeInfo.duration} minutes</span>
-                        </h5>
-                    )}
+                        {isSecondRider && sessionData.confirm_pickup.toLowerCase() === "false" ? (
+                            <>
+                                <h5>Joining an existing ride.</h5>
+                                <h5>
+                                    {driverData.name} is <span className="bold">{routeInfo.duration} minutes</span> away!
+                                </h5>
+                            </>
+                        ) : sessionData.confirm_pickup.toLowerCase() === "false" ? (
+                            <h5>
+                                {driverData.name} is <span className="bold">{routeInfo.duration} minutes</span> away!
+                            </h5>
+                        ) : hasSecondRider && sessionData.second_rider_confirm_pickup.toLowerCase() === "false" ?(
+                            <>
+                                <h5>
+                                    Another Rider has joined your ride! Picking them up now.
+                                </h5>
+                                <h5>
+                                    ETA: <span className="bold">{routeInfo.duration} minutes</span>
+                                </h5>
+                            </>
+                        ) : (
+                            <h5>
+                                ETA: <span className="bold">{routeInfo.duration} minutes</span>
+                            </h5>
+                        )}
                     </div>
                 )}
                 </div>
