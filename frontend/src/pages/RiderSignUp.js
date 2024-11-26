@@ -84,7 +84,7 @@ function RiderSignUp() {
     
     const date = new Date();
     const currentMont = date.getMonth();
-    if (formData.expiry_month < currentMont) {
+    if (formData.expiry_month < currentMont && formData.expiry_year === '2024') {
       alert('Invalid input month, please select a card with an expiry month beyond today.');
       return;
     }
