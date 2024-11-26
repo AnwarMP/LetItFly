@@ -118,7 +118,7 @@ const Settings = () => {
     } else if (role === 'rider') {
       let address_test = formData.home_address;
       try {
-        const response = await fetch('http://localhost:3000/check-valid-address', {
+        const response = await fetch('/check-valid-address', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({address: address_test}),
