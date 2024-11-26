@@ -73,6 +73,73 @@ const Settings = () => {
     setError(null);
     setSuccessMessage('');
 
+    let name_test = formData.first_name.replace((/[a-zA-Z-]+/), '');
+    if (name_test.length > 0) {
+      alert('Invalid characters found in first name, please try again');
+      setLoading(false);
+      return;
+    }
+    name_test = formData.last_name.replace((/[a-zA-Z-]+/), '');
+    if (name_test.length > 0) {
+      alert('Invalid characters found in last name, please try again');
+      setLoading(false);
+      return;
+    }
+
+    // Test must be have no length regex check for non-numbers in phone number
+    let phone_number_test = formData.phone_number.replace(/[0-9]+/, '');
+    if (phone_number_test.length > 0) {
+      alert('Invalid characters for phone number found. Please only input numbers.');
+      setLoading(false);
+      return;
+    }
+    // Phone number entry must have 10 characters 
+    if (formData.phone_number.length !== 10) {
+      alert('Please input a valid phone number that is 10 digits long (e.g. 1234567890).');
+      setLoading(false);
+      return;
+    }
+
+    if (role === 'driver') {
+      let car_model_test = formData.car_model.replace(/[0-9a-zA-Z- ]+/, '');
+      if (car_model_test.length > 0) {
+        alert('Invalid character found in car model, please try again.');
+        setLoading(false);
+        return;
+      }
+
+      // Car license plate must contain numbers or letters, flexible in characters for non-standard cars
+      let car_plate_test = formData.car_license_plate.replace(/[0-9a-zA-Z]+/, '');
+      if (car_plate_test.length > 0) {
+        alert('Invalid license plate, plase input a plate with numbers and letters only.');
+        setLoading(false);
+        return;
+      }
+    } else if (role === 'rider') {
+      let address_test = formData.home_address;
+      try {
+        const response = await fetch('http://localhost:3000/check-valid-address', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({address: address_test}),
+        });
+
+        console.log(response);
+        if (!response.ok) {
+          alert('Invalid address. Please try again.');
+          setLoading(false);
+          return;
+        }
+
+      } catch (error) {
+        console.error('Valid address check returns error', error);
+        setLoading(false);
+        alert('Invalid address. Please try again.');
+        return;
+      }
+    }
+
+
     try {
       const response = await fetch('http://localhost:3000/auth/profile', {
         method: 'PUT',

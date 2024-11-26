@@ -22,11 +22,97 @@ function RiderSignUp() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+  
+    // Name test checks for invalid characters in name field. 
+    // Lowercase characters, uppercase characters, and dashes are allowed.
+    let name_test = formData.first_name.replace((/[a-zA-Z-]+/), '');
+    if (name_test.length > 0) {
+      alert('Invalid characters found in first name, please try again');
+      return;
+    }
+    name_test = formData.last_name.replace((/[a-zA-Z-]+/), '');
+    if (name_test.length > 0) {
+      alert('Invalid characters found in last name, please try again');
+      return;
+    }
+
+    // Test must be have no length regex check for non-numbers in phone number
+    let phone_number_test = formData.phone_number.replace(/[0-9]+/, '');
+    if (phone_number_test.length > 0) {
+      alert('Invalid characters for phone number found. Please only input numbers.');
+      return;
+    }
+    // Phone number entry must have 10 characters 
+    if (formData.phone_number.length !== 10) {
+      alert('Please input a valid phone number that is 10 digits long (e.g. 1234567890).');
+      return;
+    }
+
     if (formData.password !== formData.confirm_password) {
       alert('Passwords do not match!');
       return;
     }
+
+    // Basic form validation for password, password must be between 8 to 32 characters
+    if (formData.password.length < 8 || formData.password.length > 32) {
+      alert('Passwords must be between 8 to 32 characters, please try again.');
+      return;
+    }
+    
+    // Prevents password from excluding any numbers
+    let password_test = formData.password.replace(/[^0-9]+/g, '');
+    if (password_test === '') {
+      alert('Password has no numbers, please try again.');
+      return;
+    }
   
+    // Prevents password from having no lowercase or uppercase characters
+    password_test = formData.password.replace(/[^a-zA-Z]+/, '');
+    if (password_test === '') {
+      alert('Password has no lowercase or uppercase characters, please try again.');
+      return;
+    }
+
+
+    
+    // Ensuring card number only has number inputs
+    let card_test = formData.card_number.replace(/[0-9]+/, '');
+    if (card_test.length > 0) {
+      alert('Invalid input for card number, must only contain characters between 0 and 9. Please try again.');
+      return;
+    }
+    
+    const date = new Date();
+    const currentMont = date.getMonth();
+    if (formData.expiry_month < currentMont && formData.expiry_year === '2024') {
+      alert('Invalid input month, please select a card with an expiry month beyond today.');
+      return;
+    }
+    
+    // This is for testing if inputted address is valid through a backend call to MapBox GeoCoding service
+    // Done at end of form validation to reduce amount of API calls
+    let address_test = formData.home_address;
+    try {
+      const response = await fetch('http://localhost:3000/check-valid-address', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({address: address_test}),
+      });
+
+      console.log(response);
+      if (!response.ok) {
+        alert('Invalid address. Please try again.');
+        return;
+      }
+
+    } catch (error) {
+      console.error('Valid address check returns error', error);
+      alert('Invalid address. Please try again.');
+      return;
+    }
+    
+    
+    
     // Include all required fields for rider registration
     const signUpData = { 
       email: formData.email, 
@@ -107,6 +193,12 @@ function RiderSignUp() {
           <div className="form-group">
             <label>Password:</label>
             <input type="password" name="password" value={formData.password} onChange={handleChange} required />
+            <p>Requirements for Password:</p>
+            <ul>
+              <li>Password must be 8-32 characters long.</li>
+              <li>Password must at contain at least one number.</li>
+              <li>Password must at contain at least one lowercase or uppercase character.</li>
+            </ul>
           </div>
           <div className="form-group">
             <label>Confirm Password:</label>
