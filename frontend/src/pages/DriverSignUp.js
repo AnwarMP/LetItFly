@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './SignUp.css';
 
 function DriverSignUp() {
@@ -13,15 +13,124 @@ function DriverSignUp() {
     confirm_password: '',
     account_holder_name: '',
     routing_number: '',
-    account_number: '', // We'll only store last 4
+    account_number: '',
+    address: '',
   });
 
+  const [errors, setErrors] = useState({});
+  const [touchedFields, setTouchedFields] = useState({});
+  const [isFormValid, setIsFormValid] = useState(false);
+  const [isSubmitAttempted, setIsSubmitAttempted] = useState(false);
+
+  // Handle input changes
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    
+    // Only validate if the field has been touched or form submission was attempted
+    if (touchedFields[name] || isSubmitAttempted) {
+      const error = validateField(name, value);
+      setErrors(prev => ({ ...prev, [name]: error }));
+    }
   };
+
+  // Handle field blur
+  const handleBlur = (e) => {
+    const { name } = e.target;
+    setTouchedFields(prev => ({ ...prev, [name]: true }));
+    const error = validateField(name, formData[name]);
+    setErrors(prev => ({ ...prev, [name]: error }));
+  };
+  
+    // Check if all fields are valid
+  useEffect(() => {
+    const validateForm = () => {
+      const newErrors = {};
+      Object.keys(formData).forEach(key => {
+        const error = validateField(key, formData[key]);
+        if (error) newErrors[key] = error;
+      });
+      
+      setIsFormValid(Object.keys(newErrors).length === 0 && 
+        Object.values(formData).every(value => value.length > 0));
+    };
+
+    validateForm();
+  }, [formData]);
+
+   // Validation rules
+    const validateField = (name, value) => {
+      switch (name) {
+        case 'first_name':
+        case 'last_name':
+          return /^[a-zA-Z-]+$/.test(value) ? '' : 'Only letters and hyphens allowed';
+        
+        case 'phone_number':
+          return value.length === 10 && /^\d+$/.test(value) 
+            ? '' : 'Phone number must be exactly 10 digits';
+        
+        case 'email': {
+          const validDomains = ['@gmail.com', '@yahoo.com', '@hotmail.com'];
+          const hasValidDomain = validDomains.some(domain => value.endsWith(domain));
+          return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) && hasValidDomain
+            ? '' : 'Must be a valid gmail.com, yahoo.com, or hotmail.com email';
+        }
+        
+        case 'car_model':
+          return /^[0-9a-zA-Z- ]+$/.test(value) ? '' : 'Invalid car model format';
+        
+        case 'car_license_plate':
+          return /^[0-9a-zA-Z]+$/.test(value) ? '' : 'Only letters and numbers allowed';
+        
+        case 'password': {
+          if (value.length < 8 || value.length > 32) return 'Password must be 8-32 characters';
+          if (!/\d/.test(value)) return 'Password must contain at least one number';
+          if (!/[a-zA-Z]/.test(value)) return 'Password must contain at least one letter';
+          return '';
+        }
+        
+        case 'confirm_password':
+          return value === formData.password ? '' : 'Passwords do not match';
+        
+        case 'account_holder_name':
+          return /^[a-zA-Z- ]+$/.test(value) ? '' : 'Only letters, spaces, and hyphens allowed';
+        
+        case 'routing_number':
+          return value.length === 9 && /^\d+$/.test(value) 
+            ? '' : 'Routing number must be exactly 9 digits';
+        
+        case 'account_number':
+          return value.length === 9 && /^\d+$/.test(value) 
+            ? '' : 'Account number must be exactly 9 digits';
+        
+        case 'address': {
+          const addressRegex = /^[\w\s.-]+,\s*[\w\s.-]+,\s*[A-Z]{2}\s*\d{5}$/;
+          return addressRegex.test(value) 
+            ? '' : 'Format: Street, City, State ZIP';
+        }
+        
+        default:
+          return '';
+      }
+    };
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!isFormValid) return;
+
+
+    // Validate all fields
+    const newErrors = {};
+    Object.keys(formData).forEach(key => {
+      const error = validateField(key, formData[key]);
+      if (error) newErrors[key] = error;
+    });
+    setErrors(newErrors);
+
+    if (Object.keys(newErrors).length > 0) {
+      return;
+    }
     
 
     // Name test checks for invalid characters in name field. 
@@ -154,91 +263,52 @@ function DriverSignUp() {
         alert('Registration successful!');
         window.location.replace('/');
       } else {
-        alert(`Registration failed: ${data.message}`);
-      }
+        alert(`Registration failed: ${data.message !== undefined ? data.message : 'Ensure email is not already in use.'}`);
+              }
     } catch (error) {
-      console.error('Error during registration:', error);
-      alert('An error occurred while trying to register. Please try again later.');
+      console.error('Error during registration, ensure this email has not been used before', error);
+      alert('An error occurred while trying to register. Please try again later. Ensure email is not already in use.');
     }
   };
-  
 
+
+  const shouldShowError = (fieldName) => {
+    return (touchedFields[fieldName] || isSubmitAttempted) && errors[fieldName];
+  };
+  
   return (
     <div className="sign-up-page">
       <div className="sign-up-container">
         <h2 className="sign-up-header">Sign Up as Driver</h2>
-
+        
         <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label>First Name:</label>
-            <input type="text" name="first_name" value={formData.first_name} onChange={handleChange} required />
-          </div>
-          <div className="form-group">
-            <label>Last Name:</label>
-            <input type="text" name="last_name" value={formData.last_name} onChange={handleChange} required />
-          </div>
-          <div className="form-group">
-            <label>Phone Number:</label>
-            <input type="text" name="phone_number" value={formData.phone_number} onChange={handleChange} required />
-          </div>
-          <div className="form-group">
-            <label>Email:</label>
-            <input type="email" name="email" value={formData.email} onChange={handleChange} required />
-          </div>
-          <div className="form-group">
-            <label>Car Model:</label>
-            <input type="text" name="car_model" value={formData.car_model} onChange={handleChange} required />
-          </div>
-          <div className="form-group">
-            <label>Car License Plate:</label>
-            <input type="text" name="car_license_plate" value={formData.car_license_plate} onChange={handleChange} required />
-          </div>
-          <div className="form-group">
-            <label>Password:</label>
-            <input type="password" name="password" value={formData.password} onChange={handleChange} required />
-            <p>Requirements for Password:</p>
-            <ul>
-              <li>Password must be 8-32 characters long.</li>
-              <li>Password must at contain at least one number.</li>
-              <li>Password must at contain at least one lowercase or uppercase character.</li>
-            </ul>
-          </div>
-          <div className="form-group">
-            <label>Confirm Password:</label>
-            <input type="password" name="confirm_password" value={formData.confirm_password} onChange={handleChange} required />
-          </div>
-          <div className="form-group">
-            <label>Account Holder Name:</label>
-            <input
-              type="text"
-              name="account_holder_name"
-              value={formData.account_holder_name}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label>Routing Number:</label>
-            <input
-              type="text"
-              name="routing_number"
-              value={formData.routing_number}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label>Account Number - Last Four Digits:</label>
-            <input
-              type="text"
-              name="account_number"
-              value={formData.account_number}
-              onChange={handleChange}
-              required
-            />
-          </div>
+          {Object.keys(formData).map(field => (
+            <div className="form-group" key={field}>
+              <label>{field.split('_').map(word => 
+                word.charAt(0).toUpperCase() + word.slice(1)
+              ).join(' ')}:</label>
+              <input
+                type={field.includes('password') ? 'password' : 'text'}
+                name={field}
+                value={formData[field]}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                className={shouldShowError(field) ? 'error' : ''}
+                required
+              />
+              {shouldShowError(field) && (
+                <span className="error-message">{errors[field]}</span>
+              )}
+            </div>
+          ))}
 
-          <button type="submit" className="submit-button">Sign Up</button>
+          <button 
+            type="submit" 
+            className={`submit-button ${!isFormValid ? 'disabled' : ''}`}
+            disabled={!isFormValid}
+          >
+            Sign Up
+          </button>
         </form>
       </div>
     </div>
