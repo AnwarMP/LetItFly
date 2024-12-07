@@ -186,6 +186,19 @@ body {
   .btn-search:hover {
     background-color: #f0f0f0;
   }
+
+  .center-div {
+    display: flex;
+    align-items: center;
+    width: 100%;
+
+  }
+
+  .name-text {
+    font-size: 32px;
+    font-weight: 700;
+  }
+
   /*--------------------Forms---------------------------*/
   .form-group {
     margin-bottom: 1rem;
