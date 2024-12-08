@@ -912,8 +912,7 @@ export const Driver = () => {
                     (
                         <div className='default-container text-center remove-indent'>
                             <br/><br/><br/><br/><br/>
-                            <img src='/default-profile.png' alt='profile-picture'></img><br/>
-                            <span id='name-text'>{user?.first_name} {user?.last_name}</span><br/><br/>
+                            <span id='name-text' className='name-text'>{user?.first_name} {user?.last_name}</span><br/><br/>
                             <button 
                                 className={`btn btn-circle btn-lg btn-outline-dark ${isWorking ? 'working' : ''}`} 
                                 onClick={handleStartWork}
