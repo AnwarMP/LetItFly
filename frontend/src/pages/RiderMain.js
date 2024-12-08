@@ -243,6 +243,8 @@ export const RiderMain = () => {
                     const data = await response.json();
                     setSessionData(data); // Update session data state
                     console.log("Fetched session data!: ", { ...data});
+                    console.log("allow_rideshare value:", data.allow_rideshare);
+                    console.log("allow_rideshare type:", typeof data.allow_rideshare);
 
                     if (data.confirm_pickup.toLowerCase() === "false" && data.is_second_rider !== undefined ) {
                         setPickupLocation(driverData.location);
@@ -376,6 +378,7 @@ export const RiderMain = () => {
                     <h3>Your Ride</h3>
                     <p><strong>Pickup Location:</strong> {sessionData.pickup_location}</p>
                     <p><strong>Dropoff Location:</strong> {sessionData.dropoff_location}</p>
+                    <p><strong>Rideshare:</strong> {allowRideshare ? 'Enabled' : 'Disabled'}</p>
                     <p><strong>Fare (USD):</strong> {sessionData.fare}</p>
                     {/* Add more fields as needed */}
                     </div>
