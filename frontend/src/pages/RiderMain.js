@@ -467,7 +467,7 @@ export const RiderMain = () => {
                             <option value="" disabled>
                                 Number of Passengers
                             </option>
-                            {[...Array(4)].map((_, i) => (
+                            {[...Array(2)].map((_, i) => (
                                 <option key={i + 1} value={i + 1}>
                                     {i + 1}
                                 </option>
