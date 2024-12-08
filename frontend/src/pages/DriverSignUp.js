@@ -9,6 +9,7 @@ function DriverSignUp() {
     email: '',
     car_model: '',
     car_license_plate: '',
+    has_four_seats: '',
     password: '',
     confirm_password: '',
     account_holder_name: '',
@@ -81,6 +82,9 @@ function DriverSignUp() {
         
         case 'car_license_plate':
           return /^[0-9a-zA-Z]+$/.test(value) ? '' : 'Only letters and numbers allowed';
+
+        case 'has_four_seats':
+          return value === 'yes' ? '' : 'You must have at least four passenger seats to be a LetItFly driver';
         
         case 'password': {
           if (value.length < 8 || value.length > 32) return 'Password must be 8-32 characters';
@@ -276,31 +280,62 @@ function DriverSignUp() {
     return (touchedFields[fieldName] || isSubmitAttempted) && errors[fieldName];
   };
   
+  const renderFormField = (field) => {
+    const label = field.split('_').map(word => 
+      word.charAt(0).toUpperCase() + word.slice(1)
+    ).join(' ');
+
+    // Special case for has_four_seats field
+    if (field === 'has_four_seats') {
+      return (
+        <div className="form-group" key={field}>
+          <label>LetItFly requires that drivers have a minimum of four passenger seats, do you meet this requirement?</label>
+          <select
+            name={field}
+            value={formData[field]}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            className={shouldShowError(field) ? 'error' : ''}
+            required
+          >
+            <option value="">Select an option</option>
+            <option value="yes">Yes</option>
+            <option value="no">No</option>
+          </select>
+          {shouldShowError(field) && (
+            <span className="error-message">{errors[field]}</span>
+          )}
+        </div>
+      );
+    }
+
+    // Default input field rendering
+    return (
+      <div className="form-group" key={field}>
+        <label>{label}:</label>
+        <input
+          type={field.includes('password') ? 'password' : 'text'}
+          name={field}
+          value={formData[field]}
+          onChange={handleChange}
+          onBlur={handleBlur}
+          className={shouldShowError(field) ? 'error' : ''}
+          required
+        />
+        {shouldShowError(field) && (
+          <span className="error-message">{errors[field]}</span>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="sign-up-page">
       <div className="sign-up-container">
         <h2 className="sign-up-header">Sign Up as Driver</h2>
         
         <form onSubmit={handleSubmit}>
-          {Object.keys(formData).map(field => (
-            <div className="form-group" key={field}>
-              <label>{field.split('_').map(word => 
-                word.charAt(0).toUpperCase() + word.slice(1)
-              ).join(' ')}:</label>
-              <input
-                type={field.includes('password') ? 'password' : 'text'}
-                name={field}
-                value={formData[field]}
-                onChange={handleChange}
-                onBlur={handleBlur}
-                className={shouldShowError(field) ? 'error' : ''}
-                required
-              />
-              {shouldShowError(field) && (
-                <span className="error-message">{errors[field]}</span>
-              )}
-            </div>
-          ))}
+          {Object.keys(formData).map(field => renderFormField(field))}
 
           <button 
             type="submit" 
@@ -314,5 +349,6 @@ function DriverSignUp() {
     </div>
   );
 }
+
 
 export default DriverSignUp;
