@@ -145,7 +145,7 @@ function RiderSignUp() {
 
     // Validate address with backend
     try {
-      const addressResponse = await fetch('http://localhost:3000/check-valid-address', {
+      const addressResponse = await fetch('/check-valid-address', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ address: formData.home_address }),
@@ -170,7 +170,7 @@ function RiderSignUp() {
         home_address: formData.home_address
       };
 
-      const response = await fetch('http://localhost:3000/auth/register', {
+      const response = await fetch('/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(signUpData),
@@ -180,7 +180,7 @@ function RiderSignUp() {
       
       if (response.ok) {
         // Add payment method
-        const paymentResponse = await fetch('http://localhost:3000/api/payments/methods', {
+        const paymentResponse = await fetch('/api/payments/methods', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
