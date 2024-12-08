@@ -41,6 +41,8 @@ export const RiderMain = () => {
         }
     })
 
+    const addressRegex = /^[^,]+,\s*[^,]+,\s*[^,]+,\s*\d{5}$/;
+
     //Define the list of airports**
     const airports = [
         "San Francisco International Airport",
@@ -68,8 +70,15 @@ export const RiderMain = () => {
     // Check if number of passengers is selected
     const hasNumPassengers = numPassengers !== '';
 
+    // Add validation function
+    const isValidAddress = (location) => {
+        return isAirport(location) || addressRegex.test(location);
+    };
+
     // Updated validation logic
-    const canFindDriver = hasPickup && hasDropoff && atLeastOneAirport && differentLocations && hasNumPassengers;
+    const canFindDriver = hasPickup && hasDropoff && atLeastOneAirport && differentLocations && 
+    hasNumPassengers && 
+    (isValidAddress(pickupLocation) && isValidAddress(dropoffLocation));
 
     // Utility function to calculate fare
     const calculateFare = (distance) => {
@@ -234,6 +243,8 @@ export const RiderMain = () => {
                     const data = await response.json();
                     setSessionData(data); // Update session data state
                     console.log("Fetched session data!: ", { ...data});
+                    console.log("allow_rideshare value:", data.allow_rideshare);
+                    console.log("allow_rideshare type:", typeof data.allow_rideshare);
 
                     if (data.confirm_pickup.toLowerCase() === "false" && data.is_second_rider !== undefined ) {
                         setPickupLocation(driverData.location);
@@ -367,6 +378,7 @@ export const RiderMain = () => {
                     <h3>Your Ride</h3>
                     <p><strong>Pickup Location:</strong> {sessionData.pickup_location}</p>
                     <p><strong>Dropoff Location:</strong> {sessionData.dropoff_location}</p>
+                    <p><strong>Rideshare:</strong> {allowRideshare ? 'Enabled' : 'Disabled'}</p>
                     <p><strong>Fare (USD):</strong> {sessionData.fare}</p>
                     {/* Add more fields as needed */}
                     </div>
@@ -481,7 +493,12 @@ export const RiderMain = () => {
                     {/* Display error message if validation fails */}
                     {!driverData && !canFindDriver && !loading && (
                         <div className="error-message">
-                            Please ensure you have selected number of passengers and are going to or from one of the 3 given Bay Area airports.
+                                    Please ensure:<br></br>
+                                    - You have selected number of passengers
+                                    <br></br>
+                                    - At least one location is one of the 3 given Bay Area airports
+                                    <br></br>
+                                    - Non-airport addresses follow format: Street, City, State, ZIP
                         </div>
                     )}
                     {!driverData && !loading && canFindDriver && routeInfo.duration > 0 && routeInfo.distance > 0 && (
