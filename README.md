@@ -2,6 +2,9 @@
 "Let It Fly" is an airport shuttle service platform connecting passengers with drivers for seamless, safe, and affordable transportation to and from Bay Area airports.
 
 
+### Use the `version/dockerized` branch with updated instructions to run full release, the following is for development on main 
+
+
 ## Prerequisites
 
 Make sure you have the following installed:
@@ -33,6 +36,7 @@ PGHOST=localhost
 PGPORT=5432
 JWT_SECRET=supersecretkey
 PORT=3000
+MAPBOX_ACCESS_TOKEN=
 ```
 
 Start the backend: 
@@ -44,6 +48,12 @@ npm start
 
 Install Dependencies
 Navigate to the frontend directory:
+
+Create a .env file 
+```json
+REACT_APP_MAPBOX_ACCESS_TOKEN=
+```
+
 ```bash
 cd frontend
 ```
